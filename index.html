@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lucine Smets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --blue:        #524840;
+    --green:       #eceadb;
+    /* Derived — update automatically via color-mix */
+    --blue-mid:    color-mix(in oklch, var(--blue) 80%, black);
+    --blue-dark:   color-mix(in oklch, var(--blue) 55%, black);
+    --blue-light:  color-mix(in oklch, var(--blue) 18%, white);
+    --green-light: color-mix(in oklch, var(--green) 40%, white);
+    --ink:         oklch(14% 0.015 50);
+    --ink-soft:    oklch(44% 0.02 50);
+    --surface:     oklch(98% 0.005 50);
+    --white:       #ffffff;
+    --border:      oklch(90% 0.008 50);
+    --radius:      14px;
+    --radius-lg:   22px;
+    --ff:          'Outfit', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--ff); background: var(--surface); color: var(--ink); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+  /* Utility */
+  .container { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; border-radius: 99px; padding: 5px 14px;
+  }
+  .chip-blue  { background: var(--blue-light); color: var(--blue-mid); }
+  .chip-green { background: var(--green-light); color: var(--green); }
+  .chip-white { background: rgba(255,255,255,.18); color: #fff; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    padding: 16px 0;
+    transition: background .3s, backdrop-filter .3s, box-shadow .3s;
+  }
+  nav.scrolled {
+    background: rgba(255,255,255,.9);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 1px 0 var(--border);
+  }
+  nav .inner { display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-weight: 900; font-size: 20px; color: #fff; letter-spacing: -.025em; transition: color .3s; }
+  nav.scrolled .logo { color: var(--blue); }
+  .logo span { color: var(--green); }
+  .nav-cta {
+    background: var(--white); color: var(--blue); font-family: var(--ff);
+    font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+    padding: 9px 22px; border-radius: 99px; text-decoration: none;
+    transition: background .15s, color .15s, transform .1s;
+  }
+  nav.scrolled .nav-cta { background: var(--blue); color: #fff; }
+  .nav-cta:hover { transform: translateY(-1px); opacity: .9; }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; min-height: 100svh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; overflow: hidden;
+    padding: 120px 24px 80px;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--blue-dark) 0%, color-mix(in oklch, var(--blue) 40%, black) 100%);
+  }
+  .hero-bg video,
+  .hero-bg iframe {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 100%; min-height: 100%;
+    width: 177.78vh;
+    height: 56.25vw;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .hero-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to bottom,
+      rgba(0,0,0,.45) 0%,
+      rgba(0,0,0,.25) 50%,
+      rgba(0,0,0,.65) 100%
+    );
+  }
+  /* Placeholder shown when no video */
+  .hero-bg-placeholder {
+    position: absolute; inset: 0;
+    background: var(--blue-dark);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.2); font-size: 12px; font-family: monospace;
+    letter-spacing: .1em; text-transform: uppercase;
+    flex-direction: column; gap: 8px;
+  }
+  .hero-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 24px; max-width: 820px; }
+  .hero h1 {
+    font-size: clamp(42px, 7vw, 80px);
+    font-weight: 900; line-height: 1.0; letter-spacing: -.04em;
+    color: #fff; text-wrap: balance;
+  }
+  .hero h1 em { font-style: normal; color: var(--green); }
+  .hero-sub {
+    font-size: clamp(16px, 2vw, 20px); color: rgba(255,255,255,.82);
+    font-weight: 400; max-width: 560px; line-height: 1.65; text-wrap: pretty;
+  }
+  .hero-cta-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+  .btn-primary {
+    background: var(--green); color: #fff; font-family: var(--ff);
+    font-size: 16px; font-weight: 700; border: none; cursor: pointer;
+    padding: 16px 34px; border-radius: 99px; text-decoration: none;
+    transition: background .15s, transform .1s; display: inline-block;
+    box-shadow: 0 4px 24px rgba(0,0,0,.25);
+  }
+  .btn-primary:hover { background: var(--blue-mid); transform: translateY(-2px); }
+  .btn-ghost {
+    font-size: 15px; font-weight: 600; color: rgba(255,255,255,.75);
+    text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+    transition: color .15s;
+  }
+  .btn-ghost:hover { color: #fff; }
+  .hero-badge {
+    position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+    z-index: 1; background: rgba(255,255,255,.12); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.2); border-radius: 99px;
+    padding: 10px 22px; display: flex; align-items: center; gap: 12px;
+    white-space: nowrap;
+  }
+  .hero-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+  .hero-badge span { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); }
+
+  /* Scroll arrow */
+  .scroll-hint {
+    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+    z-index: 1; animation: bob 2s ease-in-out infinite;
+    color: rgba(255,255,255,.45);
+  }
+  @keyframes bob { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+
+  /* ── SECTIONS ── */
+  .section-intro { text-align: center; margin-bottom: 48px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .section-intro h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -.03em; text-wrap: balance; line-height: 1.1; }
+  .section-intro p { font-size: 17px; color: var(--ink-soft); max-width: 520px; text-wrap: pretty; }
+
+  /* ── VIDEO SECTION ── */
+  .video-section { padding: 100px 0 80px; }
+  .video-wrap {
+    border-radius: var(--radius-lg); overflow: hidden;
+    background: var(--ink); aspect-ratio: 16/9;
+    position: relative; max-width: 820px; margin: 0 auto;
+    box-shadow: 0 12px 56px rgba(0,0,0,.13);
+  }
+  .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+  .video-placeholder {
+    position: absolute; inset: 0;
+    background: color-mix(in oklch, var(--blue) 30%, black);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px;
+  }
+  .play-btn {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: var(--blue); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 24px rgba(0,0,0,.35);
+    transition: transform .15s, background .15s;
+  }
+  .play-btn:hover { transform: scale(1.08); background: var(--blue-dark); }
+  .play-btn svg { margin-left: 5px; }
+  .video-placeholder p { font-size: 13px; color: rgba(255,255,255,.35); font-family: monospace; letter-spacing: .06em; text-transform: uppercase; }
+
+  /* ── STORY ── */
+  .story-section { padding: 80px 0; background: #fff; }
+  .story-grid {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    border: 1.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+  }
+  .story-card {
+    padding: 40px 32px; display: flex; flex-direction: column; gap: 18px;
+    background: #fff;
+  }
+  .story-card + .story-card { border-left: 1.5px solid var(--border); }
+  .story-card.blue { background: var(--blue); }
+  .story-num { font-size: 72px; font-weight: 900; line-height: 1; letter-spacing: -.05em; color: var(--blue-light); user-select: none; }
+  .story-card.blue .story-num { color: rgba(255,255,255,.12); }
+  .story-step { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+  .story-card.blue .story-step { color: rgba(255,255,255,.6); }
+  .story-line { width: 32px; height: 3px; border-radius: 99px; background: var(--blue); }
+  .story-card.blue .story-line { background: var(--green); }
+  .story-card h3 { font-size: 20px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
+  .story-card.blue h3 { color: #fff; }
+  .story-card p { font-size: 15px; color: var(--ink-soft); line-height: 1.65; }
+  .story-card.blue p { color: rgba(255,255,255,.78); }
+
+  /* ── FEATURES ── */
+  .features-section { padding: 80px 0; }
+  .features-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+  .feat-card {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 32px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: box-shadow .15s, transform .15s;
+  }
+  .feat-card:hover { box-shadow: 0 6px 32px rgba(0,0,0,.07); transform: translateY(-2px); }
+  .feat-icon { width: 50px; height: 50px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .feat-icon.b { background: var(--blue-light); }
+  .feat-icon.g { background: var(--green-light); }
+  .feat-card h3 { font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+  .feat-card p { font-size: 15px; color: var(--ink-soft); line-height: 1.6; }
+  .feat-tag { align-self: flex-start; }
+
+  /* ── CHECKLIST ── */
+  .check-section { padding: 80px 0; }
+  .check-box {
+    background: var(--blue-dark);
+    border-radius: var(--radius-lg); padding: 64px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start;
+  }
+  .check-left { display: flex; flex-direction: column; gap: 18px; }
+  .check-left h2 { font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; color: #fff; letter-spacing: -.03em; line-height: 1.15; text-wrap: balance; }
+  .check-left p { font-size: 16px; color: rgba(255,255,255,.72); line-height: 1.65; }
+  .check-cta {
+    background: var(--green); color: #fff; font-family: var(--ff);
+    font-size: 15px; font-weight: 700; border: none; cursor: pointer;
+    padding: 14px 28px; border-radius: 99px; text-decoration: none;
+    transition: background .15s, transform .1s; display: inline-block; align-self: flex-start;
+  }
+  .check-cta:hover { background: var(--blue-mid); transform: translateY(-1px); }
+  .check-list { display: flex; flex-direction: column; gap: 12px; }
+  .check-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(255,255,255,.08); border-radius: var(--radius);
+    padding: 14px 18px;
+  }
+  .check-mark {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--green); display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .check-item p { font-size: 15px; color: rgba(255,255,255,.9); font-weight: 500; line-height: 1.45; }
+
+  /* ── CTA ── */
+  .cta-section { padding: 80px 0 110px; }
+  .cta-card {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 72px 64px;
+    text-align: center; display: flex; flex-direction: column;
+    align-items: center; gap: 24px;
+    box-shadow: 0 2px 32px rgba(0,0,0,.05);
+  }
+  .cta-card h2 { font-size: clamp(30px, 4.5vw, 50px); font-weight: 900; letter-spacing: -.035em; line-height: 1.05; text-wrap: balance; max-width: 640px; }
+  .cta-card h2 em { font-style: normal; color: var(--blue); }
+  .cta-card p { font-size: 18px; color: var(--ink-soft); max-width: 460px; line-height: 1.65; }
+  .btn-book {
+    background: var(--blue); color: #fff; font-family: var(--ff);
+    font-size: 17px; font-weight: 700; border: none; cursor: pointer;
+    padding: 18px 44px; border-radius: 99px; text-decoration: none;
+    transition: background .15s, transform .1s; display: inline-block;
+    box-shadow: 0 4px 24px rgba(0,0,0,.18);
+  }
+  .btn-book:hover { background: var(--blue-mid); transform: translateY(-2px); }
+  .cta-note { font-size: 13px; color: var(--ink-soft); }
+  .cta-faces { display: flex; align-items: center; gap: 10px; }
+  .faces-row { display: flex; }
+  .face {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--blue-light);
+    border: 2px solid #fff; margin-left: -8px; display: flex;
+    align-items: center; justify-content: center; font-size: 14px;
+    color: var(--blue-mid); font-weight: 700; flex-shrink: 0;
+  }
+  .faces-row .face:first-child { margin-left: 0; }
+  .cta-faces span { font-size: 14px; color: var(--ink-soft); font-weight: 500; }
+
+  /* ── FOOTER ── */
+  footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: center; font-size: 13px; color: var(--ink-soft); }
+  footer a { color: var(--blue); text-decoration: none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .story-grid { grid-template-columns: 1fr; }
+    .story-card + .story-card { border-left: none; border-top: 1.5px solid var(--border); }
+    .features-grid { grid-template-columns: 1fr; }
+    .check-box { grid-template-columns: 1fr; padding: 36px 28px; gap: 32px; }
+    .cta-card { padding: 44px 28px; }
+    .hero-badge { font-size: 12px; gap: 8px; padding: 8px 16px; }
+  }
+
+  /* ── TWEAKS PANEL ── */
+  #tweaks-panel {
+    display: none; position: fixed; bottom: 24px; right: 24px;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 24px;
+    width: 270px; z-index: 999;
+    box-shadow: 0 8px 40px rgba(0,0,0,.13);
+    font-family: var(--ff);
+  }
+  #tweaks-panel.open { display: block; }
+  #tweaks-panel h4 { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+  .tweak-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+  .tweak-row label { font-size: 11px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
+  .tweak-row input[type=color] { width: 100%; height: 32px; border-radius: 6px; border: 1px solid var(--border); padding: 2px; cursor: pointer; }
+  .tweak-row select { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--ff); font-size: 13px; background: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav id="nav">
+  <div class="container inner">
+    <span class="logo">Lucine Smets<span>.</span></span>
+    <a href="https://calendly.com/lucines/30min" target="_blank" class="nav-cta">Réserver un appel →</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-bg">
+    <iframe
+      src="https://player.vimeo.com/video/1185203661?background=1&autoplay=1&loop=1&muted=1&autopause=0"
+      frameborder="0"
+      allow="autoplay; fullscreen"
+      id="hero-video-iframe"
+    ></iframe>
+  </div>
+
+  <div class="hero-content">
+    <span class="chip chip-white">✦ Business en ligne</span>
+    <h1>YouTube ne sera pas<br/><em>suffisant.</em></h1>
+    <p class="hero-sub">Pas parce que tu manques d'ambition mais parce que personne ne réussit sans le bon environnement, les bons outils, et les bonnes connaissances.</p>
+    <div class="hero-cta-row">
+      <a href="https://calendly.com/lucines/30min" target="_blank" class="btn-primary">Réserver mon appel gratuit</a>
+      <a href="#video" class="btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+        Regarder d'abord
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-badge">
+    <div class="hero-badge-dot"></div>
+    <span>+9 000 membres actifs dans la communauté</span>
+  </div>
+
+  <div class="scroll-hint">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </div>
+</section>
+
+<!-- ── VIDEO ── -->
+<section class="video-section" id="video">
+  <div class="container">
+    <div class="section-intro">
+      <span class="chip chip-blue">Commence par ça</span>
+      <h2>Regarde cette vidéo avant tout</h2>
+      <p>Je t'introduis l'entrepreneuriat digital, te partage mon parcours, comment j'ai construit un revenu en ligne et ce que ça peut changer pour toi.</p>
+    </div>
+    <div class="video-wrap">
+      <iframe
+        src="https://www.youtube.com/embed/TxWFKLM5yb8"
+        title="Présentation Lucine Smets"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- ── STORY ── -->
+<section class="story-section">
+  <div class="container">
+    <div class="section-intro">
+      <span class="chip chip-green" style="color: rgb(81, 73, 64);">Mon parcours</span>
+      <h2>Comment tout a changé</h2>
+    </div>
+    <div class="story-grid">
+      <div class="story-card">
+        <div class="story-num">01</div>
+        <div class="story-step">Le problème</div>
+        <div class="story-line"></div>
+        <h3>Regarder, apprendre, scroller mais sans résultat concret</h3>
+        <p>J'ai passé des mois sur YouTube, des forums, des formations gratuites. Je connaissais la théorie par coeur. Mais j'avais peur de passer à l'action et je ne savais pas par où commencer. Tu te reconnais ?</p>
+      </div>
+      <div class="story-card blue">
+        <div class="story-num">02</div>
+        <div class="story-step">Le déclic</div>
+        <div class="story-line"></div>
+        <h3>J'ai arrêté d'apprendre seule et trouvé le bon environnement</h3>
+        <p>La plateforme m'a donné une communauté de gens qui passent réellement à l'action, du mentorat en direct et de vrais outils. Pas juste de la théorie, c'est là où tout a changé.</p>
+      </div>
+      <div class="story-card">
+        <div class="story-num">03</div>
+        <div class="story-step">Le résultat</div>
+        <div class="story-line"></div>
+        <h3>Un business qui s'adapte à ta vie, pas l'inverse</h3>
+        <p>Aujourd'hui je construis des revenus en ligne, et j'aide d'autres personnes à faire de même, peu importe leur situation ou niveau de départ.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features-section">
+  <div class="container">
+    <div class="section-intro">
+      <span class="chip chip-blue">Ce que la plateforme offre</span>
+      <h2>Tout au même endroit</h2>
+      <p>Fini de piocher dans 10 ressources gratuites. La plateforme te donne une vision complète — structurée, vivante, et accompagnée.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon b">🎓</div>
+        <h3>Formations structurées</h3>
+        <p>Des cours vidéo étape par étape sur la création de revenus en ligne : investissements, marketing digital, trading : de l'analyse technique à la fondamentale et UGC. Conçus pour que les débutants comprennent.</p>
+        <span class="chip chip-blue feat-tag">À ton rythme</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon g">📡</div>
+        <h3>Sessions en direct</h3>
+        <p>Plus de 50h de live par semaine sur la plate-forme : analyses en temps réel, questions-réponses, apprentissage par l'action aux côtés de professionnels.</p>
+        <span class="chip chip-green feat-tag">Chaque semaine</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon g">⚙️</div>
+        <h3>Outils professionnels</h3>
+        <p>Outils d'analyse technique, idées de trades, trackers de portefeuille et journaling, outils de création de contenu,... Ce qui est utilisé par les membres qui génèrent déjà des résultats.</p>
+        <span class="chip chip-green feat-tag">Inclus</span>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon b">🤝</div>
+        <h3>Communauté active</h3>
+        <p>+9 000 membres qui partagent leurs stratégies, victoires et soutien. Tu n'es pas isolé, la responsabilité collective est au cœur de la plateforme.</p>
+        <span class="chip chip-blue feat-tag">Actif chaque jour</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHECKLIST ── -->
+<section class="check-section">
+  <div class="container">
+    <div class="check-box">
+      <div class="check-left">
+        <span class="chip chip-white" style="align-self:flex-start;">Cette page est pour toi si…</span>
+        <h2>Si tu veux arrêter de regarder et commencer à construire</h2>
+        <p>Tu n'as pas besoin d'expérience. Tu n'as pas besoin de milliers d'euros. Tu as besoin de la bonne structure et de quelqu'un pour t'accompagner.</p>
+        <a href="https://calendly.com/lucines/30min" target="_blank" class="check-cta">Je réserve mon appel →</a>
+      </div>
+      <div class="check-list">
+        <div class="check-item">
+          <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p>Tu as essayé d'apprendre en ligne mais tu as peur d'échouer</p>
+        </div>
+        <div class="check-item">
+          <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p>Tu veux créer un revenu en ligne mais tu ne sais pas par où commencer</p>
+        </div>
+        <div class="check-item">
+          <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p>Tu veux développer de nouvelles sources de revenus passives</p>
+        </div>
+        <div class="check-item">
+          <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p>Tu veux investir dans toi-même avec le bon accompagnement</p>
+        </div>
+        <div class="check-item">
+          <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p>Tu cherches une communauté qui avance dans la même direction que toi</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-card">
+      <span class="chip chip-green" style="color: rgb(81, 73, 64);">Appel découverte gratuit — 30 min</span>
+      <h2>Parlons de <em>ton</em> projet,<br/>sans engagement</h2>
+      <p>On fait le point sur où tu en es, où tu veux aller, et si la plateforme peut t'aider à y arriver.</p>
+      <div class="cta-faces">
+        <div class="faces-row">
+          <div class="face">L</div>
+          <div class="face">A</div>
+          <div class="face">M</div>
+          <div class="face">T</div>
+        </div>
+        <span>+20 000 personnes ont déjà franchi le pas</span>
+      </div>
+      <a href="https://calendly.com/lucines/30min" target="_blank" class="btn-book">Réserver mon appel sur Calendly →</a>
+      <p class="cta-note">30 minutes. Aucun engagement. Une conversation honnête.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container">
+    <p>© 2026 Lucine Smets · <a href="https://lucinesmets.com" target="_blank">lucinesmets.com</a> </p>
+  </div>
+</footer>
+
+<!-- ── TWEAKS ── -->
+<div id="tweaks-panel">
+  <h4>Tweaks</h4>
+  <div class="tweak-row">
+    <label>Couleur bleue</label>
+    <input type="color" id="tw-blue" value="#2563eb"/>
+  </div>
+  <div class="tweak-row">
+    <label>Couleur verte</label>
+    <input type="color" id="tw-green" value="#16a34a"/>
+  </div>
+  <div class="tweak-row">
+    <label>Police</label>
+    <select id="tw-font">
+      <option value="'Outfit', sans-serif">Outfit (défaut)</option>
+      <option value="'DM Sans', sans-serif">DM Sans</option>
+      <option value="'Sora', sans-serif">Sora</option>
+      <option value="'Plus Jakarta Sans', sans-serif">Plus Jakarta Sans</option>
+    </select>
+  </div>
+  <div class="tweak-row">
+    <label>Opacité vidéo hero</label>
+    <select id="tw-vid-opacity">
+      <option value="0.45">Moyenne (défaut)</option>
+      <option value="0.25">Légère</option>
+      <option value="0.65">Forte</option>
+    </select>
+  </div>
+</div>
+
+<script>
+  // Nav scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  }, {passive: true});
+
+  // Tweaks
+  window.addEventListener('message', e => {
+    if (e.data?.type === '__activate_edit_mode')   document.getElementById('tweaks-panel').classList.add('open');
+    if (e.data?.type === '__deactivate_edit_mode') document.getElementById('tweaks-panel').classList.remove('open');
+  });
+  window.parent.postMessage({type: '__edit_mode_available'}, '*');
+
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "blue": "#524840",
+    "green": "#eceadb",
+    "font": "'Outfit', sans-serif",
+    "vidOpacity": "0.45"
+  }/*EDITMODE-END*/;
+
+  function applyTweaks(t) {
+    const r = document.documentElement;
+    r.style.setProperty('--blue', t.blue);
+    r.style.setProperty('--green', t.green);
+    // Derived colors — recomputed in JS since color-mix reads the updated var
+    // (CSS color-mix auto-updates, so just setting the base vars is enough)
+    document.body.style.fontFamily = t.font;
+    const vid = document.querySelector('.hero-bg video');
+    if (vid) vid.style.opacity = t.vidOpacity;
+  }
+  applyTweaks(TWEAK_DEFAULTS);
+
+  document.getElementById('tw-blue').value = TWEAK_DEFAULTS.blue;
+  document.getElementById('tw-green').value = TWEAK_DEFAULTS.green;
+  document.getElementById('tw-font').value = TWEAK_DEFAULTS.font;
+  document.getElementById('tw-vid-opacity').value = TWEAK_DEFAULTS.vidOpacity;
+
+  document.getElementById('tw-blue').addEventListener('input', e => {
+    document.documentElement.style.setProperty('--blue', e.target.value);
+    window.parent.postMessage({type:'__edit_mode_set_keys', edits:{blue:e.target.value}}, '*');
+  });
+  document.getElementById('tw-green').addEventListener('input', e => {
+    document.documentElement.style.setProperty('--green', e.target.value);
+    window.parent.postMessage({type:'__edit_mode_set_keys', edits:{green:e.target.value}}, '*');
+  });
+  document.getElementById('tw-font').addEventListener('change', e => {
+    document.body.style.fontFamily = e.target.value;
+    const fonts = {"'DM Sans', sans-serif":"DM+Sans:wght@400;700;800","'Sora', sans-serif":"Sora:wght@400;700;800","'Plus Jakarta Sans', sans-serif":"Plus+Jakarta+Sans:wght@400;700;800"};
+    if (fonts[e.target.value]) {
+      const l = document.createElement('link'); l.rel = 'stylesheet';
+      l.href = `https://fonts.googleapis.com/css2?family=${fonts[e.target.value]}&display=swap`;
+      document.head.appendChild(l);
+    }
+    window.parent.postMessage({type:'__edit_mode_set_keys', edits:{font:e.target.value}}, '*');
+  });
+  document.getElementById('tw-vid-opacity').addEventListener('change', e => {
+    const vid = document.querySelector('.hero-bg video');
+    if (vid) vid.style.opacity = e.target.value;
+    window.parent.postMessage({type:'__edit_mode_set_keys', edits:{vidOpacity:e.target.value}}, '*');
+  });
+</script>
+</body>
+</html>
