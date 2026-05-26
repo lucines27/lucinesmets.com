@@ -203,6 +203,250 @@
   .story-card p { font-size: 15px; color: var(--ink-soft); line-height: 1.65; }
   .story-card.blue p { color: rgba(255,255,255,.78); }
 
+  /* ── CTA premium line ── */
+  .cta-line {
+    font-size: 16px !important;
+    color: var(--ink-soft);
+    max-width: 460px;
+    line-height: 1.7;
+    font-weight: 400;
+    text-wrap: pretty;
+    padding-top: 4px;
+  }
+  .cta-line em {
+    font-style: italic;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ── ABOUT SECTION ── */
+  .about-section {
+    padding: 110px 0;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: 72px;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .about-photo {
+    position: relative;
+    aspect-ratio: 4/5;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: color-mix(in oklch, var(--blue) 12%, white);
+  }
+  .about-photo .ph-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px;
+    color: color-mix(in oklch, var(--blue) 50%, white);
+    font-size: 11px;
+    font-family: monospace;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .about-photo .ph-inner svg { opacity: 0.5; }
+  .about-photo .ph-inner small {
+    display: block; margin-top: 2px;
+    font-size: 10px; opacity: 0.7;
+  }
+  .about-text {
+    display: flex; flex-direction: column;
+    gap: 22px;
+  }
+  .about-eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .about-text h2 {
+    font-size: clamp(32px, 4vw, 46px);
+    font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+  .about-body {
+    display: flex; flex-direction: column;
+    gap: 18px;
+    color: var(--ink-soft);
+    font-size: 16.5px;
+    line-height: 1.75;
+    text-wrap: pretty;
+  }
+  .about-body p strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .about-signature {
+    display: flex; flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .about-signature .name {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    font-style: italic;
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  .about-signature .role {
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: .02em;
+  }
+
+  /* ── MOMENTS / GALLERY ── */
+  .moments-section {
+    padding: 110px 0;
+    background: var(--surface);
+  }
+  .moments-head {
+    text-align: center;
+    max-width: 580px;
+    margin: 0 auto 64px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 14px;
+  }
+  .moments-head .eyebrow {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .moments-head h2 {
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  .moments-head p {
+    font-size: 17px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    text-wrap: pretty;
+    max-width: 480px;
+  }
+
+  /* Asymmetric gallery — 12-col grid */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 80px;
+    gap: 16px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+  .gal {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: color-mix(in oklch, var(--blue) 10%, white);
+    transition: transform .35s ease, box-shadow .35s ease;
+  }
+  .gal:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,.07); }
+  .gal-ph {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
+    color: color-mix(in oklch, var(--blue) 50%, white);
+    font-size: 10px; font-family: monospace;
+    letter-spacing: .12em; text-transform: uppercase; text-align: center;
+  }
+  .gal-ph svg { opacity: 0.45; }
+  .gal-ph small { font-size: 9px; opacity: 0.7; }
+  /* Asymmetric placement (desktop) */
+  .gal:nth-child(1) { grid-column: span 5; grid-row: span 5; }
+  .gal:nth-child(2) { grid-column: span 4; grid-row: span 3; }
+  .gal:nth-child(3) { grid-column: span 3; grid-row: span 4; }
+  .gal:nth-child(4) { grid-column: span 4; grid-row: span 4; background: color-mix(in oklch, var(--green) 35%, white); }
+  .gal:nth-child(5) { grid-column: span 5; grid-row: span 3; background: color-mix(in oklch, var(--blue) 18%, white); }
+  .gal:nth-child(6) { grid-column: span 3; grid-row: span 3; background: color-mix(in oklch, var(--green) 25%, white); }
+
+  /* Editorial captions — placed beside / under photos */
+  .moments-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px 24px;
+    max-width: 1060px;
+    margin: 0 auto;
+    align-items: start;
+  }
+  .moments-cell { display: flex; flex-direction: column; gap: 12px; }
+  .moments-cell .gal {
+    position: relative;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: color-mix(in oklch, var(--blue) 10%, white);
+    transition: transform .35s ease, box-shadow .35s ease;
+  }
+  .moments-cell .gal:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,.07); }
+  .caption {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    font-weight: 400;
+    letter-spacing: .005em;
+    padding: 2px 4px 0;
+    min-height: 22px;
+    opacity: 0.85;
+    text-wrap: pretty;
+  }
+  .caption::before {
+    content: '— ';
+    color: color-mix(in oklch, var(--blue) 40%, white);
+    margin-right: 2px;
+  }
+  .caption:empty::after {
+    content: 'ajouter une légende';
+    font-family: monospace;
+    font-style: normal;
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: color-mix(in oklch, var(--blue) 30%, white);
+    opacity: 0.55;
+  }
+  .caption:empty::before { display: none; }
+
+  /* Cell shapes — asymmetric editorial grid */
+  .m-1 { grid-column: span 7; }
+  .m-1 .gal { aspect-ratio: 4/3; }
+  .m-2 { grid-column: span 5; }
+  .m-2 .gal { aspect-ratio: 4/5; background: color-mix(in oklch, var(--green) 30%, white); }
+  .m-3 { grid-column: span 4; }
+  .m-3 .gal { aspect-ratio: 1/1; background: color-mix(in oklch, var(--blue) 16%, white); }
+  .m-4 { grid-column: span 4; }
+  .m-4 .gal { aspect-ratio: 1/1; }
+  .m-5 { grid-column: span 4; }
+  .m-5 .gal { aspect-ratio: 1/1; background: color-mix(in oklch, var(--green) 22%, white); }
+  .m-6 { grid-column: span 6; margin-top: 24px; }
+  .m-6 .gal { aspect-ratio: 16/10; background: color-mix(in oklch, var(--blue) 14%, white); }
+  .m-7 { grid-column: span 6; margin-top: 24px; }
+  .m-7 .gal { aspect-ratio: 16/10; background: color-mix(in oklch, var(--green) 18%, white); }
+  .section-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 0;
+  }
+
   /* ── FEATURES ── */
   .features-section { padding: 80px 0; }
   .features-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
@@ -288,6 +532,16 @@
 
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
+    .about-section { padding: 70px 0; }
+    .about-grid { grid-template-columns: 1fr; gap: 36px; }
+    .about-photo { max-width: 320px; aspect-ratio: 4/5; margin: 0 auto; }
+    .moments-section { padding: 70px 0; }
+    .moments-grid { grid-template-columns: repeat(2, 1fr); gap: 14px 12px; }
+    .m-1 { grid-column: span 2; }
+    .m-2 { grid-column: span 2; }
+    .m-3, .m-4, .m-5 { grid-column: span 1; }
+    .m-3 .gal, .m-4 .gal, .m-5 .gal { aspect-ratio: 1/1; }
+    .m-6, .m-7 { grid-column: span 2; margin-top: 0; }
     .story-grid { grid-template-columns: 1fr; }
     .story-card + .story-card { border-left: none; border-top: 1.5px solid var(--border); }
     .features-grid { grid-template-columns: 1fr; }
@@ -319,7 +573,7 @@
 <nav id="nav">
   <div class="container inner">
     <span class="logo">Lucine Smets<span>.</span></span>
-    <a href="https://calendly.com/lucines/30min" target="_blank" class="nav-cta">Réserver un appel →</a>
+    <a href="#video" class="nav-cta">Voir la vidéo →</a>
   </div>
 </nav>
 
@@ -335,21 +589,23 @@
   </div>
 
   <div class="hero-content">
-    <span class="chip chip-white">✦ Business en ligne</span>
-    <h1>YouTube ne sera pas<br/><em>suffisant.</em></h1>
-    <p class="hero-sub">Pas parce que tu manques d'ambition mais parce que personne ne réussit sans le bon environnement, les bons outils, et les bonnes connaissances.</p>
+    <span class="chip chip-white">✨ Écosystème digital</span>
+    <h1>Le problème aujourd'hui,<br/>ce n'est plus <em>l'information.</em></h1>
+    <p class="hero-sub">Tout le monde a accès a l'information mais tout le monde ne réussit pas. La difficulté, ce n'est pas d'apprendre. C'est de savoir quoi faire, comment et avec qui.</p>
     <div class="hero-cta-row">
-      <a href="https://calendly.com/lucines/30min" target="_blank" class="btn-primary">Réserver mon appel gratuit</a>
-      <a href="#video" class="btn-ghost">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-        Regarder d'abord
+      <a href="#video" class="btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-3px;margin-right:4px;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+        Regarder la vidéo gratuite
+      </a>
+      <a href="https://calendly.com/lucines/30min" target="_blank" class="btn-ghost">
+        ou réserver un appel →
       </a>
     </div>
   </div>
 
   <div class="hero-badge">
     <div class="hero-badge-dot"></div>
-    <span>+9 000 membres actifs dans la communauté</span>
+    <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-3px;margin-right:4px;"><polygon points="7 4 20 12 7 20 7 4" fill="currentColor"/></svg>Vidéo de présentation — 12 min</span>
   </div>
 
   <div class="scroll-hint">
@@ -361,9 +617,9 @@
 <section class="video-section" id="video">
   <div class="container">
     <div class="section-intro">
-      <span class="chip chip-blue">Commence par ça</span>
+      <span class="chip chip-blue">Commence par ici</span>
       <h2>Regarde cette vidéo avant tout</h2>
-      <p>Je t'introduis l'entrepreneuriat digital, te partage mon parcours, comment j'ai construit un revenu en ligne et ce que ça peut changer pour toi.</p>
+      <p>Pas une vidéo de vente. Je te partage mon parcours, pourquoi je me suis lancée dans le digital, et ce que j'aurais aimé comprendre plus tôt. À regarder avant tout le reste.</p>
     </div>
     <div class="video-wrap">
       <iframe
@@ -389,22 +645,47 @@
         <div class="story-num">01</div>
         <div class="story-step">Le problème</div>
         <div class="story-line"></div>
-        <h3>Regarder, apprendre, scroller mais sans résultat concret</h3>
-        <p>J'ai passé des mois sur YouTube, des forums, des formations gratuites. Je connaissais la théorie par coeur. Mais j'avais peur de passer à l'action et je ne savais pas par où commencer. Tu te reconnais ?</p>
+        <h3>Regarder, apprendre, scroller : mais ne jamais passer à l'action</h3>
+        <p>J'ai passé des mois à consommer du contenu : YouTube, podcasts, formations gratuites. J'avais l'impression d'avancer… mais en réalité je tournais en rond. Je connaissais la théorie, mais j'avais peur de me lancer, peur de mal faire, peur d'échouer. Tu te reconnais ?</p>
       </div>
       <div class="story-card blue">
         <div class="story-num">02</div>
         <div class="story-step">Le déclic</div>
         <div class="story-line"></div>
-        <h3>J'ai arrêté d'apprendre seule et trouvé le bon environnement</h3>
-        <p>La plateforme m'a donné une communauté de gens qui passent réellement à l'action, du mentorat en direct et de vrais outils. Pas juste de la théorie, c'est là où tout a changé.</p>
+        <h3>J'ai arrêté d'apprendre seule : et j'ai rejoint un environnement</h3>
+        <p>Le vrai déclic, ce n'était pas «une formation de plus». C'était d'être entourée de personnes qui faisaient vraiment les choses, d'avoir un cadre clair, et de pouvoir poser mes questions en direct. C'est là que tout a commencé à bouger.</p>
       </div>
       <div class="story-card">
         <div class="story-num">03</div>
         <div class="story-step">Le résultat</div>
         <div class="story-line"></div>
-        <h3>Un business qui s'adapte à ta vie, pas l'inverse</h3>
-        <p>Aujourd'hui je construis des revenus en ligne, et j'aide d'autres personnes à faire de même, peu importe leur situation ou niveau de départ.</p>
+        <h3>Une activité digitale qui s'adapte à ma vie, pas l'inverse</h3>
+        <p>Aujourd'hui, je développe des compétences que personne ne peut me reprendre. Et j'accompagne d'autres personnes à faire pareil peu importe leur âge, leur niveau, ou d'où elles partent.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section class="about-section">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-photo">
+        <img src="lucine.jpeg" alt="Lucine Smets" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; display: block"/>
+      </div>
+      <div class="about-text">
+        <span class="about-eyebrow">Derrière cette page</span>
+        <h2>Une vraie personne, un vrai parcours.</h2>
+        <div class="about-body">
+          <p>Je m'appelle Lucine, et je me suis intéressée au business digital très jeune.</p>
+          <p>Comme beaucoup de personnes, j'ai passé énormément de temps à regarder du contenu, apprendre seule, essayer de comprendre comment fonctionnait réellement le monde du digital… sans toujours savoir quoi faire concrètement.</p>
+          <p>Avec le temps, j'ai compris que le plus important n'était pas simplement l'information. <strong>C'était l'environnement, les personnes autour de soi, la structure et la capacité à rester constant.</strong></p>
+          <p>Aujourd'hui, ce qui me passionne, c'est aider des personnes perdues dans toutes ces informations à trouver une direction plus claire, développer des compétences utiles et avancer dans un environnement sain.</p>
+        </div>
+        <div class="about-signature">
+          <span class="name">Lucine Smets</span>
+          <span class="role">Entrepreneure digitale & créatrice de contenu</span>
+        </div>
       </div>
     </div>
   </div>
@@ -414,35 +695,99 @@
 <section class="features-section">
   <div class="container">
     <div class="section-intro">
-      <span class="chip chip-blue">Ce que la plateforme offre</span>
-      <h2>Tout au même endroit</h2>
-      <p>Fini de piocher dans 10 ressources gratuites. La plateforme te donne une vision complète — structurée, vivante, et accompagnée.</p>
+      <span class="chip chip-blue">L'écosystème</span>
+      <h2>Ce qui change vraiment quand tu n'es plus seul·e</h2>
+      <p>Ce ne sont pas des outils en plus. C'est un environnement qui te donne ce qui manque quand on apprend seul·e sur Internet : la structure, les bonnes personnes, et la confiance pour avancer.</p>
     </div>
     <div class="features-grid">
       <div class="feat-card">
-        <div class="feat-icon b">🎓</div>
-        <h3>Formations structurées</h3>
-        <p>Des cours vidéo étape par étape sur la création de revenus en ligne : investissements, marketing digital, trading : de l'analyse technique à la fondamentale et UGC. Conçus pour que les débutants comprennent.</p>
+        <div class="feat-icon b">🧭</div>
+        <h3>Avoir une vraie structure</h3>
+        <p>Plus besoin de piocher à droite à gauche. Un chemin clair, pensé pour les débutants, autour des compétences digitales modernes : entrepreneuriat en ligne, création de contenu, investissement et compréhension des marchés. Tu sais enfin quoi faire, et dans quel ordre.</p>
         <span class="chip chip-blue feat-tag">À ton rythme</span>
       </div>
       <div class="feat-card">
-        <div class="feat-icon g">📡</div>
-        <h3>Sessions en direct</h3>
-        <p>Plus de 50h de live par semaine sur la plate-forme : analyses en temps réel, questions-réponses, apprentissage par l'action aux côtés de professionnels.</p>
+        <div class="feat-icon g">👥</div>
+        <h3>Ne plus apprendre seul·e</h3>
+        <p>Plus de 50h de sessions en direct par semaine : des personnes qui pratiquent vraiment, qui répondent à tes questions, qui montrent leur écran. Tu apprends en regardant des gens faire — pas en lisant des PDF.</p>
         <span class="chip chip-green feat-tag">Chaque semaine</span>
       </div>
       <div class="feat-card">
-        <div class="feat-icon g">⚙️</div>
-        <h3>Outils professionnels</h3>
-        <p>Outils d'analyse technique, idées de trades, trackers de portefeuille et journaling, outils de création de contenu,... Ce qui est utilisé par les membres qui génèrent déjà des résultats.</p>
+        <div class="feat-icon g">🛠️</div>
+        <h3>Gagner du temps et éviter les erreurs</h3>
+        <p>Quand on commence seul·e, on perd énormément de temps à chercher quoi utiliser, quoi apprendre et quoi croire. Ici, tu avances avec des ressources déjà utilisées au quotidien par des personnes qui pratiquent réellement.</p>
         <span class="chip chip-green feat-tag">Inclus</span>
       </div>
       <div class="feat-card">
-        <div class="feat-icon b">🤝</div>
-        <h3>Communauté active</h3>
-        <p>+9 000 membres qui partagent leurs stratégies, victoires et soutien. Tu n'es pas isolé, la responsabilité collective est au cœur de la plateforme.</p>
-        <span class="chip chip-blue feat-tag">Actif chaque jour</span>
+        <div class="feat-icon b">🌱</div>
+        <h3>S'entourer des bonnes personnes</h3>
+        <p>Des milliers de personnes avancent aujourd'hui dans cet environnement. Quand tu doutes, quand tu bloques, quand tu célèbres une première victoire — tu n'es plus jamais isolé·e. C'est probablement le truc le plus sous-estimé.</p>
+        <span class="chip chip-blue feat-tag">Au quotidien</span>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MOMENTS & ENVIRONNEMENT ── -->
+<section class="moments-section">
+  <div class="container">
+    <div class="moments-head">
+      <span class="eyebrow">Carnet</span>
+      <h2>Ce que les gens trouvent ici</h2>
+      <p>Parfois, ce qui change tout, ce n'est pas une information de plus. C'est simplement d'être entouré·e des bonnes personnes.</p>
+    </div>
+
+    <div class="moments-grid">
+
+      <div class="moments-cell m-1">
+        <div class="gal">
+          <img src="carnet-2.png" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; display: block"/>
+        </div>
+        <p class="caption" contenteditable="true">En direction Paris pour une formation groupée (2025)</p>
+      </div>
+
+      <div class="moments-cell m-2">
+        <div class="gal">
+          <img src="carnet-1.png" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; display: block"/>
+        </div>
+        <p class="caption" contenteditable="true">Depuis l'hôtel Atlantis aux Bahamas (2025)</p>
+      </div>
+
+      <div class="moments-cell m-3">
+        <div class="gal">
+          <img src="carnet-5.png" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; display: block"/>
+        </div>
+        <p class="caption" contenteditable="true">Récompense des membres (2025)</p>
+      </div>
+
+      <div class="moments-cell m-4">
+        <div class="gal">
+          <img src="carnet-6.png" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 55% 50%; display: block"/>
+        </div>
+        <p class="caption" contenteditable="true">On travaille depuis l'aéroport (2024)</p>
+      </div>
+
+      <div class="moments-cell m-5">
+        <div class="gal">
+          <img src="carnet-7.png" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; display: block"/>
+        </div>
+        <p class="caption" contenteditable="true">Formation pour les membres (2026)</p>
+      </div>
+
+      <div class="moments-cell m-6">
+        <div class="gal">
+          <img src="carnet-3.png" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; display: block"/>
+        </div>
+        <p class="caption" contenteditable="true">Avec un coati dans les montagnes mexicaines (2024)</p>
+      </div>
+
+      <div class="moments-cell m-7">
+        <div class="gal">
+          <img src="carnet-4.png" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; display: block"/>
+        </div>
+        <p class="caption" contenteditable="true">Notre propre marque de vêtements (2025)</p>
+      </div>
+
     </div>
   </div>
 </section>
@@ -453,30 +798,30 @@
     <div class="check-box">
       <div class="check-left">
         <span class="chip chip-white" style="align-self:flex-start;">Cette page est pour toi si…</span>
-        <h2>Si tu veux arrêter de regarder et commencer à construire</h2>
-        <p>Tu n'as pas besoin d'expérience. Tu n'as pas besoin de milliers d'euros. Tu as besoin de la bonne structure et de quelqu'un pour t'accompagner.</p>
-        <a href="https://calendly.com/lucines/30min" target="_blank" class="check-cta">Je réserve mon appel →</a>
+        <h2>Si tu veux arrêter de juste regarder, et commencer à construire</h2>
+        <p>Tu n'as pas besoin d'être un·e expert·e. Tu n'as pas besoin de milliers d'euros. Tu as besoin du bon cadre et des bonnes personnes autour de toi.</p>
+        <a href="https://calendly.com/lucines/30min" target="_blank" class="check-cta">Réserver un appel découverte →</a>
       </div>
       <div class="check-list">
         <div class="check-item">
           <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <p>Tu as essayé d'apprendre en ligne mais tu as peur d'échouer</p>
+          <p>Tu consommes du contenu depuis des mois mais tu n'as toujours pas osé te lancer</p>
         </div>
         <div class="check-item">
           <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <p>Tu veux créer un revenu en ligne mais tu ne sais pas par où commencer</p>
+          <p>Tu veux développer de vraies compétences digitales, mais tu ne sais pas par où commencer</p>
         </div>
         <div class="check-item">
           <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <p>Tu veux développer de nouvelles sources de revenus passives</p>
+          <p>Tu veux comprendre les nouveaux modèles du digital et faire travailler ton temps autrement</p>
         </div>
         <div class="check-item">
           <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <p>Tu veux investir dans toi-même avec le bon accompagnement</p>
+          <p>Tu es prêt·e à t'investir, à condition d'être bien accompagné·e</p>
         </div>
         <div class="check-item">
           <div class="check-mark"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <p>Tu cherches une communauté qui avance dans la même direction que toi</p>
+          <p>Tu cherches un environnement qui avance dans la même direction que toi</p>
         </div>
       </div>
     </div>
@@ -488,19 +833,11 @@
   <div class="container">
     <div class="cta-card">
       <span class="chip chip-green" style="color: rgb(81, 73, 64);">Appel découverte gratuit — 30 min</span>
-      <h2>Parlons de <em>ton</em> projet,<br/>sans engagement</h2>
-      <p>On fait le point sur où tu en es, où tu veux aller, et si la plateforme peut t'aider à y arriver.</p>
-      <div class="cta-faces">
-        <div class="faces-row">
-          <div class="face">L</div>
-          <div class="face">A</div>
-          <div class="face">M</div>
-          <div class="face">T</div>
-        </div>
-        <span>+20 000 personnes ont déjà franchi le pas</span>
-      </div>
-      <a href="https://calendly.com/lucines/30min" target="_blank" class="btn-book">Réserver mon appel sur Calendly →</a>
-      <p class="cta-note">30 minutes. Aucun engagement. Une conversation honnête.</p>
+      <h2>Faisons le point sur <em>toi</em>,<br/>sans pression</h2>
+      <p>On regarde ensemble où tu en es aujourd'hui, ce qui te bloque, et quel chemin pourrait te correspondre. Pas un appel de vente — une vraie conversation.</p>
+      <p class="cta-line">Le plus important pendant ces 30 minutes :<br/><em>voir si cet environnement te correspond réellement.</em></p>
+      <a href="https://calendly.com/lucines/30min" target="_blank" class="btn-book">Réserver mon appel découverte →</a>
+      <p class="cta-note">30 minutes — sans pression, sans pitch, sans engagement.</p>
     </div>
   </div>
 </section>
