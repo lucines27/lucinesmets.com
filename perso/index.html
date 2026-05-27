@@ -5366,8 +5366,8 @@ async function fetchWhoopData(){
   const btn=document.getElementById('whoop-sync-btn');
   if(btn){btn.disabled=true;btn.textContent='↻ Sync…';}
   const [recovery,sleep]=await Promise.all([
-    whoopFetch('/v2/recovery?limit=1'),
-    whoopFetch('/v2/activity/sleep?limit=1')
+    whoopFetch('/developer/v1/recovery/collection?limit=1'),
+    whoopFetch('/developer/v1/activity/sleep/collection?limit=1')
   ]);
   const cache=store.get('whoop_cache',{});
   if(recovery?.records?.[0]){
@@ -5409,14 +5409,20 @@ function renderWhoopWidget(){
   const slp=c.sleepPct?c.sleepPct+'%':'--';
   const recNum=parseFloat(rec)||0;
   const stroke=recNum>=67?'#0d9488':recNum>=34?'#f59e0b':'#ef4444';
-  const recLbl=recNum>=67?'Excellente récupération':recNum>=34?'Récupération modérée':rec==='--'?'En attente de sync':'Récupération faible';
+  const recLbl=recNum>=67?'Excellente récupération':recNum>=34?'Récupération modérée':rec==='--'?'':' Récupération faible';
+  const noData=rec==='--';
   const circ=2*Math.PI*30;
-  const off=rec==='--'?circ:circ*(1-recNum/100);
+  const off=noData?circ:circ*(1-recNum/100);
   cont.innerHTML=`<div class="card">
     <div class="whoop-header">
       <span class="whoop-lbl">WHOOP</span>
       <span class="whoop-dot">Connecté</span>
     </div>
+    ${noData?`<div style="text-align:center;padding:14px 0 8px">
+      <div style="font-size:24px;margin-bottom:8px">⌚</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">Pas encore de données</div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.5">Porte ta montre WHOOP et synchronise<br>dans l'appli après ton prochain réveil</div>
+    </div>`:`
     <div class="whoop-grid">
       <div class="whoop-ring-wrap">
         <svg viewBox="0 0 72 72">
@@ -5431,7 +5437,7 @@ function renderWhoopWidget(){
       <div class="whoop-metric"><div class="whoop-metric-val">${rhr}</div><div class="whoop-metric-lbl">BPM repos</div></div>
       <div class="whoop-metric"><div class="whoop-metric-val">${slp}</div><div class="whoop-metric-lbl">Sommeil</div></div>
     </div>
-    <div class="whoop-rec-lbl">${recLbl}</div>
+    <div class="whoop-rec-lbl">${recLbl}</div>`}
     <button class="whoop-sync-btn" id="whoop-sync-btn" onclick="fetchWhoopData()">↻ Synchroniser</button>
   </div>`;
 }
