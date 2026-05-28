@@ -5301,6 +5301,7 @@ async function exchangeWhoopCode(code,state){
         refresh_token:data.refresh_token,
         expires_at:Date.now()+(data.expires_in||3600)*1000
       });
+      store.set('whoop_needs_reconnect',false);
       // Clean URL if needed
       if(window.location.search)window.history.replaceState({},'',window.location.pathname);
       toast('WHOOP connecté ✓');
@@ -5346,8 +5347,9 @@ async function whoopFetch(path){
   let tokens=store.get('whoop_tokens',null);
   if(!tokens?.access_token)return null;
   if(tokens.expires_at&&Date.now()>tokens.expires_at-60000){
+    if(!tokens.refresh_token){store.set('whoop_needs_reconnect',true);return null;}
     const ok=await refreshWhoopToken();
-    if(!ok)return null;
+    if(!ok){store.set('whoop_needs_reconnect',true);return null;}
     tokens=store.get('whoop_tokens',null);
   }
   try{
@@ -5366,8 +5368,8 @@ async function fetchWhoopData(){
   const btn=document.getElementById('whoop-sync-btn');
   if(btn){btn.disabled=true;btn.textContent='↻ Sync…';}
   const [recovery,sleep]=await Promise.all([
-    whoopFetch('/developer/v1/recovery/collection?limit=1'),
-    whoopFetch('/developer/v1/activity/sleep/collection?limit=1')
+    whoopFetch('/developer/v2/recovery?limit=1'),
+    whoopFetch('/developer/v2/activity/sleep?limit=1')
   ]);
   const cache=store.get('whoop_cache',{});
   if(recovery?.records?.[0]){
@@ -5385,7 +5387,11 @@ async function fetchWhoopData(){
   store.set('whoop_cache',cache);
   renderWhoopWidget();
   if(btn){btn.disabled=false;btn.textContent='↻ Synchroniser';}
-  toast('WHOOP synchronisé ✓');
+  if(!recovery&&!sleep&&store.get('whoop_needs_reconnect',false)){
+    toast('Token expiré — reconnecte WHOOP dans Réglages');
+  }else{
+    toast('WHOOP synchronisé ✓');
+  }
 }
 
 function renderWhoopWidget(){
@@ -5398,6 +5404,19 @@ function renderWhoopWidget(){
         <div style="font-size:28px;margin-bottom:8px">⌚</div>
         <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">WHOOP non connecté</div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Configure Client ID + Secret dans Réglages puis connecte-toi</div>
+      </div>
+    </div>`;
+    return;
+  }
+  const needsReconnect=store.get('whoop_needs_reconnect',false)||(tokens.expires_at&&Date.now()>tokens.expires_at);
+  if(needsReconnect){
+    cont.innerHTML=`<div class="card">
+      <div class="whoop-header"><span class="whoop-lbl">WHOOP</span><span style="font-size:10px;color:var(--red)">Token expiré</span></div>
+      <div style="text-align:center;padding:12px 0 8px">
+        <div style="font-size:24px;margin-bottom:8px">🔑</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">Session expirée</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.5">Reconnecte WHOOP dans Réglages<br>pour récupérer tes données</div>
+        <button class="whoop-sync-btn" onclick="openSettings();setTimeout(()=>document.getElementById('whoop-connect-btn')?.scrollIntoView({behavior:'smooth'}),300)" style="font-size:11px">→ Aller aux Réglages</button>
       </div>
     </div>`;
     return;
