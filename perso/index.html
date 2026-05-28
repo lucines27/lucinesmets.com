@@ -5813,10 +5813,11 @@ const SANTE_CONFIG=[
    getColor:v=>!v?'neutral':v>=110?'green':v>=70?'orange':'red',
    getPct:v=>Math.min(100,v/130*100),
    getMsg:v=>!v?'':v>=110?'Objectif atteint ✓':`Encore ${110-v} g`},
-  {id:'sleep',emoji:'😴',label:'Sommeil',unit:'h',step:0.5,
+  {id:'sleep',emoji:'😴',label:'Sommeil',unit:'',step:0.5,
+   fmt:v=>{if(!v)return'—';const h=Math.floor(v);const m=Math.round((v-h)*60);return h+'h'+String(m).padStart(2,'0');},
    getColor:v=>!v?'neutral':v>=7?'green':v>=6?'orange':'red',
    getPct:v=>Math.min(100,v/9*100),
-   getMsg:v=>!v?'':v>=7?'Objectif atteint ✓':`Encore ${(7-v).toFixed(1)}h`},
+   getMsg:v=>{if(!v)return'';if(v>=7)return'Objectif atteint ✓';const rem=7-v;const rh=Math.floor(rem);const rm=Math.round((rem-rh)*60);return'Encore '+(rh?rh+'h':'')+String(rm).padStart(2,'0')+'min';}},
   {id:'sucre',emoji:'🍬',label:'Sucre',unit:'g',step:1,
    getColor:v=>!v?'neutral':v<25?'green':v<50?'orange':'red',
    getPct:v=>Math.min(100,v/50*100),
@@ -5847,7 +5848,7 @@ function renderSanteCards(){
     card.innerHTML=`
       <div class="sc-emoji">${m.emoji}</div>
       <div class="sc-lbl">${m.label}</div>
-      <div class="sc-val" id="sante-val-${m.id}" style="color:${c.val}" onclick="santeEdit('${m.id}')">${v||'—'}</div>
+      <div class="sc-val" id="sante-val-${m.id}" style="color:${c.val}" onclick="santeEdit('${m.id}')">${m.fmt?m.fmt(v):(v||'—')}</div>
       <div class="sc-unit">${m.unit}</div>
       <div class="sc-msg" id="sante-msg-${m.id}" style="color:${msg?c.msg:'transparent'}">${msg||'·'}</div>
       <div class="sc-bar-wrap"><div class="sc-bar-fill" id="sante-bar-${m.id}" style="width:${pct}%;background:${c.bar}"></div></div>`;
@@ -6015,7 +6016,7 @@ function renderSanteHistory(){
       const chips=[
         data.eau&&`<span style="color:#3b82f6">💧 ${data.eau} ml</span>`,
         data.prot&&`<span style="color:#f97316">🥩 ${data.prot} g</span>`,
-        data.sleep&&`<span style="color:var(--accent)">😴 ${data.sleep} h</span>`,
+        data.sleep&&`<span style="color:var(--accent)">😴 ${(()=>{const v=data.sleep;const h=Math.floor(v);const m=Math.round((v-h)*60);return h+'h'+String(m).padStart(2,'0');})()} </span>`,
         data.sucre&&`<span style="color:#a855f7">🍬 ${data.sucre} g</span>`,
         data.cal&&`<span style="color:var(--text3)">🔥 ${data.cal} kcal</span>`,
       ].filter(Boolean).map(s=>`<span style="font-size:11px;font-weight:500">${s}</span>`).join('');
