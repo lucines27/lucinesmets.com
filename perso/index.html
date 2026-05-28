@@ -5523,7 +5523,7 @@ async function fetchWhoopData(){
   // Workouts
   if(workouts?.records){
     cache.workouts=workouts.records.map(w=>({
-      sport_id:w.sport_id,
+      sport_id:w.sport_id, sport_name:w.sport_name||null,
       start:w.start,
       end:w.end,
       strain:w.score?.strain?Math.round(w.score.strain*10)/10:null,
@@ -5636,26 +5636,47 @@ function renderWhoopWidget(){
 //  WHOOP WORKOUTS RENDER
 // ══════════════════════════════════════════════
 const WHOOP_SPORTS={
-  '-1':['🏃','Activité'],0:['🏃‍♀️','Course'],1:['🚴‍♀️','Vélo'],
-  16:['⚾','Baseball'],17:['🏀','Basketball'],18:['🚣','Aviron'],
-  21:['⚽','Football'],24:['⛳','Golf'],25:['🥾','Randonnée'],
-  26:['🏒','Hockey'],32:['🥊','MMA / Boxe'],34:['🧘','Pilates'],
-  35:['🏊‍♀️','Natation'],38:['🏉','Rugby'],39:['⛷️','Ski'],
-  43:['🎾','Tennis'],44:['🏃','Athlétisme'],47:['🧘','Yoga'],
-  48:['🏊‍♀️','Natation'],49:['🏋️‍♀️','Musculation'],
-  59:['🔥','CrossFit'],60:['💪','Fitness'],62:['🤸','Gym'],
-  64:['🥋','Arts martiaux'],66:['🚵','VTT'],
-  72:['🏋️','Powerlifting'],73:['🧗','Escalade'],
-  74:['🚣','Aviron'],76:['⛷️','Ski'],77:['🏂','Snowboard'],
-  79:['🏄','Surf'],80:['🏊','Nage en eau libre'],
-  82:['🏅','Triathlon'],86:['🚶‍♀️','Marche'],
-  88:['🧘','Yoga'],90:['🔄','Elliptique'],91:['🪜','Stepper'],
-  96:['🥾','Randonnée'],97:['💪','Force'],
+  '-1':['⚡','Activité'],
+  0:['🏃','Course'],1:['🚴','Vélo'],16:['⚾','Baseball'],
+  17:['🏀','Basketball'],18:['🚣','Aviron'],19:['🤺','Escrime'],
+  20:['🏑','Hockey sur gazon'],21:['🏈','Football américain'],
+  22:['⛳','Golf'],24:['🏒','Hockey sur glace'],25:['🥍','Lacrosse'],
+  27:['🏉','Rugby'],28:['⛵','Voile'],29:['⛷️','Ski'],
+  30:['⚽','Football'],31:['🥎','Softball'],32:['🎾','Squash'],
+  33:['🏊','Natation'],34:['🎾','Tennis'],35:['🏃','Athlétisme'],
+  36:['🏐','Volleyball'],37:['🤽','Water Polo'],38:['🤼','Lutte'],
+  39:['🥊','Boxe'],42:['💃','Danse'],43:['🧘','Pilates'],
+  44:['🧘','Yoga'],45:['🏋️','Musculation'],47:['⛷️','Ski de fond'],
+  48:['💪','Fitness fonctionnel'],49:['🚴','Duathlon'],
+  51:['🤸','Gymnastique'],52:['🥾','Randonnée'],53:['🐴','Équitation'],
+  55:['🛶','Kayak'],56:['🥋','Arts martiaux'],57:['🚵','VTT'],
+  59:['🏋️','Powerlifting'],60:['🧗','Escalade'],61:['🏄','Paddleboard'],
+  62:['🏅','Triathlon'],63:['🚶','Marche'],64:['🏄','Surf'],
+  65:['🔄','Elliptique'],66:['🪜','Stepper'],70:['🧘','Méditation'],
+  71:['⚡','Autre'],73:['🤿','Plongée'],74:['🪖','Opérations tactiques'],
+  82:['🥏','Ultimate'],83:['🧗','Grimpe'],84:['🪢','Corde à sauter'],
+  86:['🛹','Skateboard'],87:['📋','Coaching'],88:['🧊','Bain froid'],
+  89:['🚗','Trajet'],91:['🏂','Snowboard'],92:['🏍️','Motocross'],
+  96:['🔥','HIIT'],97:['🚴','Spinning'],98:['🥋','Jiu-Jitsu'],
+  99:['🔨','Travail manuel'],101:['🏓','Pickleball'],
+  103:['🥊','Box Fitness'],107:['🩰','Barre'],110:['🤸','Parkour'],
+  121:['💆','Massage'],123:['🏋️','Musculation'],126:['🚲','Assault Bike'],
+  127:['🥊','Kickboxing'],128:['🧘','Stretching'],
+  230:['🏓','Tennis de table'],231:['🏸','Badminton'],
+  233:['🧖','Sauna'],234:['🥏','Disc Golf'],248:['💪','F45'],
+  249:['🎾','Padel'],251:['👨‍👧','Parentalité'],252:['🚶','Marche poussette'],
+  259:['🧘','Hot Yoga'],261:['🏟️','Stades'],266:['🐕','Promenade chien'],
 };
 
-function whoopSportInfo(id){
+function whoopSportInfo(id, name){
   const k=String(id);
-  return WHOOP_SPORTS[k]||['🏃','Sport'];
+  if(WHOOP_SPORTS[k]) return WHOOP_SPORTS[k];
+  // fallback: use sport_name from API if available
+  if(name && name!=='activity'){
+    const n=name.charAt(0).toUpperCase()+name.slice(1).replace(/_/g,' ');
+    return ['⚡', n];
+  }
+  return ['⚡','Sport'];
 }
 
 function whoopStrainColor(s){
@@ -5685,7 +5706,7 @@ function renderWhoopWorkouts(){
   if(!wks||!wks.length){wrap.innerHTML='';return;}
 
   const rows=wks.map(w=>{
-    const [icon,name]=whoopSportInfo(w.sport_id);
+    const [icon,name]=whoopSportInfo(w.sport_id, w.sport_name);
     const dateStr=whoopRelDate(w.start);
     // Duration
     let dur='';
