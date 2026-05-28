@@ -2945,6 +2945,60 @@ const CONFIG = {
 };
 
 // ══════════════════════════════════════════════
+//  SUPABASE SYNC — cross-device via kv_store
+// ══════════════════════════════════════════════
+const SUPABASE_URL = 'https://nkswmmmyhqjtkacrlfpb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rc3dtbW15aHFqdGthY3JsZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MjI3ODAsImV4cCI6MjA5NTQ5ODc4MH0.ayXBMh13FGbm8Hzrvz1BL2W1N6yXwYzdhdy915KMtdI';
+
+// Queue of keys pending flush to Supabase
+let _supaFlushQueue = {};
+let _supaFlushTimer = null;
+
+function _queueSupaFlush(k, v) {
+  _supaFlushQueue[k] = v;
+  clearTimeout(_supaFlushTimer);
+  _supaFlushTimer = setTimeout(_flushToSupabase, 800);
+}
+
+async function _flushToSupabase() {
+  const queue = _supaFlushQueue;
+  _supaFlushQueue = {};
+  const rows = Object.entries(queue).map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }));
+  if (!rows.length) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(rows)
+    });
+  } catch(e) { /* offline — localStorage is the source of truth */ }
+}
+
+async function initSupabase() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?select=key,value`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY
+      }
+    });
+    if (!res.ok) return;
+    const rows = await res.json();
+    rows.forEach(({ key, value }) => {
+      // Only overwrite if Supabase has data (value != null)
+      if (value !== null && value !== undefined) {
+        localStorage.setItem('lm_' + key, JSON.stringify(value));
+      }
+    });
+  } catch(e) { /* offline — use localStorage */ }
+}
+
+// ══════════════════════════════════════════════
 //  AUTH
 // ══════════════════════════════════════════════
 function checkPwd(){
@@ -2954,7 +3008,7 @@ function checkPwd(){
   if(v === pwd){
     document.getElementById('lock').classList.add('hidden');
     document.getElementById('app').classList.add('visible');
-    init();
+    initSupabase().then(init).catch(init);
   } else {
     document.getElementById('lock-err').textContent = 'Mot de passe incorrect';
     document.getElementById('pwd-input').value='';
@@ -2974,7 +3028,7 @@ const eveningDateKey = () => {
 };
 const store = {
   get:(k,d)=>{ try{const v=localStorage.getItem('lm_'+k);return v!=null?JSON.parse(v):d}catch{return d}},
-  set:(k,v)=>localStorage.setItem('lm_'+k,JSON.stringify(v))
+  set:(k,v)=>{ localStorage.setItem('lm_'+k,JSON.stringify(v)); _queueSupaFlush(k,v); }
 };
 
 // ══════════════════════════════════════════════
@@ -5437,7 +5491,7 @@ function renderWhoopWidget(){
   const slpNum=parseFloat(c.sleepPct)||0;
   const slpColor=c.sleepPct?(slpNum>=80?'#0d9488':slpNum>=60?'#f59e0b':'#ef4444'):'var(--text2)';
   const hrvNum=c.hrv||0;
-  const hrvColor=c.hrv?(hrvNum>=50?'#0d9488':hrvNum>=30?'#f59e0b':'#ef4444'):'var(--text2)';
+  const hrvColor=c.hrv?(hrvNum>=75?'#0d9488':hrvNum>=30?'#f59e0b':'#ef4444'):'var(--text2)';
   const rhrNum=c.rhr||0;
   const rhrColor=c.rhr?(rhrNum<=60?'#0d9488':rhrNum<=70?'#f59e0b':'#ef4444'):'var(--text2)';
   cont.innerHTML=`<div class="card">
