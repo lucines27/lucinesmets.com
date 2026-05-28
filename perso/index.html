@@ -5472,27 +5472,18 @@ async function fetchWhoopData(){
     if(mainSleep){
       const sl=mainSleep.score||{};
       cache.sleepPct=sl.sleep_performance_percentage?Math.round(sl.sleep_performance_percentage):null;
-    }
-    // Total sleep = main sleep + all naps from today, converted to hours
-    const todayStr = todayKey(); // e.g. "2026-05-28"
-    let totalMs = 0;
-    sleep.records.forEach(rec => {
-      const endDate = rec.end ? rec.end.slice(0,10) : '';
-      const startDate = rec.start ? rec.start.slice(0,10) : '';
-      // Include main sleep that ended today, or naps that started today
-      const isRelevant = endDate === todayStr || startDate === todayStr;
-      if(isRelevant){
-        const ms = rec.score?.stage_summary?.total_in_bed_time_milli || 0;
-        totalMs += ms;
+      // Use main sleep duration directly (avoids timezone-related date mismatch)
+      const sleepMs = sl.stage_summary?.total_sleep_time_milli
+                   || sl.stage_summary?.total_in_bed_time_milli
+                   || 0;
+      if(sleepMs > 0){
+        const todayStr = todayKey();
+        cache.sleepH = (sleepMs/3600000).toFixed(1);
+        const santeKey = 'sante_' + todayStr;
+        const santeData = store.get(santeKey, {});
+        santeData.sleep = parseFloat((sleepMs/3600000).toFixed(1));
+        store.set(santeKey, santeData);
       }
-    });
-    if(totalMs > 0){
-      cache.sleepH = (totalMs/3600000).toFixed(1);
-      // Auto-fill the Santé sleep field
-      const santeKey = 'sante_' + todayStr;
-      const santeData = store.get(santeKey, {});
-      santeData.sleep = parseFloat((totalMs/3600000).toFixed(1));
-      store.set(santeKey, santeData);
     }
   }
   store.set('whoop_cache',cache);
