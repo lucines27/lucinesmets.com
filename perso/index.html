@@ -5726,8 +5726,12 @@ function renderWhoopWorkouts(){
     groups[key].push(w);
   });
 
-  // Sort days descending (most recent first)
-  const keys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  // Sort days descending (most recent first), keep only last 7 calendar days
+  const keys=Object.keys(groups).sort((a,b)=>b.localeCompare(a)).filter(key=>{
+    const [yr,mo,da]=key.split('-').map(Number);
+    const d=new Date(yr,mo-1,da);
+    return Math.round((today-d)/(86400000))<=6;
+  });
 
   const sections=keys.map(key=>{
     const [yr,mo,da]=key.split('-').map(Number);
