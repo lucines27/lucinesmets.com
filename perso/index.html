@@ -391,6 +391,16 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .whoop-wk-metric-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
 .strain-bar-wrap{width:100%;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
 .strain-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.whoop-day-group{margin-bottom:0}
+.whoop-day-header{display:flex;align-items:center;cursor:pointer;padding:9px 2px;gap:8px;user-select:none;border-bottom:1px solid var(--bg3)}
+.whoop-day-group:last-child .whoop-day-header{border-bottom:none}
+.whoop-day-group.open .whoop-day-header{border-bottom:1px solid var(--bg3)}
+.whoop-day-label{font-size:12px;font-weight:700;color:var(--text);flex:1}
+.whoop-day-meta{font-size:11px;color:var(--text3)}
+.whoop-day-chevron{font-size:15px;color:var(--text3);transition:transform .2s;display:inline-block;line-height:1}
+.whoop-day-group.open .whoop-day-chevron{transform:rotate(90deg)}
+.whoop-day-body{display:none}
+.whoop-day-group.open .whoop-day-body{display:block}
 /* ── ENTRAÎNEMENT ── */
 .workout-tabs{display:flex;gap:6px;margin-bottom:14px}
 .wk-tab{flex:1;padding:10px 4px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;transition:all .15s;line-height:1.3}
@@ -5705,50 +5715,88 @@ function renderWhoopWorkouts(){
   const wks=c.workouts;
   if(!wks||!wks.length){wrap.innerHTML='';return;}
 
-  const rows=wks.map(w=>{
-    const [icon,name]=whoopSportInfo(w.sport_id, w.sport_name);
-    const dateStr=whoopRelDate(w.start);
-    // Duration
-    let dur='';
-    if(w.start&&w.end){
-      const ms=new Date(w.end)-new Date(w.start);
-      const mins=Math.round(ms/60000);
-      dur=mins>=60?`${Math.floor(mins/60)}h${String(mins%60).padStart(2,'0')}`:`${mins} min`;
-    }
-    const sc=w.strain!==null?whoopStrainColor(w.strain):'var(--text3)';
-    const strainDisp=w.strain!==null?w.strain:'—';
-    const hrDisp=w.avg_hr?`${w.avg_hr} bpm`:'—';
-    // Distance / calories
-    let extra='';
-    if(w.dist_m&&w.dist_m>100) extra=` · ${(w.dist_m/1000).toFixed(1)} km`;
-    else if(w.kj&&w.kj>0) extra=` · ${Math.round(w.kj/4.184)} kcal`;
+  // Group by local calendar date
+  const groups={};
+  const today=new Date();today.setHours(0,0,0,0);
+  wks.forEach(w=>{
+    if(!w.start)return;
+    const dt=new Date(w.start);
+    const key=`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    if(!groups[key])groups[key]=[];
+    groups[key].push(w);
+  });
 
-    return `<div class="whoop-wk-item">
-      <div class="whoop-wk-icon">${icon}</div>
-      <div class="whoop-wk-info">
-        <div class="whoop-wk-name">${name}</div>
-        <div class="whoop-wk-meta">${dateStr}${dur?' · '+dur:''}${extra}</div>
-      </div>
-      <div class="whoop-wk-metrics">
-        <div class="whoop-wk-metric">
-          <div class="whoop-wk-metric-val" style="color:${sc}">${strainDisp}</div>
-          <div class="whoop-wk-metric-lbl">strain</div>
+  // Sort days descending (most recent first)
+  const keys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+
+  const sections=keys.map(key=>{
+    const [yr,mo,da]=key.split('-').map(Number);
+    const dayDate=new Date(yr,mo-1,da);
+    const diff=Math.round((today-dayDate)/(86400000));
+    let label;
+    if(diff===0)label="Aujourd'hui";
+    else if(diff===1)label='Hier';
+    else if(diff<=6)label=`Il y a ${diff} jours`;
+    else label=dayDate.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+
+    const dayWks=groups[key];
+    const isOpen=diff===0;
+
+    const rows=dayWks.map(w=>{
+      const [icon,name]=whoopSportInfo(w.sport_id, w.sport_name);
+      let dur='';
+      if(w.start&&w.end){
+        const ms=new Date(w.end)-new Date(w.start);
+        const mins=Math.round(ms/60000);
+        dur=mins>=60?`${Math.floor(mins/60)}h${String(mins%60).padStart(2,'0')}`:`${mins} min`;
+      }
+      const sc=w.strain!==null?whoopStrainColor(w.strain):'var(--text3)';
+      const strainDisp=w.strain!==null?w.strain:'â';
+      const hrDisp=w.avg_hr?`${w.avg_hr} bpm`:'â';
+      let extra='';
+      if(w.dist_m&&w.dist_m>100) extra=` Â· ${(w.dist_m/1000).toFixed(1)} km`;
+      else if(w.kj&&w.kj>0) extra=` Â· ${Math.round(w.kj/4.184)} kcal`;
+      return `<div class="whoop-wk-item">
+        <div class="whoop-wk-icon">${icon}</div>
+        <div class="whoop-wk-info">
+          <div class="whoop-wk-name">${name}</div>
+          <div class="whoop-wk-meta">${dur||'â'}${extra}</div>
         </div>
-        <div class="whoop-wk-metric">
-          <div class="whoop-wk-metric-val" style="color:var(--text2)">${hrDisp}</div>
-          <div class="whoop-wk-metric-lbl">FC moy</div>
+        <div class="whoop-wk-metrics">
+          <div class="whoop-wk-metric">
+            <div class="whoop-wk-metric-val" style="color:${sc}">${strainDisp}</div>
+            <div class="whoop-wk-metric-lbl">strain</div>
+          </div>
+          <div class="whoop-wk-metric">
+            <div class="whoop-wk-metric-val" style="color:var(--text2)">${hrDisp}</div>
+            <div class="whoop-wk-metric-lbl">FC moy</div>
+          </div>
         </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="whoop-day-group${isOpen?' open':''}" id="whoop-day-${key}">
+      <div class="whoop-day-header" onclick="toggleWhoopDay('${key}')">
+        <span class="whoop-day-label">${label}</span>
+        <span class="whoop-day-meta">${dayWks.length} sÃ©ance${dayWks.length>1?'s':''}</span>
+        <span class="whoop-day-chevron">âº</span>
       </div>
+      <div class="whoop-day-body">${rows}</div>
     </div>`;
   }).join('');
 
   wrap.innerHTML=`<div class="whoop-wk-card">
     <div class="whoop-wk-header">
-      <span class="whoop-wk-title">⌚ Séances WHOOP récentes</span>
+      <span class="whoop-wk-title">â SÃ©ances WHOOP â 7 derniers jours</span>
     </div>
-    ${rows}
+    ${sections}
   </div>`;
 }
+
+window.toggleWhoopDay=function(key){
+  const el=document.getElementById('whoop-day-'+key);
+  if(el)el.classList.toggle('open');
+};
 
 // ══════════════════════════════════════════════
 //  FOLLOWER TRACKER
