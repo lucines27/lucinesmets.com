@@ -375,6 +375,22 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .suppl-add-btn{width:28px;height:28px;border-radius:8px;background:var(--accent-bg);border:1.5px solid var(--accent-light);color:var(--accent);font-size:18px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;transition:background .15s}
 .suppl-add-btn:hover{background:var(--accent-light)}
 
+/* ── WHOOP WORKOUTS ── */
+.whoop-wk-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.whoop-wk-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.whoop-wk-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:700}
+.whoop-wk-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg3)}
+.whoop-wk-item:last-child{border-bottom:none}
+.whoop-wk-icon{font-size:22px;flex-shrink:0;width:32px;text-align:center}
+.whoop-wk-info{flex:1;min-width:0}
+.whoop-wk-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.whoop-wk-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.whoop-wk-metrics{display:flex;gap:10px;flex-shrink:0;align-items:center}
+.whoop-wk-metric{text-align:center}
+.whoop-wk-metric-val{font-size:13px;font-weight:700}
+.whoop-wk-metric-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.strain-bar-wrap{width:100%;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
+.strain-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
 /* ── ENTRAÎNEMENT ── */
 .workout-tabs{display:flex;gap:6px;margin-bottom:14px}
 .wk-tab{flex:1;padding:10px 4px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;transition:all .15s;line-height:1.3}
@@ -2162,6 +2178,7 @@ body.focus-mode #focus-exit-btn{display:flex}
       </div>
 
       <div class="section-label">Entraînement</div>
+      <div id="whoop-workouts-wrap"></div>
       <div class="card" id="workout-card">
         <div class="workout-tabs">
           <button class="wk-tab" id="wk-tab-push"  onclick="renderWorkout('push')">💪<br>Push</button>
@@ -5466,9 +5483,11 @@ async function whoopFetch(path){
 async function fetchWhoopData(){
   const btn=document.getElementById('whoop-sync-btn');
   if(btn){btn.disabled=true;btn.textContent='↻ Sync…';}
-  const [recovery,sleep]=await Promise.all([
+  const [recovery,sleep,cycle,workouts]=await Promise.all([
     whoopFetch('/developer/v2/recovery?limit=1'),
-    whoopFetch('/developer/v2/activity/sleep?limit=5')  // fetch more to skip naps
+    whoopFetch('/developer/v2/activity/sleep?limit=5'),
+    whoopFetch('/developer/v2/cycle?limit=1'),
+    whoopFetch('/developer/v2/activity/workout?limit=7')
   ]);
   const cache=store.get('whoop_cache',{});
   if(recovery?.records?.[0]){
@@ -5497,8 +5516,26 @@ async function fetchWhoopData(){
       }
     }
   }
+  // Strain (daily cycle)
+  if(cycle?.records?.[0]?.score){
+    cache.strain=cycle.records[0].score.strain?Math.round(cycle.records[0].score.strain*10)/10:null;
+  }
+  // Workouts
+  if(workouts?.records){
+    cache.workouts=workouts.records.map(w=>({
+      sport_id:w.sport_id,
+      start:w.start,
+      end:w.end,
+      strain:w.score?.strain?Math.round(w.score.strain*10)/10:null,
+      avg_hr:w.score?.average_heart_rate||null,
+      max_hr:w.score?.max_heart_rate||null,
+      kj:w.score?.kilojoule?Math.round(w.score.kilojoule):null,
+      dist_m:w.score?.distance_meter?Math.round(w.score.distance_meter):null,
+    }));
+  }
   store.set('whoop_cache',cache);
   renderWhoopWidget();
+  renderWhoopWorkouts();
   renderSanteCards(); // refresh sleep card
   if(btn){btn.disabled=false;btn.textContent='↻ Synchroniser';}
   if(!recovery&&!sleep&&store.get('whoop_needs_reconnect',false)){
@@ -5540,13 +5577,14 @@ function renderWhoopWidget(){
   const hrv=c.hrv?c.hrv+'ms':'--';
   const rhr=c.rhr?c.rhr+' bpm':'--';
   const slp=c.sleepPct?c.sleepPct+'%':'--';
+  const strainVal=c.strain??null;
+  const strainDisp=strainVal!==null?strainVal:'--';
   const recNum=parseFloat(rec)||0;
   const stroke=recNum>=67?'#0d9488':recNum>=34?'#f59e0b':'#ef4444';
   const recLbl=recNum>=67?'Excellente récupération':recNum>=34?'Récupération modérée':rec==='--'?'':' Récupération faible';
   const noData=rec==='--';
   const circ=2*Math.PI*30;
   const off=noData?circ:circ*(1-recNum/100);
-  // Couleurs par métrique
   const recColor=noData?'var(--text2)':stroke;
   const slpNum=parseFloat(c.sleepPct)||0;
   const slpColor=c.sleepPct?(slpNum>=80?'#0d9488':slpNum>=60?'#f59e0b':'#ef4444'):'var(--text2)';
@@ -5554,6 +5592,11 @@ function renderWhoopWidget(){
   const hrvColor=c.hrv?(hrvNum>=75?'#0d9488':hrvNum>=30?'#f59e0b':'#ef4444'):'var(--text2)';
   const rhrNum=c.rhr||0;
   const rhrColor=c.rhr?(rhrNum<=60?'#0d9488':rhrNum<=70?'#f59e0b':'#ef4444'):'var(--text2)';
+  // Strain color: 0-9 blue, 10-13 green, 14-17 orange, 18-21 red
+  const strainNum=parseFloat(strainVal)||0;
+  const strainColor=strainVal===null?'var(--text2)':strainNum>=18?'#ef4444':strainNum>=14?'#f97316':strainNum>=10?'#0d9488':'#3b82f6';
+  const strainLbl=strainVal===null?'':strainNum>=18?'All out':strainNum>=14?'Intense':strainNum>=10?'Modéré':'Léger';
+  const strainPct=strainVal!==null?Math.round((strainNum/21)*100):0;
   cont.innerHTML=`<div class="card">
     <div class="whoop-header">
       <span class="whoop-lbl">WHOOP</span>
@@ -5578,8 +5621,111 @@ function renderWhoopWidget(){
       <div class="whoop-metric"><div class="whoop-metric-val" style="color:${rhrColor}">${rhr}</div><div class="whoop-metric-lbl">BPM repos</div></div>
       <div class="whoop-metric"><div class="whoop-metric-val" style="color:${slpColor}">${slp}</div><div class="whoop-metric-lbl">Sommeil</div></div>
     </div>
-    <div class="whoop-rec-lbl" style="color:${recColor}">${recLbl}</div>`}
+    <div class="whoop-rec-lbl" style="color:${recColor}">${recLbl}</div>
+    ${strainVal!==null?`<div style="margin:8px 0 4px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-weight:600">Strain du jour</span>
+      <span style="font-size:13px;font-weight:700;color:${strainColor}">${strainDisp} <span style="font-size:10px;font-weight:500;color:${strainColor}">${strainLbl}</span></span>
+    </div>
+    <div class="strain-bar-wrap"><div class="strain-bar-fill" style="width:${strainPct}%;background:${strainColor}"></div></div>`:''}
+    `}
     <button class="whoop-sync-btn" id="whoop-sync-btn" onclick="fetchWhoopData()">↻ Synchroniser</button>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  WHOOP WORKOUTS RENDER
+// ══════════════════════════════════════════════
+const WHOOP_SPORTS={
+  '-1':['🏃','Activité'],0:['🏃‍♀️','Course'],1:['🚴‍♀️','Vélo'],
+  16:['⚾','Baseball'],17:['🏀','Basketball'],18:['🚣','Aviron'],
+  21:['⚽','Football'],24:['⛳','Golf'],25:['🥾','Randonnée'],
+  26:['🏒','Hockey'],32:['🥊','MMA / Boxe'],34:['🧘','Pilates'],
+  35:['🏊‍♀️','Natation'],38:['🏉','Rugby'],39:['⛷️','Ski'],
+  43:['🎾','Tennis'],44:['🏃','Athlétisme'],47:['🧘','Yoga'],
+  48:['🏊‍♀️','Natation'],49:['🏋️‍♀️','Musculation'],
+  59:['🔥','CrossFit'],60:['💪','Fitness'],62:['🤸','Gym'],
+  64:['🥋','Arts martiaux'],66:['🚵','VTT'],
+  72:['🏋️','Powerlifting'],73:['🧗','Escalade'],
+  74:['🚣','Aviron'],76:['⛷️','Ski'],77:['🏂','Snowboard'],
+  79:['🏄','Surf'],80:['🏊','Nage en eau libre'],
+  82:['🏅','Triathlon'],86:['🚶‍♀️','Marche'],
+  88:['🧘','Yoga'],90:['🔄','Elliptique'],91:['🪜','Stepper'],
+  96:['🥾','Randonnée'],97:['💪','Force'],
+};
+
+function whoopSportInfo(id){
+  const k=String(id);
+  return WHOOP_SPORTS[k]||['🏃','Sport'];
+}
+
+function whoopStrainColor(s){
+  if(s===null||s===undefined)return'var(--text2)';
+  return s>=18?'#ef4444':s>=14?'#f97316':s>=10?'#0d9488':'#3b82f6';
+}
+
+function whoopRelDate(iso){
+  if(!iso)return'';
+  const d=new Date(iso);
+  const today=new Date();today.setHours(0,0,0,0);
+  const dt=new Date(d);dt.setHours(0,0,0,0);
+  const diff=Math.round((today-dt)/(86400000));
+  if(diff===0)return "Aujourd'hui";
+  if(diff===1)return'Hier';
+  if(diff<=6)return`Il y a ${diff} jours`;
+  return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+}
+
+function renderWhoopWorkouts(){
+  const wrap=document.getElementById('whoop-workouts-wrap');
+  if(!wrap)return;
+  const tokens=store.get('whoop_tokens',null);
+  if(!tokens?.access_token){wrap.innerHTML='';return;}
+  const c=store.get('whoop_cache',{});
+  const wks=c.workouts;
+  if(!wks||!wks.length){wrap.innerHTML='';return;}
+
+  const rows=wks.map(w=>{
+    const [icon,name]=whoopSportInfo(w.sport_id);
+    const dateStr=whoopRelDate(w.start);
+    // Duration
+    let dur='';
+    if(w.start&&w.end){
+      const ms=new Date(w.end)-new Date(w.start);
+      const mins=Math.round(ms/60000);
+      dur=mins>=60?`${Math.floor(mins/60)}h${String(mins%60).padStart(2,'0')}`:`${mins} min`;
+    }
+    const sc=w.strain!==null?whoopStrainColor(w.strain):'var(--text3)';
+    const strainDisp=w.strain!==null?w.strain:'—';
+    const hrDisp=w.avg_hr?`${w.avg_hr} bpm`:'—';
+    // Distance / calories
+    let extra='';
+    if(w.dist_m&&w.dist_m>100) extra=` · ${(w.dist_m/1000).toFixed(1)} km`;
+    else if(w.kj&&w.kj>0) extra=` · ${Math.round(w.kj/4.184)} kcal`;
+
+    return `<div class="whoop-wk-item">
+      <div class="whoop-wk-icon">${icon}</div>
+      <div class="whoop-wk-info">
+        <div class="whoop-wk-name">${name}</div>
+        <div class="whoop-wk-meta">${dateStr}${dur?' · '+dur:''}${extra}</div>
+      </div>
+      <div class="whoop-wk-metrics">
+        <div class="whoop-wk-metric">
+          <div class="whoop-wk-metric-val" style="color:${sc}">${strainDisp}</div>
+          <div class="whoop-wk-metric-lbl">strain</div>
+        </div>
+        <div class="whoop-wk-metric">
+          <div class="whoop-wk-metric-val" style="color:var(--text2)">${hrDisp}</div>
+          <div class="whoop-wk-metric-lbl">FC moy</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML=`<div class="whoop-wk-card">
+    <div class="whoop-wk-header">
+      <span class="whoop-wk-title">⌚ Séances WHOOP récentes</span>
+    </div>
+    ${rows}
   </div>`;
 }
 
