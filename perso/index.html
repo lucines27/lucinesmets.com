@@ -7294,7 +7294,7 @@ async function renderNotionPipeline(){
     if(!pages.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3)">Base vide</div>';return;}
     // Détection dynamique des propriétés Marque / Statut / Date
     const findProp=(props,keys)=>keys.map(k=>Object.keys(props).find(p=>p.toLowerCase().includes(k))).find(Boolean);
-    const rows=pages.map(page=>{
+    const allRows=pages.map(page=>{
       const props=page.properties||{};
       const brandKey=findProp(props,['marque','brand','nom','name','titre','title']);
       const statusKey=findProp(props,['statut','status','état','state']);
@@ -7303,16 +7303,34 @@ async function renderNotionPipeline(){
       const status=statusKey?getNotionStatus(props[statusKey]):'—';
       const date=dateKey?getNotionDate(props[dateKey]):'';
       const cls=notionStatusClass(status);
-      return `<tr>
-        <td style="font-weight:600;color:var(--text)">${brand}</td>
-        <td><span class="notion-badge ${cls}">${status}</span></td>
-        <td style="font-size:11px;color:var(--text3)">${date}</td>
-      </tr>`;
-    }).join('');
-    cont.innerHTML=`<table class="notion-table">
-      <thead><tr><th>Marque</th><th>Statut</th><th>Date</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+      return {brand,status,date,cls};
+    });
+
+    function renderNotionRows(filter){
+      const q=(filter||'').toLowerCase().trim();
+      const filtered=q?allRows.filter(r=>r.brand.toLowerCase().includes(q)):allRows;
+      if(!filtered.length) return '<tr><td colspan="3" style="text-align:center;color:var(--text3);font-size:12px;padding:12px">Aucune marque trouvée</td></tr>';
+      return filtered.map(r=>`<tr>
+        <td style="font-weight:600;color:var(--text)">${r.brand}</td>
+        <td><span class="notion-badge ${r.cls}">${r.status}</span></td>
+        <td style="font-size:11px;color:var(--text3)">${r.date}</td>
+      </tr>`).join('');
+    }
+
+    cont.innerHTML=`
+      <div style="position:relative;margin-bottom:8px">
+        <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none;opacity:.5">🔍</span>
+        <input id="notion-brand-search" type="text" placeholder="Chercher une marque…"
+          style="width:100%;box-sizing:border-box;padding:7px 10px 7px 30px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;outline:none"
+          oninput="document.getElementById('notion-tbody').innerHTML=renderNotionRowsFromSearch(this.value)">
+      </div>
+      <table class="notion-table">
+        <thead><tr><th>Marque</th><th>Statut</th><th>Date</th></tr></thead>
+        <tbody id="notion-tbody">${renderNotionRows('')}</tbody>
+      </table>`;
+
+    // Expose render function globally so oninput can call it
+    window.renderNotionRowsFromSearch = renderNotionRows;
   }catch(e){
     cont.innerHTML=`<div style="font-size:11px;color:var(--red)">Erreur réseau (CORS ?)</div>`;
   }
