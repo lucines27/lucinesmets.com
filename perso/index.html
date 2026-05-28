@@ -9027,11 +9027,19 @@ Réponds UNIQUEMENT avec du JSON valide, aucun texte avant ou après, aucun mark
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:4096,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:4096,messages:[{role:'user',content:prompt}]})
     });
     const data=await res.json();
+    if(!res.ok){
+      const errMsg=data?.error?.message||data?.message||JSON.stringify(data);
+      throw new Error(`API ${res.status}: ${errMsg}`);
+    }
     let text=(data?.content?.[0]?.text||'').trim();
+    if(!text) throw new Error('Réponse API vide');
     text=text.replace(/^```json?\s*/,'').replace(/\s*```$/,'').trim();
+    // Extract JSON object if there's text around it
+    const jsonMatch=text.match(/\{[\s\S]*\}/);
+    if(jsonMatch) text=jsonMatch[0];
     const content=JSON.parse(text);
     const lesson={
       id:'les_'+Date.now(),
