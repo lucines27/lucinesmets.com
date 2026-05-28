@@ -2963,7 +2963,9 @@ function _queueSupaFlush(k, v) {
 async function _flushToSupabase() {
   const queue = _supaFlushQueue;
   _supaFlushQueue = {};
-  const rows = Object.entries(queue).map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }));
+  const rows = Object.entries(queue)
+    .filter(([, value]) => value !== null && value !== undefined)
+    .map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }));
   if (!rows.length) return;
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
@@ -2979,6 +2981,14 @@ async function _flushToSupabase() {
   } catch(e) { /* offline — localStorage is the source of truth */ }
 }
 
+// Keys that are transient/device-specific and must NOT be loaded from Supabase
+// (they'd cause OAuth state mismatches or wrong reconnect flags)
+const SUPABASE_SKIP_LOAD = new Set([
+  'whoop_state', 'whoop_needs_reconnect',
+  'gcal_state', 'gcal_verifier',
+  'gmail_state', 'gmail_verifier'
+]);
+
 async function initSupabase() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?select=key,value`, {
@@ -2990,6 +3000,8 @@ async function initSupabase() {
     if (!res.ok) return;
     const rows = await res.json();
     rows.forEach(({ key, value }) => {
+      // Skip transient/device-specific keys
+      if (SUPABASE_SKIP_LOAD.has(key)) return;
       // Only overwrite if Supabase has data (value != null)
       if (value !== null && value !== undefined) {
         localStorage.setItem('lm_' + key, JSON.stringify(value));
@@ -3004,7 +3016,7 @@ async function initSupabase() {
           let value;
           try { value = JSON.parse(localStorage.getItem(fullKey)); } catch { value = null; }
           return { key, value, updated_at: new Date().toISOString() };
-        });
+        }).filter(r => r.value !== null && r.value !== undefined);
         fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
           method: 'POST',
           headers: {
@@ -3050,7 +3062,7 @@ const eveningDateKey = () => {
 };
 const store = {
   get:(k,d)=>{ try{const v=localStorage.getItem('lm_'+k);return v!=null?JSON.parse(v):d}catch{return d}},
-  set:(k,v)=>{ localStorage.setItem('lm_'+k,JSON.stringify(v)); _queueSupaFlush(k,v); }
+  set:(k,v)=>{ localStorage.setItem('lm_'+k,JSON.stringify(v)); if(!SUPABASE_SKIP_LOAD.has(k)) _queueSupaFlush(k,v); }
 };
 
 // ══════════════════════════════════════════════
