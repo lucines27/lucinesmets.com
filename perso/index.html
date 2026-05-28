@@ -5467,17 +5467,37 @@ async function fetchWhoopData(){
     cache.rhr=r.resting_heart_rate?Math.round(r.resting_heart_rate):null;
   }
   if(sleep?.records){
-    // Prefer the most recent non-nap sleep; fall back to any record if all are naps
+    // Prefer the most recent non-nap sleep for performance %; fall back if needed
     const mainSleep = sleep.records.find(r => r.nap === false) || sleep.records[0];
     if(mainSleep){
       const sl=mainSleep.score||{};
       cache.sleepPct=sl.sleep_performance_percentage?Math.round(sl.sleep_performance_percentage):null;
-      const ms=sl.stage_summary?.total_in_bed_time_milli;
-      cache.sleepH=ms?(ms/3600000).toFixed(1):null;
+    }
+    // Total sleep = main sleep + all naps from today, converted to hours
+    const todayStr = todayKey(); // e.g. "2026-05-28"
+    let totalMs = 0;
+    sleep.records.forEach(rec => {
+      const endDate = rec.end ? rec.end.slice(0,10) : '';
+      const startDate = rec.start ? rec.start.slice(0,10) : '';
+      // Include main sleep that ended today, or naps that started today
+      const isRelevant = endDate === todayStr || startDate === todayStr;
+      if(isRelevant){
+        const ms = rec.score?.stage_summary?.total_in_bed_time_milli || 0;
+        totalMs += ms;
+      }
+    });
+    if(totalMs > 0){
+      cache.sleepH = (totalMs/3600000).toFixed(1);
+      // Auto-fill the Santé sleep field
+      const santeKey = 'sante_' + todayStr;
+      const santeData = store.get(santeKey, {});
+      santeData.sleep = parseFloat((totalMs/3600000).toFixed(1));
+      store.set(santeKey, santeData);
     }
   }
   store.set('whoop_cache',cache);
   renderWhoopWidget();
+  renderSanteCards(); // refresh sleep card
   if(btn){btn.disabled=false;btn.textContent='↻ Synchroniser';}
   if(!recovery&&!sleep&&store.get('whoop_needs_reconnect',false)){
     toast('Token expiré — reconnecte WHOOP dans Réglages');
