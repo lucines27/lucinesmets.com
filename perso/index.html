@@ -846,7 +846,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .pwm-card{display:flex;gap:0;overflow:hidden}
 .pwm-col{flex:1;min-width:0;padding:10px 12px}
 .pwm-col+.pwm-col{border-left:1px solid var(--border)}
-.pwm-col-lbl{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:8px}
+.pwm-col-lbl{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:0}
+.pwm-nav-btn{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 3px;line-height:1;border-radius:4px;transition:color .15s;flex-shrink:0}
+.pwm-nav-btn:hover:not(:disabled){color:var(--accent)}
+.pwm-nav-btn:disabled{opacity:.2;cursor:default}
 .pwm-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--bg3)}
 .pwm-item:last-child{border-bottom:none}
 .pwm-status{flex-shrink:0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap;font-family:'DM Sans',sans-serif}
@@ -1890,11 +1893,19 @@ body.focus-mode #focus-exit-btn{display:flex}
       <div class="section-label">Priorités semaine / mois</div>
       <div class="card pwm-card" style="padding:0">
         <div class="pwm-col">
-          <div class="pwm-col-lbl">Cette semaine</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+            <button class="pwm-nav-btn" onclick="pwmNav('week',-1)" title="Semaine précédente">‹</button>
+            <div class="pwm-col-lbl" id="pwm-week-lbl" style="flex:1;text-align:center;margin-bottom:0">Cette semaine</div>
+            <button class="pwm-nav-btn" onclick="pwmNav('week',1)" id="pwm-week-next" title="Semaine suivante">›</button>
+          </div>
           <div id="pwm-week-list"></div>
         </div>
         <div class="pwm-col">
-          <div class="pwm-col-lbl">Ce mois</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+            <button class="pwm-nav-btn" onclick="pwmNav('month',-1)" title="Mois précédent">‹</button>
+            <div class="pwm-col-lbl" id="pwm-month-lbl" style="flex:1;text-align:center;margin-bottom:0">Ce mois</div>
+            <button class="pwm-nav-btn" onclick="pwmNav('month',1)" id="pwm-month-next" title="Mois suivant">›</button>
+          </div>
           <div id="pwm-month-list"></div>
         </div>
       </div>
@@ -9952,8 +9963,13 @@ function pomoRenderStats(){
 // ══════════════════════════════════════════════
 //  PRIORITÉS SEMAINE / MOIS
 // ══════════════════════════════════════════════
-function pwmWeekKey(){
+let _pwmWeekOffset=0; // 0=current, -1=last week, etc.
+let _pwmMonthOffset=0;
+
+function pwmWeekKey(offset){
+  const ofs=offset!==undefined?offset:_pwmWeekOffset;
   const d=new Date();
+  d.setDate(d.getDate()+ofs*7);
   const jan4=new Date(d.getFullYear(),0,4);
   const startOfWeek1=new Date(jan4);
   startOfWeek1.setDate(jan4.getDate()-(jan4.getDay()||7)+1);
@@ -9961,9 +9977,41 @@ function pwmWeekKey(){
   const week=Math.floor(diff/(7*86400000))+1;
   return 'priorities_week_'+d.getFullYear()+'-'+String(week).padStart(2,'0');
 }
-function pwmMonthKey(){
+function pwmMonthKey(offset){
+  const ofs=offset!==undefined?offset:_pwmMonthOffset;
   const d=new Date();
+  d.setDate(1); // prevent month overflow
+  d.setMonth(d.getMonth()+ofs);
   return 'priorities_month_'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+
+function pwmWeekLabel(offset){
+  const ofs=offset!==undefined?offset:_pwmWeekOffset;
+  if(ofs===0) return 'Cette semaine';
+  if(ofs===-1) return 'Semaine dernière';
+  // Compute date range
+  const d=new Date();
+  d.setDate(d.getDate()+ofs*7);
+  const dow=d.getDay()||7;
+  const mon=new Date(d); mon.setDate(d.getDate()-dow+1);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  const fmt=dt=>dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  return fmt(mon)+' – '+fmt(sun);
+}
+function pwmMonthLabel(offset){
+  const ofs=offset!==undefined?offset:_pwmMonthOffset;
+  if(ofs===0) return 'Ce mois';
+  if(ofs===-1) return 'Mois dernier';
+  const d=new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth()+ofs);
+  return d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase());
+}
+
+function pwmNav(type,dir){
+  if(type==='week') _pwmWeekOffset=Math.min(0,_pwmWeekOffset+dir);
+  else _pwmMonthOffset=Math.min(0,_pwmMonthOffset+dir);
+  renderPwm();
 }
 
 const PWM_EMPTY=()=>([
@@ -9975,15 +10023,8 @@ const PWM_STATUS_CYCLE={todo:'inprogress',inprogress:'done',done:'todo'};
 const PWM_STATUS_LABEL={todo:'○ Pas commencé',inprogress:'◑ En cours',done:'✓ Terminé'};
 
 function pwmInit(){
-  // Auto-reset: if stored key differs from current, start fresh
-  ['week','month'].forEach(type=>{
-    const curKey=type==='week'?pwmWeekKey():pwmMonthKey();
-    const storedKey=store.get('pwm_'+type+'_lastkey','');
-    if(storedKey!==curKey){
-      store.set('pwm_'+curKey,PWM_EMPTY());
-      store.set('pwm_'+type+'_lastkey',curKey);
-    }
-  });
+  _pwmWeekOffset=0;
+  _pwmMonthOffset=0;
   renderPwm();
 }
 
@@ -10004,12 +10045,31 @@ function pwmSet(type,items){
 const _pwmOpen=new Set();
 
 function renderPwm(){
+  // Update nav labels and disable "next" when at current period
+  const wLbl=document.getElementById('pwm-week-lbl');
+  const mLbl=document.getElementById('pwm-month-lbl');
+  const wNext=document.getElementById('pwm-week-next');
+  const mNext=document.getElementById('pwm-month-next');
+  if(wLbl)wLbl.textContent=pwmWeekLabel();
+  if(mLbl)mLbl.textContent=pwmMonthLabel();
+  if(wNext)wNext.disabled=_pwmWeekOffset>=0;
+  if(mNext)mNext.disabled=_pwmMonthOffset>=0;
+
+  const isPast={week:_pwmWeekOffset<0, month:_pwmMonthOffset<0};
+
   ['week','month'].forEach(type=>{
     const el=document.getElementById('pwm-'+type+'-list');
     if(!el)return;
     const items=pwmGet(type);
+    const past=isPast[type];
     el.innerHTML='';
+    // Show empty message for past periods with no data
+    if(past && items.every(it=>!it.text)){
+      el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0;text-align:center">Aucune priorité enregistrée</div>';
+      return;
+    }
     items.forEach((item,i)=>{
+      if(past && !item.text) return; // skip empty rows in history
       const isDone=item.status==='done';
       const steps=item.steps||[];
       const doneSteps=steps.filter(s=>s.done).length;
@@ -10023,14 +10083,23 @@ function renderPwm(){
       // Main row
       const row=document.createElement('div');
       row.className='pwm-item';
-      row.innerHTML=`
-        <button class="pwm-status ${item.status}" onclick="pwmCycleStatus('${type}',${i})">${PWM_STATUS_LABEL[item.status]}</button>
-        <input class="pwm-text${isDone?' done-text':''}" value="${item.text.replace(/"/g,'&quot;')}" placeholder="+ Ajouter une priorité"
-          onchange="pwmEditText('${type}',${i},this.value)"
-          onblur="pwmEditText('${type}',${i},this.value)">
-        <button class="pwm-steps-toggle" onclick="pwmToggleSteps('${type}',${i})" title="Étapes">${isOpen?'▾':'▸'} Étapes${steps.length?` ${doneSteps}/${steps.length}`:''}
-        </button>
-        <button class="pwm-del" onclick="pwmDelete('${type}',${i})" title="Supprimer">×</button>`;
+      if(past){
+        // Read-only view for past periods
+        row.innerHTML=`
+          <span class="pwm-status ${item.status}" style="cursor:default">${PWM_STATUS_LABEL[item.status]}</span>
+          <span class="pwm-text${isDone?' done-text':''}" style="flex:1;font-size:13px;padding:4px 6px">${item.text||'—'}</span>
+          <button class="pwm-steps-toggle" onclick="pwmToggleSteps('${type}',${i})" title="Étapes">${isOpen?'▾':'▸'} Étapes${steps.length?` ${doneSteps}/${steps.length}`:''}
+          </button>`;
+      } else {
+        row.innerHTML=`
+          <button class="pwm-status ${item.status}" onclick="pwmCycleStatus('${type}',${i})">${PWM_STATUS_LABEL[item.status]}</button>
+          <input class="pwm-text${isDone?' done-text':''}" value="${item.text.replace(/"/g,'&quot;')}" placeholder="+ Ajouter une priorité"
+            onchange="pwmEditText('${type}',${i},this.value)"
+            onblur="pwmEditText('${type}',${i},this.value)">
+          <button class="pwm-steps-toggle" onclick="pwmToggleSteps('${type}',${i})" title="Étapes">${isOpen?'▾':'▸'} Étapes${steps.length?` ${doneSteps}/${steps.length}`:''}
+          </button>
+          <button class="pwm-del" onclick="pwmDelete('${type}',${i})" title="Supprimer">×</button>`;
+      }
 
       // Steps accordion panel
       const panel=document.createElement('div');
