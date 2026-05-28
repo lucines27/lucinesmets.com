@@ -5432,6 +5432,14 @@ function renderWhoopWidget(){
   const noData=rec==='--';
   const circ=2*Math.PI*30;
   const off=noData?circ:circ*(1-recNum/100);
+  // Couleurs par métrique
+  const recColor=noData?'var(--text2)':stroke;
+  const slpNum=parseFloat(c.sleepPct)||0;
+  const slpColor=c.sleepPct?(slpNum>=80?'#0d9488':slpNum>=60?'#f59e0b':'#ef4444'):'var(--text2)';
+  const hrvNum=c.hrv||0;
+  const hrvColor=c.hrv?(hrvNum>=50?'#0d9488':hrvNum>=30?'#f59e0b':'#ef4444'):'var(--text2)';
+  const rhrNum=c.rhr||0;
+  const rhrColor=c.rhr?(rhrNum<=60?'#0d9488':rhrNum<=70?'#f59e0b':'#ef4444'):'var(--text2)';
   cont.innerHTML=`<div class="card">
     <div class="whoop-header">
       <span class="whoop-lbl">WHOOP</span>
@@ -5450,13 +5458,13 @@ function renderWhoopWidget(){
             stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
             stroke-linecap="round" transform="rotate(-90 36 36)"/>
         </svg>
-        <div class="whoop-ring-num">${rec}<div class="whoop-ring-sub">recovery</div></div>
+        <div class="whoop-ring-num" style="color:${recColor}">${rec}<div class="whoop-ring-sub" style="color:var(--text3)">recovery</div></div>
       </div>
-      <div class="whoop-metric"><div class="whoop-metric-val">${hrv}</div><div class="whoop-metric-lbl">HRV</div></div>
-      <div class="whoop-metric"><div class="whoop-metric-val">${rhr}</div><div class="whoop-metric-lbl">BPM repos</div></div>
-      <div class="whoop-metric"><div class="whoop-metric-val">${slp}</div><div class="whoop-metric-lbl">Sommeil</div></div>
+      <div class="whoop-metric"><div class="whoop-metric-val" style="color:${hrvColor}">${hrv}</div><div class="whoop-metric-lbl">HRV</div></div>
+      <div class="whoop-metric"><div class="whoop-metric-val" style="color:${rhrColor}">${rhr}</div><div class="whoop-metric-lbl">BPM repos</div></div>
+      <div class="whoop-metric"><div class="whoop-metric-val" style="color:${slpColor}">${slp}</div><div class="whoop-metric-lbl">Sommeil</div></div>
     </div>
-    <div class="whoop-rec-lbl">${recLbl}</div>`}
+    <div class="whoop-rec-lbl" style="color:${recColor}">${recLbl}</div>`}
     <button class="whoop-sync-btn" id="whoop-sync-btn" onclick="fetchWhoopData()">↻ Synchroniser</button>
   </div>`;
 }
