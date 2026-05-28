@@ -5457,7 +5457,7 @@ async function fetchWhoopData(){
   if(btn){btn.disabled=true;btn.textContent='↻ Sync…';}
   const [recovery,sleep]=await Promise.all([
     whoopFetch('/developer/v2/recovery?limit=1'),
-    whoopFetch('/developer/v2/activity/sleep?limit=1')
+    whoopFetch('/developer/v2/activity/sleep?limit=5')  // fetch more to skip naps
   ]);
   const cache=store.get('whoop_cache',{});
   if(recovery?.records?.[0]){
@@ -5466,11 +5466,15 @@ async function fetchWhoopData(){
     cache.hrv=r.hrv_rmssd_milli?Math.round(r.hrv_rmssd_milli):null;
     cache.rhr=r.resting_heart_rate?Math.round(r.resting_heart_rate):null;
   }
-  if(sleep?.records?.[0]){
-    const sl=sleep.records[0].score||{};
-    cache.sleepPct=sl.sleep_performance_percentage?Math.round(sl.sleep_performance_percentage):null;
-    const ms=sl.stage_summary?.total_in_bed_time_milli;
-    cache.sleepH=ms?(ms/3600000).toFixed(1):null;
+  if(sleep?.records){
+    // Prefer the most recent non-nap sleep; fall back to any record if all are naps
+    const mainSleep = sleep.records.find(r => r.nap === false) || sleep.records[0];
+    if(mainSleep){
+      const sl=mainSleep.score||{};
+      cache.sleepPct=sl.sleep_performance_percentage?Math.round(sl.sleep_performance_percentage):null;
+      const ms=sl.stage_summary?.total_in_bed_time_milli;
+      cache.sleepH=ms?(ms/3600000).toFixed(1):null;
+    }
   }
   store.set('whoop_cache',cache);
   renderWhoopWidget();
