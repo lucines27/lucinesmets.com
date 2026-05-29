@@ -5887,6 +5887,9 @@ const SANTE_CONFIG=[
    getMsg:v=>!v?'':v>=110?'Objectif atteint ✓':`Encore ${110-v} g`},
   {id:'sleep',emoji:'😴',label:'Sommeil',unit:'',step:0.5,
    fmt:v=>{if(!v)return'—';const h=Math.floor(v);const m=Math.round((v-h)*60);return h+'h'+String(m).padStart(2,'0');},
+   inputType:'text',inputPlaceholder:'5h33',
+   inputVal:v=>{if(!v)return'';const h=Math.floor(v);const m=Math.round((v-h)*60);return h+'h'+String(m).padStart(2,'0');},
+   parseInput:s=>{if(!s)return 0;s=s.trim();const hm=s.match(/^(\d+)[h:](\d*)$/);if(hm)return parseInt(hm[1])+(parseInt(hm[2]||0)/60);return parseFloat(s)||0;},
    getColor:v=>!v?'neutral':v>=7?'green':v>=6?'orange':'red',
    getPct:v=>Math.min(100,v/9*100),
    getMsg:v=>{if(!v)return'';if(v>=7)return'Objectif atteint ✓';const rem=7-v;const rh=Math.floor(rem);const rm=Math.round((rem-rh)*60);return'Encore '+(rh?rh+'h':'')+String(rm).padStart(2,'0')+'min';}},
@@ -5941,8 +5944,16 @@ function santeEdit(mid){
   const c=SC[ck];
   // Créer l'input inline
   const inp=document.createElement('input');
-  inp.type='number';inp.step=conf.step;
-  inp.value=cur||'';inp.placeholder='0';
+  // Créer l'input inline
+  const inp=document.createElement('input');
+  if(conf.inputType==='text'){
+    inp.type='text';
+    inp.placeholder=conf.inputPlaceholder||'0';
+    inp.value=conf.inputVal?conf.inputVal(cur):(cur||'');
+  } else {
+    inp.type='number';inp.step=conf.step;
+    inp.value=cur||'';inp.placeholder='0';
+  }
   inp.className='sc-inp sc-val';
   inp.style.color=c.val;
   inp.id='sante-val-'+mid;
@@ -5950,7 +5961,7 @@ function santeEdit(mid){
   inp.focus();inp.select();
   // Mise à jour live des couleurs / barre / message pendant la saisie
   inp.addEventListener('input',()=>{
-    const v=parseFloat(inp.value)||0;
+    const v=conf.parseInput?conf.parseInput(inp.value):(parseFloat(inp.value)||0);
     const nk=conf.getColor(v);
     const nc=SC[nk];
     inp.style.color=nc.val;
