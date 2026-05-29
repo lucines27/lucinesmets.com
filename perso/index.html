@@ -1082,6 +1082,12 @@ html,body{font-feature-settings:"ss01","cv01","cv11";-webkit-font-smoothing:anti
 }
 .nav-btn.active svg{stroke-width:2;transform:translateY(-1px) scale(1.06)}
 .nav-btn:active{transform:scale(.94)}
+/* ── PUSH NOTIF BELL ── */
+.push-bell{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--text3);transition:color .15s,background .15s;z-index:20}
+.push-bell:hover{background:var(--bg2);color:var(--accent)}
+.push-bell svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.push-bell.on{color:var(--accent)}
+.push-bell.on svg{fill:var(--accent-bg)}
 
 /* ────────────────────────────────────────────────────────────
    CARDS — Personnalité premium
@@ -1881,7 +1887,10 @@ body.focus-mode #focus-exit-btn{display:flex}
 
 <!-- APP -->
 <div id="app">
-  <nav class="nav">
+  <nav class="nav" style="position:relative">
+    <button class="push-bell" id="push-bell-btn" onclick="togglePush()" title="Notifications" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+    </button>
     <button class="nav-btn active" onclick="showPage('home',this)" aria-label="Dashboard">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       Dashboard
@@ -5802,6 +5811,7 @@ window.toggleWhoopDay=function(key){
   if(el)el.classList.toggle('open');
 };
 
+// ══════════════════════════════════════════════
 //  FOLLOWER TRACKER
 // ══════════════════════════════════════════════
 let followersChart=null;
@@ -5944,8 +5954,6 @@ function santeEdit(mid){
   const c=SC[ck];
   // Créer l'input inline
   const inp=document.createElement('input');
-  // Créer l'input inline
-  const inp=document.createElement('input');
   if(conf.inputType==='text'){
     inp.type='text';
     inp.placeholder=conf.inputPlaceholder||'0';
@@ -5972,7 +5980,7 @@ function santeEdit(mid){
   });
   // Sauvegarde au blur + re-render
   inp.addEventListener('blur',()=>{
-    const v=parseFloat(inp.value)||0;
+    const v=conf.parseInput?conf.parseInput(inp.value):(parseFloat(inp.value)||0);
     const d=store.get('sante_'+todayKey(),{});
     if(v>0)d[mid]=v;else delete d[mid];
     store.set('sante_'+todayKey(),d);
@@ -11926,6 +11934,51 @@ function morningBriefingRegenerate(){
   morningBriefingGenerate(true);
 }
 
+// ── PUSH NOTIFICATIONS ──
+const PUSH_SERVER='http://178.105.58.171:3001';
+const VAPID_PUBLIC='BAqywgIHA1fHZfFku_zR28HBodQdBGwJrNBDGTakJlu4eZYkGm_Wa-X-umX4N2AiyIcdNH8izDkxcJ5-HaXjeiQ';
+
+function urlB64ToUint8Array(b64){
+  const pad='='.repeat((4-b64.length%4)%4);
+  const base64=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);
+  const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+
+async function initPush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
+  try{
+    const reg=await navigator.serviceWorker.register('/perso/sw.js');
+    const sub=await reg.pushManager.getSubscription();
+    const btn=document.getElementById('push-bell-btn');
+    if(btn){btn.style.display='';btn.classList.toggle('on',!!sub);}
+  }catch(e){console.warn('Push init:',e);}
+}
+
+async function togglePush(){
+  if(!('serviceWorker' in navigator))return;
+  const reg=await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  const btn=document.getElementById('push-bell-btn');
+  if(sub){
+    await sub.unsubscribe();
+    btn&&btn.classList.remove('on');
+  }else{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted')return;
+    sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC)});
+    await fetch(PUSH_SERVER+'/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)}).catch(()=>{});
+    btn&&btn.classList.add('on');
+  }
+}
+
+// Envoyer une notif push depuis le dashboard (appel manuel ou automatique)
+window.sendPushNotif=function(title,body,icon){
+  fetch(PUSH_SERVER+'/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,body,icon:icon||'/perso/icons/icon-192.png'})}).catch(()=>{});
+};
+
 document.addEventListener('DOMContentLoaded',()=>{
   // ── Migration XP v2 : anciens seuils cumulatifs → nouveaux ──
   if(!store.get('xp_migrated_v2',false)){
@@ -11949,6 +12002,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(checkAndSaveQuests,1000);
   setTimeout(saveWeeklySnapshots,1200);
   setTimeout(()=>morningBriefingGenerate(false),1500);
+  setTimeout(initPush,2000);
 });
 
 </script>
