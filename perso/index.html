@@ -2835,6 +2835,24 @@ body.focus-mode #focus-exit-btn{display:flex}
             </div>
           </div>
 
+          <!-- Obsidian Local REST API -->
+          <div style="margin-top:16px;padding:14px;background:var(--bg2);border-radius:14px;border:1px solid var(--border2)">
+            <div class="setting-lbl" style="color:#7c3aed;font-weight:600;margin-bottom:8px">🧠 Obsidian — Mémoire longue durée</div>
+            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27123</div></div><input class="setting-input" id="obsidian-port" placeholder="27123" oninput="saveSettings()"></div>
+            <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
+            <div class="setting-row" style="margin-top:8px">
+              <div><div class="setting-lbl">🧠 Mémoire Obsidian activée</div><div class="setting-sub">Journal, Bible, Livres, Coach IA</div></div>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="obsidian-enabled-toggle" style="accent-color:#7c3aed;width:16px;height:16px" onchange="store.set('obsidian_enabled',this.checked);toast(this.checked?'Mémoire Obsidian activée ✓':'Mémoire Obsidian désactivée')">
+                <span style="font-size:12px;color:var(--text2)" id="obsidian-enabled-lbl">Off</span>
+              </label>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="save-btn" onclick="obsidianTest()">🧪 Tester Obsidian</button>
+              <span id="obsidian-test-result" style="font-size:12px;color:var(--text3)"></span>
+            </div>
+          </div>
+
           <div class="setting-row" style="padding-top:12px;border-top:1px solid var(--border2)">
             <div><div class="setting-lbl">🔊 Sons activés</div><div class="setting-sub">Dings, bells et fanfares subtils</div></div>
             <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -4045,10 +4063,12 @@ function addMsg(role,text){
   return wrap;
 }
 
+let _coachLog=[];
 async function sendCoach(){
   const inp=document.getElementById('coach-input');
   const val=inp.value.trim();if(!val)return;
   inp.value='';
+  _coachLog.push('**Moi :** '+val);
   addMsg('user',val);
   const typing=addMsg('coach','<div class="typing-dots"><span></span><span></span><span></span></div>');
 
@@ -4084,8 +4104,14 @@ Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet po
     const data=await res.json();
     const reply=data.content?.find(b=>b.type==='text')?.text||FALLBACK[fbIdx++%FALLBACK.length];
     typing.querySelector('.msg').innerHTML=reply;
+    _coachLog.push('**Overseer :** '+reply);
   }catch{
-    typing.querySelector('.msg').innerHTML=FALLBACK[fbIdx++%FALLBACK.length];
+    const fb=FALLBACK[fbIdx++%FALLBACK.length];
+    typing.querySelector('.msg').innerHTML=fb;
+    _coachLog.push('**Overseer :** '+fb);
+  }
+  if(_coachLog.length>=6){
+    obsidianWrite('Mémoire Jarvis',todayKey()+'_coach',`# Conversation Coach — ${todayKey()}\n\n${_coachLog.join('\n\n')}\n`);
   }
   document.getElementById('chat-msgs').scrollTop=99999;
 }
@@ -4703,6 +4729,11 @@ function loadSettings(){
   document.getElementById('gcal-client-secret').value=s.googleClientSecret;
   if(s.nordigenSecretId)document.getElementById('nordigen-secret-id').value=s.nordigenSecretId;
   if(s.nordigenSecretKey)document.getElementById('nordigen-secret-key').value=s.nordigenSecretKey;
+  if(s.obsidianPort)document.getElementById('obsidian-port').value=s.obsidianPort;
+  if(s.obsidianKey)document.getElementById('obsidian-key').value=s.obsidianKey;
+  const obsToggle=document.getElementById('obsidian-enabled-toggle');
+  const obsLbl=document.getElementById('obsidian-enabled-lbl');
+  if(obsToggle){const en=store.get('obsidian_enabled',false);obsToggle.checked=en;if(obsLbl)obsLbl.textContent=en?'On':'Off';}
   const devSel=document.getElementById('capital-devise-sel');
   if(devSel)devSel.value=store.get('capital_devise','$');
   const rateInp=document.getElementById('capital-rate-inp');
@@ -4729,10 +4760,38 @@ function saveSettings(){
     googleClientSecret:document.getElementById('gcal-client-secret').value.trim()||GOOGLE_CLIENT_SECRET_DEFAULT,
     nordigenSecretId:document.getElementById('nordigen-secret-id').value.trim(),
     nordigenSecretKey:document.getElementById('nordigen-secret-key').value.trim(),
+    obsidianPort:document.getElementById('obsidian-port')?.value.trim()||'27123',
+    obsidianKey:document.getElementById('obsidian-key')?.value.trim()||'',
   };
   store.set('settings',s);
 }
 
+// ── OBSIDIAN INTEGRATION ──
+async function obsidianWrite(folder,filename,content){
+  if(!store.get('obsidian_enabled',false))return;
+  const s=store.get('settings',{});
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
+  if(!key)return;
+  try{
+    await fetch(`http://localhost:${port}/vault/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}.md`,{
+      method:'PUT',
+      headers:{'Authorization':`Bearer ${key}`,'Content-Type':'text/markdown'},
+      body:content
+    });
+  }catch(e){console.log('Obsidian write error:',e);}
+}
+async function obsidianTest(){
+  const s=store.get('settings',{});
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
+  const res=document.getElementById('obsidian-test-result');
+  if(!key){if(res)res.textContent='⚠ Clé API manquante';return;}
+  try{
+    const r=await fetch(`http://localhost:${port}/`,{headers:{'Authorization':`Bearer ${key}`}});
+    if(res)res.textContent=r.ok?'Connecté ✓':'Erreur '+r.status;
+  }catch(e){if(res)res.textContent='Erreur (Obsidian ouvert ?)';}
+}
 function updateWhoopOauthStatus(){
   const tokens=store.get('whoop_tokens',null);
   const statusEl=document.getElementById('whoop-oauth-status');
@@ -8718,8 +8777,12 @@ function libSave(){
     });
   }
   store.set('library_books',books);
-  // XP : seulement si on passe à 'lu' (pas si c'était déjà 'lu')
+  // XP + Obsidian si on passe à 'lu'
   if(newStatus==='lu'&&oldStatus!=='lu'&&xpItemId){
+    const bkTitle=document.getElementById('lib-inp-title').value.trim();
+    const bkAuthor=document.getElementById('lib-inp-author').value.trim();
+    const bkSummary=document.getElementById('lib-ai-out').textContent||'';
+    obsidianWrite('Livres',bkTitle.replace(/[\/\\:*?"<>|]/g,'_'),`# ${bkTitle}${bkAuthor?' — '+bkAuthor:''}\nDate de fin : ${todayKey()}\n\n## Résumé IA\n${bkSummary||'—'}\n`);
     if(newType==='livre')addXP(50,'book',xpItemId);
     else if(newType==='podcast')addXP(5,'podcast',xpItemId);
     else if(newType==='video')addXP(5,'video',xpItemId);
@@ -10000,6 +10063,7 @@ function checkinSaveEvening(){
   const ameliorer=(document.getElementById('ci-ameliorer')?.value||'').trim();
   const edk=eveningDateKey(); // veille si entre 0h et 4h, sinon aujourd'hui
   store.set('checkin_evening_'+edk,{positives,bien_fait,ameliorer});
+  obsidianWrite('Journal',edk,`# Journal — ${edk}\n\n## 3 choses positives\n1. ${positives[0]||'—'}\n2. ${positives[1]||'—'}\n3. ${positives[2]||'—'}\n\n## Ce que j'ai bien fait\n${bien_fait||'—'}\n\n## Ce que je dois améliorer\n${ameliorer||'—'}\n`);
   const badge=document.getElementById('ci-evening-done-badge');
   if(badge)badge.style.display='';
   addXP(5,'checkin_evening_'+edk); // clé unique par date pour l'anti-spam
@@ -10653,6 +10717,7 @@ function bibleAddStudy(){
   const study=store.get('bible_study',[]);
   study.unshift({date:todayKey(),reference:ref,notes:notes||''});
   store.set('bible_study',study);
+  obsidianWrite('Bible',ref.replace(/[\/\\:*?"<>|]/g,'_'),`# ${ref} — ${todayKey()}\n\n${notes||''}\n`);
   addXP(1,'bible_study');
   document.getElementById('bible-study-ref-inp').value='';
   document.getElementById('bible-study-notes-inp').value='';
