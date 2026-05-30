@@ -3359,6 +3359,7 @@ function checkPwd(){
     document.getElementById('lock').classList.add('hidden');
     document.getElementById('app').classList.add('visible');
     document.getElementById('jarvis-fab').style.display='flex';
+    if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
     initSupabase().then(init).catch(init);
   } else {
     document.getElementById('lock-err').textContent = 'Mot de passe incorrect';
@@ -4705,7 +4706,8 @@ function checkTelegramSchedule(){
   }
   if(h===9&&m===0){
     const goals=store.get('goals_'+today,[]);
-    sendTelegram(`☀️ *Morning check — ${today}*\nTu as ${goals.length} goals prévus aujourd'hui. Let's go !`);
+    notify('☀️ Morning check',`Tu as ${goals.length} goals prévus aujourd'hui. Let's go !`);
+    if(store.get('settings',{}).tgToken) sendTelegram(`☀️ *Morning check — ${today}*\nTu as ${goals.length} goals prévus aujourd'hui. Let's go !`);
   }
   // Dimanche 21h → bilan hebdomadaire
   if(now.getDay()===0&&h===21&&m===0){
@@ -4749,13 +4751,27 @@ function checkTelegramSchedule(){
   }
 }
 
+function notify(title,body){
+  if(!('Notification' in window))return;
+  if(Notification.permission==='granted'){
+    new Notification(title,{body,icon:'/perso/icons/icon-192.png',badge:'/perso/icons/icon-192.png'});
+  }else if(Notification.permission==='default'){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted') new Notification(title,{body,icon:'/perso/icons/icon-192.png'});
+    });
+  }
+}
+
 function _smartSend(type,msg){
   const today=todayKey();
   const sent=store.get('smart_reminders_'+today,[]);
   if(sent.includes(type))return;
   sent.push(type);
   store.set('smart_reminders_'+today,sent);
-  sendTelegram(msg);
+  // Notif locale en priorité + Telegram en secondaire si configuré
+  const lines=msg.replace(/\*/g,'').split('\n');
+  notify(lines[0],lines.slice(1).join('\n')||lines[0]);
+  if(store.get('settings',{}).tgToken&&store.get('settings',{}).tgChatId) sendTelegram(msg);
 }
 
 function _runSmartReminders(now,h,today){
