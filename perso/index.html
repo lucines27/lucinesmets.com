@@ -2409,12 +2409,17 @@ body.focus-mode #focus-exit-btn{display:flex}
           <div id="gmail-mails-list"></div>
         </div>
         <div class="card" style="margin-bottom:10px">
-          <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:8px">Notion — Pipeline UGC</div>
-          <div class="notion-settings" id="notion-settings-wrap">
-            <input class="notion-inp" id="notion-token-inp" placeholder="Token Notion (secret_…)" type="password" oninput="saveNotionSettings()">
-            <input class="notion-inp" id="notion-db-inp" placeholder="Database ID UGC" oninput="saveNotionSettings()">
+          <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="notionPipelineToggle()">
+            <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-weight:600">Notion — Pipeline UGC</div>
+            <span id="notion-pipeline-chevron" style="font-size:14px;color:var(--text3);transition:transform .2s">▾</span>
           </div>
-          <div id="notion-pipeline"></div>
+          <div id="notion-pipeline-body" style="display:none;margin-top:10px">
+            <div class="notion-settings" id="notion-settings-wrap">
+              <input class="notion-inp" id="notion-token-inp" placeholder="Token Notion (secret_…)" type="password" oninput="saveNotionSettings()">
+              <input class="notion-inp" id="notion-db-inp" placeholder="Database ID UGC" oninput="saveNotionSettings()">
+            </div>
+            <div id="notion-pipeline"></div>
+          </div>
         </div>
 
         <!-- UGC Actions quotidiennes -->
@@ -7984,6 +7989,18 @@ async function renderGmailMails(){
 }
 
 // ── Notion ───────────────────────────────────────────────────────
+function notionPipelineToggle(){
+  const body=document.getElementById('notion-pipeline-body');
+  const chevron=document.getElementById('notion-pipeline-chevron');
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  chevron.style.transform=open?'rotate(0deg)':'rotate(-90deg)';
+  if(open){
+    const s=store.get('settings',{});
+    if(s.notionToken&&s.notionDb)renderNotionPipeline();
+  }
+}
+
 function saveNotionSettings(){
   const token=(document.getElementById('notion-token-inp')?.value||'').trim();
   const db=(document.getElementById('notion-db-inp')?.value||'').trim();
