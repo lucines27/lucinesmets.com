@@ -1920,6 +1920,11 @@ body.focus-mode #focus-exit-btn{display:flex}
       <div class="home-split">
       <div class="home-left">
 
+      <!-- Bouton Commencer ma journée -->
+      <div id="start-day-wrap" style="margin-bottom:12px;display:none">
+        <button id="start-day-btn" onclick="startMyDay()" style="width:100%;padding:14px 16px;background:linear-gradient(135deg,#0d9488,#0891b2);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 14px rgba(13,148,136,.3);font-family:inherit;letter-spacing:.01em;transition:opacity .2s">☀️ Commencer ma journée</button>
+      </div>
+
       <div class="section-label">Priorités du jour</div>
       <div class="card">
         <div id="home-priorities"></div>
@@ -2410,6 +2415,15 @@ body.focus-mode #focus-exit-btn{display:flex}
           </div>
         </div>
 
+        <!-- Relances automatiques UGC -->
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#0d9488;font-weight:700;text-transform:uppercase">Relances automatiques</div>
+            <span id="ugc-relances-count" style="font-size:11px;color:var(--text3)"></span>
+          </div>
+          <div id="ugc-relances-table"></div>
+        </div>
+
         <!-- MLM -->
         <div class="section-label">MLM — ZiNRAi</div>
         <div class="card" style="margin-bottom:10px">
@@ -2837,19 +2851,52 @@ body.focus-mode #focus-exit-btn{display:flex}
 
           <!-- Obsidian Local REST API -->
           <div style="margin-top:16px;padding:14px;background:var(--bg2);border-radius:14px;border:1px solid var(--border2)">
-            <div class="setting-lbl" style="color:#7c3aed;font-weight:600;margin-bottom:8px">🧠 Obsidian — Mémoire longue durée</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div class="setting-lbl" style="color:#7c3aed;font-weight:600">🧠 Obsidian — Mémoire longue durée</div>
+              <span id="obsidian-note-count" style="font-size:11px;color:var(--text3)"></span>
+            </div>
             <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27123</div></div><input class="setting-input" id="obsidian-port" placeholder="27123" oninput="saveSettings()"></div>
             <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
             <div class="setting-row" style="margin-top:8px">
-              <div><div class="setting-lbl">🧠 Mémoire Obsidian activée</div><div class="setting-sub">Journal, Bible, Livres, Coach IA</div></div>
+              <div><div class="setting-lbl">🧠 Mémoire Obsidian activée</div><div class="setting-sub">Journal, Bible, Livres, Coach IA, Stats</div></div>
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                <input type="checkbox" id="obsidian-enabled-toggle" style="accent-color:#7c3aed;width:16px;height:16px" onchange="store.set('obsidian_enabled',this.checked);toast(this.checked?'Mémoire Obsidian activée ✓':'Mémoire Obsidian désactivée')">
+                <input type="checkbox" id="obsidian-enabled-toggle" style="accent-color:#7c3aed;width:16px;height:16px" onchange="store.set('obsidian_enabled',this.checked);document.getElementById('obsidian-enabled-lbl').textContent=this.checked?'On':'Off';toast(this.checked?'Mémoire Obsidian activée ✓':'Mémoire Obsidian désactivée');if(this.checked)obsidianCountNotes()">
                 <span style="font-size:12px;color:var(--text2)" id="obsidian-enabled-lbl">Off</span>
               </label>
             </div>
             <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <button class="save-btn" onclick="obsidianTest()">🧪 Tester Obsidian</button>
+              <button class="save-btn" onclick="obsidianTest();obsidianCountNotes()">🧪 Tester</button>
+              <button class="save-btn" onclick="obsidianNightlySync().then(()=>toast('🔄 Sync manuelle effectuée ✓'))">🔄 Sync maintenant</button>
               <span id="obsidian-test-result" style="font-size:12px;color:var(--text3)"></span>
+            </div>
+            <!-- Import mémoire -->
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border2)">
+              <div class="setting-lbl" style="margin-bottom:8px">📥 IMPORT MÉMOIRE</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <label class="save-btn" style="cursor:pointer">📥 Claude (JSON)<input type="file" accept=".json" style="display:none" onchange="jarvisImportClaude(this)"></label>
+                <label class="save-btn" style="cursor:pointer">📥 ChatGPT (JSON)<input type="file" accept=".json,.zip" style="display:none" onchange="jarvisImportChatGPT(this)"></label>
+              </div>
+              <div id="jarvis-import-progress" style="display:none;margin-top:10px">
+                <div style="font-size:12px;color:var(--text2);margin-bottom:4px" id="jarvis-import-status">Import en cours…</div>
+                <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+                  <div id="jarvis-import-bar" style="height:100%;background:#7c3aed;border-radius:3px;width:0%;transition:width .3s"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent email -->
+          <div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border-radius:12px;border:1px solid var(--border2)">
+            <div class="setting-lbl" style="color:#0d9488;font-weight:600;margin-bottom:8px">📧 Agent Email Jarvis</div>
+            <div class="setting-row">
+              <div><div class="setting-lbl">Agent email activé</div><div class="setting-sub">Vérifie tes deux boîtes Gmail toutes les heures</div></div>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="email-agent-toggle" style="accent-color:#0d9488;width:16px;height:16px" onchange="store.set('email_agent_enabled',this.checked);document.getElementById('email-agent-lbl').textContent=this.checked?'On':'Off';toast(this.checked?'Agent email activé ✓':'Agent email désactivé')">
+                <span style="font-size:12px;color:var(--text2)" id="email-agent-lbl">Off</span>
+              </label>
+            </div>
+            <div style="margin-top:8px">
+              <button class="save-btn" onclick="runEmailAgent().then(()=>toast('✓ Vérification email lancée'))">▶ Lancer maintenant</button>
             </div>
           </div>
 
@@ -4053,46 +4100,67 @@ function initCoach(){
   addMsg('coach',`Salut. ${done}/${goals.length} goals cochés aujourd'hui. Recovery à 81 — ton corps est primed. Qu'est-ce qui te bloque ?`);
 }
 
-function addMsg(role,text){
+function addMsg(role,text,userText){
   const msgs=document.getElementById('chat-msgs');
   const wrap=document.createElement('div');
   wrap.innerHTML=`<div class="msg-lbl${role==='user'?' right':''}">${role==='user'?'Toi':'Overseer'}</div>
     <div class="msg ${role}">${text}</div>`;
+  if(role!=='user'){
+    const saveBtn=document.createElement('button');
+    saveBtn.className='coach-save-btn';
+    saveBtn.textContent='💾';
+    saveBtn.title='Retenir dans Obsidian';
+    saveBtn.onclick=()=>jarvisRetainMsg(userText||'',text,saveBtn);
+    wrap.appendChild(saveBtn);
+  }
   msgs.appendChild(wrap);
   msgs.scrollTop=msgs.scrollHeight;
   return wrap;
 }
 
 let _coachLog=[];
+let _coachLastUser='';
 async function sendCoach(){
   const inp=document.getElementById('coach-input');
   const val=inp.value.trim();if(!val)return;
   inp.value='';
+  _coachLastUser=val;
   _coachLog.push('**Moi :** '+val);
   addMsg('user',val);
-  const typing=addMsg('coach','<div class="typing-dots"><span></span><span></span><span></span></div>');
+  const typing=addMsg('coach','<div class="typing-dots"><span></span><span></span><span></span></div>',val);
 
-  const goals=store.get('goals_'+todayKey(),[]);
+  const today=todayKey();
+  const goals=store.get('goals_'+today,[]);
   const habits=store.get('habits_list',DEFAULT_HABITS);
   const habitStats=habits.map(h=>{
     const data=store.get('habit_'+h.id,{});
-    const today=new Date();let streak=0;
-    for(let i=today.getDate();i>=1;i--){
-      const k=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    const now=new Date();let streak=0;
+    for(let i=now.getDate();i>=1;i--){
+      const k=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
       if(data[k])streak++;else break;
     }
     return `${h.name}: streak ${streak}j`;
   }).join(', ');
 
+  const xpS=xpGetState();
+  const lv=xpLevelFor(xpS.total||0);
+  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  const score=calcDayScore();
+  const memory=await loadJarvisMemory();
+
   const systemPrompt=`Tu es Overseer, le coach personnel ultra-direct de Lucine. Tu connais son contexte :
+- Niveau : LV ${lv} — ${lvName} (${xpS.total||0} XP total)
+- Score du jour : ${score}/100
 - Goals du jour: ${goals.map(g=>(g.done?'✓ ':'')+g.text).join(', ')||'Aucun encore'}
 - ${goals.filter(g=>g.done).length}/${goals.length} goals complétés
 - Recovery WHOOP: 81/100, HRV 115ms, sommeil 82%, strain 13.2
 - Habitudes: ${habitStats}
 - Plateformes: TikTok 351, Instagram 1230, YouTube 193
-Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet points.`;
+Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet points.
+${memory?`\n## Mémoire des conversations passées\n${memory}`:''}`;
 
   const key=store.get('settings',{}).apiKey||'';
+  let reply='';
   try{
     if(!key) throw new Error('no key');
     const res=await fetch('https://api.anthropic.com/v1/messages',{
@@ -4102,17 +4170,37 @@ Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet po
         system:systemPrompt,messages:[{role:'user',content:val}]})
     });
     const data=await res.json();
-    const reply=data.content?.find(b=>b.type==='text')?.text||FALLBACK[fbIdx++%FALLBACK.length];
+    reply=data.content?.find(b=>b.type==='text')?.text||FALLBACK[fbIdx++%FALLBACK.length];
     typing.querySelector('.msg').innerHTML=reply;
+    // Met à jour le bouton 💾 avec le texte final
+    const saveBtn=typing.querySelector('.coach-save-btn');
+    if(saveBtn) saveBtn.onclick=()=>jarvisRetainMsg(val,reply,saveBtn);
     _coachLog.push('**Overseer :** '+reply);
   }catch{
     const fb=FALLBACK[fbIdx++%FALLBACK.length];
+    reply=fb;
     typing.querySelector('.msg').innerHTML=fb;
     _coachLog.push('**Overseer :** '+fb);
   }
+
+  // Auto-save après 6 échanges
   if(_coachLog.length>=6){
-    obsidianWrite('Mémoire Jarvis',todayKey()+'_coach',`# Conversation Coach — ${todayKey()}\n\n${_coachLog.join('\n\n')}\n`);
+    obsidianWrite('Mémoire Jarvis',today+'_coach',`# Conversation Coach — ${today}\n\n${_coachLog.join('\n\n')}\n`);
   }
+
+  // Bouton "Sauvegarder conversation" après 4 échanges (8 entrées log = 4 tours)
+  const exchanges=Math.floor(_coachLog.length/2);
+  if(exchanges>=4){
+    const msgs=document.getElementById('chat-msgs');
+    if(!document.getElementById('coach-save-conv-btn')){
+      const saveBar=document.createElement('div');
+      saveBar.id='coach-save-conv-btn';
+      saveBar.style.cssText='text-align:center;padding:8px 0;';
+      saveBar.innerHTML=`<button onclick="jarvisSaveConversation()" style="background:var(--accent-bg);border:1.5px solid var(--accent);color:var(--accent);border-radius:10px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Sauvegarder cette conversation dans Obsidian</button>`;
+      msgs.appendChild(saveBar);
+    }
+  }
+
   document.getElementById('chat-msgs').scrollTop=99999;
 }
 
@@ -4423,6 +4511,18 @@ function checkTelegramSchedule(){
       sendWeeklyReport();
     }
   }
+  // ── Agent email toutes les heures ──
+  if(m===0)runEmailAgent();
+
+  // ── Sync Obsidian nightly 22h ──
+  if(h===22&&m===0){
+    const nightKey='obsidian_nightly_'+today;
+    if(!store.get(nightKey,false)){
+      store.set(nightKey,true);
+      obsidianNightlySync();
+    }
+  }
+
   // ── Rappels intelligents ──
   if(store.get('smart_reminders_enabled',false)){
     const hourKey=today+'_'+h;
@@ -4734,6 +4834,9 @@ function loadSettings(){
   const obsToggle=document.getElementById('obsidian-enabled-toggle');
   const obsLbl=document.getElementById('obsidian-enabled-lbl');
   if(obsToggle){const en=store.get('obsidian_enabled',false);obsToggle.checked=en;if(obsLbl)obsLbl.textContent=en?'On':'Off';}
+  const emailAgentToggle=document.getElementById('email-agent-toggle');
+  const emailAgentLbl=document.getElementById('email-agent-lbl');
+  if(emailAgentToggle){const en=store.get('email_agent_enabled',false);emailAgentToggle.checked=en;if(emailAgentLbl)emailAgentLbl.textContent=en?'On':'Off';}
   const devSel=document.getElementById('capital-devise-sel');
   if(devSel)devSel.value=store.get('capital_devise','$');
   const rateInp=document.getElementById('capital-rate-inp');
@@ -4780,6 +4883,107 @@ async function obsidianWrite(folder, filename, content){
       body:content
     });
   }catch(e){console.log('Obsidian write error:',e);}
+}
+
+async function loadJarvisMemory(){
+  if(!store.get('obsidian_enabled',false))return'';
+  const s=store.get('settings',{});
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
+  if(!key)return'';
+  try{
+    const res=await fetch(`http://localhost:${port}/vault/M%C3%A9moire%20Jarvis/`,{
+      headers:{'Authorization':`Bearer ${key}`}
+    });
+    if(!res.ok)return'';
+    const data=await res.json();
+    const files=(data.files||[]).filter(f=>f.endsWith('.md')).slice(-5);
+    const contents=await Promise.all(files.map(f=>
+      fetch(`http://localhost:${port}/vault/${encodeURIComponent(f)}`,{
+        headers:{'Authorization':`Bearer ${key}`}
+      }).then(r=>r.ok?r.text():'').catch(()=>'')
+    ));
+    return contents.filter(Boolean).join('\n\n---\n\n');
+  }catch(e){return'';}
+}
+
+async function jarvisRetainMsg(userText,coachText,btn){
+  const today=todayKey();
+  const now=new Date();
+  const hhmm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const xpS=xpGetState();
+  const lv=xpLevelFor(xpS.total||0);
+  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  const score=calcDayScore();
+  const goals=store.get('goals_'+today,[]);
+  const done=goals.filter(g=>g.done).length;
+  const content=`# Mémoire Jarvis — ${today} ${hhmm}\n\n## Contexte du jour\n- Niveau : LV ${lv} — ${lvName}\n- Score journalier : ${score}/100\n- Goals complétés : ${done}/${goals.length}\n\n## Échange retenu\n**Moi :** ${userText}\n**Coach :** ${coachText}\n\n## Tags\n#jarvis #${today}\n`;
+  await obsidianWrite('Mémoire Jarvis',`${today}_${Date.now()}`,content);
+  if(btn){btn.textContent='✅';btn.disabled=true;}
+  toast('💾 Mémorisé dans Obsidian');
+}
+
+async function jarvisSaveConversation(){
+  const today=todayKey();
+  const now=new Date();
+  const hhmm=`${String(now.getHours()).padStart(2,'0')}h${String(now.getMinutes()).padStart(2,'0')}`;
+  const filename=`${today}-${hhmm}`;
+  const content=`# Conversation Coach — ${today} ${hhmm}\n\n${_coachLog.join('\n\n')}\n`;
+  await obsidianWrite('Mémoire Jarvis/Conversations',filename,content);
+  const btn=document.getElementById('coach-save-conv-btn');
+  if(btn)btn.innerHTML='<span style="font-size:12px;color:var(--accent)">✅ Conversation sauvegardée</span>';
+  toast('💾 Conversation sauvegardée dans Obsidian');
+}
+
+async function obsidianCountNotes(){
+  const s=store.get('settings',{});
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
+  const el=document.getElementById('obsidian-note-count');
+  if(!key||!el)return;
+  try{
+    const r=await fetch(`http://localhost:${port}/vault/M%C3%A9moire%20Jarvis/`,{headers:{'Authorization':`Bearer ${key}`}});
+    if(!r.ok){el.textContent='—';return;}
+    const data=await r.json();
+    el.textContent=(data.files||[]).filter(f=>f.endsWith('.md')).length+' notes';
+  }catch(e){el.textContent='—';}
+}
+
+async function obsidianNightlySync(){
+  if(!store.get('obsidian_enabled',false))return;
+  const today=todayKey();
+  const xpS=xpGetState();
+  const lv=xpLevelFor(xpS.total||0);
+  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  const score=calcDayScore();
+  const goals=store.get('goals_'+today,[]);
+  const doneCnt=goals.filter(g=>g.done).length;
+  const habits=store.get('habits_list',[]);
+  const health=store.get('sante_'+today,{});
+  const xpLog=store.get('xp_log_'+today,[]);
+  const xpSnap=store.get('xp_snap_'+today,0);
+  const xpToday=Math.max(0,(xpS.total||0)-xpSnap);
+
+  // Stats du jour
+  const habitLines=habits.map(h=>{
+    const data=store.get('habit_'+h.id,{});
+    const chk=h.type==='quantity'?(parseFloat(data[today])||0)>=(h.target||1):!!data[today];
+    return `- ${chk?'✅':'❌'} ${h.name}`;
+  }).join('\n');
+  const goalLines=goals.map(g=>`- ${g.done?'✅':'⬜'} ${g.text}`).join('\n')||'- Aucun goal';
+  const statsContent=`# Stats — ${today}\n\n## XP & Niveau\n- Niveau : LV ${lv} — ${lvName}\n- XP gagné aujourd'hui : +${xpToday}\n- XP total : ${xpS.total||0}\n\n## Score journalier\n${score}/100\n\n## Goals\n${doneCnt}/${goals.length} complétés\n${goalLines}\n\n## Habitudes\n${habitLines}\n\n## Santé\n- Eau : ${health.eau||0}ml\n- Protéines : ${health.prot||0}g\n- Sommeil : ${health.sleep||0}h\n- Sucre : ${health.sucre||0}g\n`;
+  obsidianWrite('Stats',today,statsContent);
+
+  // Journal du soir si rempli
+  const evening=store.get('checkin_evening_'+today,null);
+  if(evening&&(evening.bien_fait||evening.ameliorer)){
+    const journalContent=`# Journal — ${today}\n\n## Ce que j'ai bien fait\n${evening.bien_fait||'—'}\n\n## Ce que je dois améliorer\n${evening.ameliorer||'—'}\n`;
+    obsidianWrite('Journal',today,journalContent);
+    if(evening.ameliorer){
+      obsidianWrite('Réflexions/Améliorations',today,`# Amélioration — ${today}\n\n${evening.ameliorer}\n`);
+    }
+  }
+  console.log('[Jarvis] Sync Obsidian nightly ✓');
 }
 
 async function obsidianTest(){
@@ -12071,9 +12275,100 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>morningBriefingGenerate(false),1500);
   setTimeout(initPush,2000);
   setTimeout(()=>jarvisInit(),2500);
+  setTimeout(()=>{if(store.get('obsidian_enabled',false))obsidianCountNotes();},3000);
+  setTimeout(()=>{initStartDayBtn();renderUgcRelancesTable();},800);
 });
 
 </script>
+
+<!-- ══════════════════════════════════════════════════════
+     JARVIS MEMORY IMPORTS
+══════════════════════════════════════════════════════ -->
+<script>
+async function _jarvisImportProcess(conversations,sourceName){
+  const apiKey=store.get('settings',{}).apiKey||'';
+  const prog=document.getElementById('jarvis-import-progress');
+  const status=document.getElementById('jarvis-import-status');
+  const bar=document.getElementById('jarvis-import-bar');
+  if(prog)prog.style.display='block';
+  const total=conversations.length;
+  let done=0;
+  for(const conv of conversations){
+    const title=(conv.title||conv.name||'Sans titre').replace(/[\/\\:*?"<>|]/g,'_').substring(0,60);
+    if(status)status.textContent=`Import ${done+1}/${total} — ${title}`;
+    if(bar)bar.style.width=`${Math.round((done/total)*100)}%`;
+    // Extrait le texte des messages
+    let transcript='';
+    const msgs=conv.mapping?Object.values(conv.mapping).filter(n=>n?.message?.content?.parts).map(n=>({role:n.message.author?.role||'user',text:n.message.content.parts.join(' ')})):conv.messages||[];
+    if(Array.isArray(msgs)){
+      transcript=msgs.slice(0,40).map(m=>`${m.role==='assistant'?'Assistant':'Moi'}: ${(m.text||m.content||'').substring(0,500)}`).join('\n');
+    }
+    if(!transcript){done++;continue;}
+    // Résumé via API si clé dispo
+    let summary=transcript.substring(0,800);
+    if(apiKey){
+      try{
+        const res=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+          body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:200,messages:[{role:'user',content:`Résume cette conversation en 5 bullet points clés à retenir. En français. Max 100 mots.\n\n${transcript.substring(0,2000)}`}]})
+        });
+        const data=await res.json();
+        summary=data.content?.[0]?.text||summary;
+      }catch(e){}
+    }
+    const content=`# ${title}\n_Source : ${sourceName}_\n\n## Résumé\n${summary}\n`;
+    await obsidianWrite('Mémoire Jarvis/Imports',title,content);
+    done++;
+    await new Promise(r=>setTimeout(r,300));
+  }
+  if(bar)bar.style.width='100%';
+  if(status)status.textContent=`✅ ${done} conversations importées !`;
+  setTimeout(()=>{if(prog)prog.style.display='none';},3000);
+  obsidianCountNotes();
+  toast(`✅ ${done} conversations importées dans Obsidian`);
+}
+
+function jarvisImportClaude(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      const convs=Array.isArray(data)?data:[data];
+      await _jarvisImportProcess(convs,'Claude.ai');
+    }catch(err){toast('❌ Fichier JSON Claude invalide');}
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+function jarvisImportChatGPT(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      let data=JSON.parse(e.target.result);
+      if(!Array.isArray(data))data=[data];
+      await _jarvisImportProcess(data,'ChatGPT');
+    }catch(err){toast('❌ Fichier JSON ChatGPT invalide (utilise conversations.json du ZIP)');}
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+</script>
+
+<style>
+/* ── Bouton retenir coach ── */
+.coach-save-btn{
+  background:none;border:none;cursor:pointer;font-size:13px;
+  opacity:.45;transition:opacity .15s;padding:2px 4px;
+  display:inline-block;margin-left:4px;vertical-align:middle;
+  line-height:1;
+}
+.coach-save-btn:hover{opacity:1;}
+.coach-save-btn:disabled{opacity:.3;cursor:default;}
+</style>
 
 <!-- ══════════════════════════════════════════════════════
      JARVIS FLOATING WIDGET
@@ -12217,6 +12512,227 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 
 <script>
+// ══════════════════════════════════════════════════════
+//  JARVIS HELPERS (aliases publics)
+// ══════════════════════════════════════════════════════
+function addJarvisMessage(text){
+  _jarvisRenderMsg('bot',text);
+  return document.getElementById('jarvis-messages')?.lastElementChild||{remove:()=>{}};
+}
+function showJarvisBadge(){
+  const b=document.getElementById('jarvis-badge');
+  if(b)b.style.display='block';
+}
+function openJarvisPanel(){
+  if(!_jarvisOpen)jarvisToggle();
+}
+
+// ══════════════════════════════════════════════════════
+//  EMAIL AGENT
+// ══════════════════════════════════════════════════════
+async function runEmailAgent(){
+  if(!store.get('email_agent_enabled',false))return;
+  const lastRun=store.get('email_agent_last_run',0);
+  if(Date.now()-lastRun<3600000)return;
+  store.set('email_agent_last_run',Date.now());
+  const apiKey=store.get('settings',{}).apiKey||'';
+  if(!apiKey)return;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        mcp_servers:[{type:'url',url:'https://gmailmcp.googleapis.com/mcp/v1',name:'gmail'}],
+        system:`Tu es l'agent email de Lucine. Tu gères deux boîtes Gmail : contact@ugcbylucine.be et son Gmail perso. À chaque run, tu dois :
+
+1. PUBS & NEWSLETTERS : Cherche les emails publicitaires et newsletters reçus depuis la dernière vérification. Archive-les automatiquement. Retourne la liste des marques sous forme JSON : [{brand, action: 'archived', offer_relevant: true/false}]. Pour chaque marque, évalue si l'offre pourrait être pertinente pour une collaboration UGC future.
+
+2. EMAILS UGC : Cherche les réponses à des emails de prospection UGC (sujets contenant "collaboration", "UGC", "partenariat", "creator"). Retourne : [{sender, subject, snippet, needs_reply: true/false, received_at}]
+
+3. RELANCES UGC : Cherche les emails de prospection UGC envoyés par Lucine il y a plus de 48h sans réponse. Pour chacun, envoie automatiquement cet email de relance :
+Objet : Re: [sujet original]
+Corps : "Bonjour [prénom/nom marque],\n\nJe me permets de revenir vers vous suite à mon message de il y a quelques jours concernant une potentielle collaboration UGC.\n\nJe sais que vos boîtes mail sont souvent bien remplies, je voulais juste m'assurer que mon message n'était pas passé inaperçu. 😊\n\nJe serais ravie de discuter d'une collaboration créative pour mettre en valeur vos produits de façon authentique. Mon profil et portfolio sont disponibles sur ugcbylucine.be.\n\nBelle journée,\nLucine"
+Retourne la liste des marques relancées : [{brand, email}]
+
+Réponds UNIQUEMENT en JSON strict : {ads: [...], ugc_replies: [...], ugc_followups: [...]}`,
+        messages:[{role:'user',content:'Lance la vérification email maintenant.'}]
+      })
+    });
+    const data=await res.json();
+    const text=data.content?.find(b=>b.type==='text')?.text||'{}';
+    const clean=text.replace(/```json|```/g,'').trim();
+    const result=JSON.parse(clean);
+    processEmailAgentResult(result);
+  }catch(e){console.log('Email agent error:',e);}
+}
+
+function processEmailAgentResult(result){
+  const messages=[];
+  if(result.ads?.length>0){
+    const relevant=result.ads.filter(a=>a.offer_relevant);
+    const archived=result.ads.length;
+    let msg=`📧 J'ai archivé ${archived} pub${archived>1?'s':''}/newsletter${archived>1?'s':''}.`;
+    if(relevant.length>0){
+      msg+=`\n\nCes marques pourraient t'intéresser pour une collab UGC : ${relevant.map(a=>a.brand).join(', ')}. Tu veux que je les ajoute à ta liste de prospection ?`;
+    }
+    messages.push(msg);
+    const existing=store.get('email_agent_ads',[]);
+    store.set('email_agent_ads',[...existing,...result.ads.map(a=>({...a,date:todayKey()}))]);
+  }
+  if(result.ugc_followups?.length>0){
+    const brands=result.ugc_followups.map(f=>f.brand).join(', ');
+    messages.push(`📤 J'ai relancé ${result.ugc_followups.length} marque${result.ugc_followups.length>1?'s':''} UGC sans réponse depuis 48h : ${brands}.`);
+    const log=store.get('ugc_followups_log',[]);
+    store.set('ugc_followups_log',[...log,...result.ugc_followups.map(f=>({...f,date:new Date().toISOString()}))]);
+    renderUgcRelancesTable();
+  }
+  if(result.ugc_replies?.length>0){
+    result.ugc_replies.forEach(reply=>{
+      messages.push(`💌 Nouvelle réponse UGC de ${reply.sender} : "${reply.snippet}"\n\nTu veux que je prépare une réponse ?`);
+    });
+    const existing=store.get('ugc_replies_pending',[]);
+    store.set('ugc_replies_pending',[...existing,...result.ugc_replies]);
+  }
+  if(messages.length===0){store.set('email_agent_last_check',new Date().toISOString());return;}
+  openJarvisPanel();
+  messages.forEach((msg,i)=>setTimeout(()=>addJarvisMessage(msg),i*800));
+  showJarvisBadge();
+}
+
+function initStartDayBtn(){
+  const wrap=document.getElementById('start-day-wrap');
+  if(!wrap)return;
+  const h=new Date().getHours();
+  const done=store.get('day_started_'+todayKey(),false);
+  wrap.style.display=(h>=4&&!done)?'block':'none';
+}
+
+async function startMyDay(){
+  if(store.get('day_started_'+todayKey(),false))return;
+  store.set('day_started_'+todayKey(),true);
+  const wrap=document.getElementById('start-day-wrap');
+  if(wrap)wrap.style.display='none';
+
+  openJarvisPanel();
+
+  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+  const yKey=yesterday.toISOString().slice(0,10);
+  const yGoals=store.get('goals_'+yKey,[]);
+  const yDone=yGoals.filter(g=>g.done).length;
+  const yEvening=store.get('checkin_evening_'+yKey,null);
+  const habits=store.get('habits_list',[]);
+  const todayGoals=store.get('goals_'+todayKey(),[]);
+  const xpS=xpGetState();
+
+  // Patterns
+  const patterns=[];
+  let lowGoalDays=0;
+  for(let i=1;i<=3;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    const g=store.get('goals_'+k,[]);
+    if(g.length>0&&g.filter(x=>x.done).length/g.length<0.5)lowGoalDays++;
+  }
+  if(lowGoalDays>=3)patterns.push('goals faibles 3j de suite');
+  let atlasLow=0;
+  for(let i=1;i<=3;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    const a=store.get('atlas_daily_'+k,null);
+    if(a&&parseFloat(a.avg)<2.7)atlasLow++;
+  }
+  if(atlasLow>=3)patterns.push('Atlas faible 3j de suite');
+  const monthEnd=new Date(new Date().getFullYear(),new Date().getMonth()+1,0);
+  const daysLeft=Math.floor((monthEnd-new Date())/86400000);
+  const monthPriorities=store.get('priorities_month_'+new Date().toISOString().slice(0,7),[]);
+  const notStarted=monthPriorities.filter(p=>p.status==='todo');
+  if(daysLeft<=7&&notStarted.length>0)patterns.push(`${notStarted.length} priorités mois non commencées, J-${daysLeft}`);
+
+  // Milestones streaks
+  const milestones=[];
+  habits.forEach(h=>{
+    const data=store.get('habit_'+h.id,{});
+    const streak=calcStreak(data,v=>!!v,new Date());
+    if([7,14,21,30,60,100].includes(streak))milestones.push(`${h.name} ${streak}j`);
+  });
+
+  const prompt=`Lucine vient de démarrer sa journée. Voici le contexte :
+
+HIER :
+- Goals : ${yDone}/${yGoals.length} complétés
+- XP total actuel : ${xpS.total||0}
+- Réflexion soir : ${yEvening?.ameliorer?'À améliorer : '+yEvening.ameliorer:'non remplie'}
+
+AUJOURD'HUI :
+- ${todayGoals.length} goals planifiés
+- Jours restants dans le mois : ${daysLeft}
+- Priorités mois non commencées : ${notStarted.map(p=>p.text).join(', ')||'aucune'}
+
+PATTERNS DÉTECTÉS : ${patterns.join(', ')||'aucun'}
+MILESTONES : ${milestones.join(', ')||'aucun'}
+
+Génère un débrief matin en 3 messages courts séparés par "|||" :
+1. Bilan factuel d'hier (2-3 phrases max, direct, honnête)
+2. Ce qui mérite attention aujourd'hui. Si milestone, félicite ici.
+3. Une seule question d'ouverture contextuelle et directe
+
+Ton : coach direct et bienveillant. Pas de bullet points. Focus productivité pure. En français.`;
+
+  const apiKey=store.get('settings',{}).apiKey||'';
+  if(!apiKey){addJarvisMessage('Bonjour ! Configure ta clé API Anthropic dans les Réglages pour activer le débrief complet.');return;}
+
+  const loadingEl=addJarvisMessage('…');
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
+        system:'Tu es Jarvis, le coach personnel de Lucine. Direct, bienveillant, focus productivité. Pas de gamification.',
+        messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const reply=data.content?.find(b=>b.type==='text')?.text||'';
+    const parts=reply.split('|||').map(p=>p.trim()).filter(Boolean);
+    loadingEl.remove();
+    parts.forEach((part,i)=>setTimeout(()=>addJarvisMessage(part),i*1200));
+    setTimeout(()=>runEmailAgent(),3000);
+  }catch(e){
+    const msgEl=loadingEl.querySelector('.jarvis-msg');
+    if(msgEl)msgEl.textContent='Erreur de connexion. Vérifie ta clé API dans Réglages.';
+  }
+}
+
+function renderUgcRelancesTable(){
+  const el=document.getElementById('ugc-relances-table');
+  if(!el)return;
+  const log=store.get('ugc_followups_log',[]);
+  const replies=store.get('ugc_replies_pending',[]).map(r=>r.sender||'');
+  if(!log.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px">Aucune relance envoyée</div>';return;}
+  const now=new Date();
+  const thisMonth=now.toISOString().slice(0,7);
+  const monthCount=log.filter(l=>l.date?.startsWith(thisMonth)).length;
+  document.getElementById('ugc-relances-count')&&(document.getElementById('ugc-relances-count').textContent=monthCount+' relances ce mois');
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.08em">
+      <th style="text-align:left;padding:4px 6px">Date</th>
+      <th style="text-align:left;padding:4px 6px">Marque</th>
+      <th style="text-align:left;padding:4px 6px">Email</th>
+      <th style="text-align:left;padding:4px 6px">Statut</th>
+    </tr></thead>
+    <tbody>${log.slice().reverse().slice(0,20).map(l=>{
+      const replied=replies.some(r=>r.toLowerCase().includes((l.brand||'').toLowerCase()));
+      const d=l.date?l.date.slice(0,10):'—';
+      return`<tr style="border-top:1px solid var(--border)">
+        <td style="padding:5px 6px;color:var(--text3)">${d}</td>
+        <td style="padding:5px 6px;font-weight:600">${l.brand||'—'}</td>
+        <td style="padding:5px 6px;color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.email||'—'}</td>
+        <td style="padding:5px 6px"><span style="font-size:10px;padding:2px 7px;border-radius:8px;background:${replied?'#dcfce7':'#fff7ed'};color:${replied?'#16a34a':'#ea580c'};font-weight:600">${replied?'Répondu':'Relancée'}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
 // ══════════════════════════════════════════════════════
 //  JARVIS WIDGET
 // ══════════════════════════════════════════════════════
