@@ -6004,7 +6004,16 @@ async function fetchWhoopData(){
       const sl=mainSleep.score||{};
       cache.sleepPct=sl.sleep_performance_percentage?Math.round(sl.sleep_performance_percentage):null;
     }
-    // Durée totale : somme de TOUTES les sessions (sommeil + siestes)
+    // Filtre : sessions qui se terminent aujourd'hui ou hier (nuit → matin)
+    const todayStr=todayKey();
+    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+    const yStr=yesterday.toISOString().slice(0,10);
+    const todayRecords=sleep.records.filter(r=>{
+      const end=(r.end||'').slice(0,10);
+      return end===todayStr||end===yStr;
+    });
+    const relevantRecords=todayRecords.length>0?todayRecords:sleep.records.slice(0,1);
+
     function _getSleepMs(record){
       const ss=(record.score||{}).stage_summary||{};
       return (ss.total_light_sleep_time_milli||0)
@@ -6014,7 +6023,7 @@ async function fetchWhoopData(){
            || Math.max(0,(ss.total_in_bed_time_milli||0)-(ss.total_awake_time_milli||0))
            || 0;
     }
-    const totalSleepMs = sleep.records.reduce((acc,r)=>acc+_getSleepMs(r), 0);
+    const totalSleepMs = relevantRecords.reduce((acc,r)=>acc+_getSleepMs(r), 0);
     if(totalSleepMs > 0){
       const todayStr = todayKey();
       cache.sleepH = (totalSleepMs/3600000).toFixed(2);
