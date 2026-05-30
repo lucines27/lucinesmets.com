@@ -6007,12 +6007,8 @@ async function fetchWhoopData(){
     }
     // Filtre : sessions qui se terminent aujourd'hui ou hier (nuit → matin)
     const todayStr=todayKey();
-    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
-    const yStr=yesterday.toISOString().slice(0,10);
-    const todayRecords=sleep.records.filter(r=>{
-      const end=(r.end||'').slice(0,10);
-      return end===todayStr||end===yStr;
-    });
+    // Garde uniquement les sessions qui se terminent aujourd'hui (nuit d'hier→matin + siestes du jour)
+    const todayRecords=sleep.records.filter(r=>(r.end||'').slice(0,10)===todayStr);
     const relevantRecords=todayRecords.length>0?todayRecords:sleep.records.slice(0,1);
 
     function _getSleepMs(record){
