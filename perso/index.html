@@ -5996,27 +5996,30 @@ async function fetchWhoopData(){
     cache.rhr=r.resting_heart_rate?Math.round(r.resting_heart_rate):null;
   }
   if(sleep?.records){
-    // Prefer the most recent non-nap sleep for performance %; fall back if needed
+    // Performance % : sommeil principal uniquement
     const mainSleep = sleep.records.find(r => r.nap === false) || sleep.records[0];
     if(mainSleep){
       const sl=mainSleep.score||{};
       cache.sleepPct=sl.sleep_performance_percentage?Math.round(sl.sleep_performance_percentage):null;
-      // Calcul réel : somme des stades (WHOOP n'expose pas total_sleep_time_milli)
-      const ss=sl.stage_summary||{};
-      const sleepMs = (ss.total_light_sleep_time_milli||0)
-                    + (ss.total_slow_wave_sleep_time_milli||0)
-                    + (ss.total_rem_sleep_time_milli||0)
-                    || ss.total_sleep_time_milli
-                    || (ss.total_in_bed_time_milli - (ss.total_awake_time_milli||0))
-                    || 0;
-      if(sleepMs > 0){
-        const todayStr = todayKey();
-        cache.sleepH = (sleepMs/3600000).toFixed(2);
-        const santeKey = 'sante_' + todayStr;
-        const santeData = store.get(santeKey, {});
-        santeData.sleep = Math.round(sleepMs/60000)/60; // précision à la minute
-        store.set(santeKey, santeData);
-      }
+    }
+    // Durée totale : somme de TOUTES les sessions (sommeil + siestes)
+    function _getSleepMs(record){
+      const ss=(record.score||{}).stage_summary||{};
+      return (ss.total_light_sleep_time_milli||0)
+           + (ss.total_slow_wave_sleep_time_milli||0)
+           + (ss.total_rem_sleep_time_milli||0)
+           || ss.total_sleep_time_milli
+           || Math.max(0,(ss.total_in_bed_time_milli||0)-(ss.total_awake_time_milli||0))
+           || 0;
+    }
+    const totalSleepMs = sleep.records.reduce((acc,r)=>acc+_getSleepMs(r), 0);
+    if(totalSleepMs > 0){
+      const todayStr = todayKey();
+      cache.sleepH = (totalSleepMs/3600000).toFixed(2);
+      const santeKey = 'sante_' + todayStr;
+      const santeData = store.get(santeKey, {});
+      santeData.sleep = Math.round(totalSleepMs/60000)/60;
+      store.set(santeKey, santeData);
     }
   }
   // Strain (daily cycle)
