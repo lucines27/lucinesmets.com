@@ -4713,6 +4713,14 @@ function checkTelegramSchedule(){
   // ── Agent email toutes les heures ──
   if(m===0)runEmailAgent();
 
+  // ── Refresh WHOOP token proactif toutes les 45 min ──
+  if(m===0||m===45){
+    const wt=store.get('whoop_tokens',null);
+    if(wt?.refresh_token&&wt?.expires_at&&Date.now()>wt.expires_at-900000){
+      refreshWhoopToken();
+    }
+  }
+
   // ── Refresh abonnés à 8h ──
   if(h===8&&m===0)refreshFollowers(false);
 
@@ -6045,15 +6053,22 @@ function renderWhoopWidget(){
     </div>`;
     return;
   }
-  const needsReconnect=store.get('whoop_needs_reconnect',false)||(tokens.expires_at&&Date.now()>tokens.expires_at);
+  const tokenExpired=(tokens.expires_at&&Date.now()>tokens.expires_at);
+  const needsReconnect=store.get('whoop_needs_reconnect',false)||tokenExpired;
   if(needsReconnect){
+    // Essaie d'abord un refresh silencieux
+    if(tokens.refresh_token&&tokenExpired){
+      refreshWhoopToken().then(ok=>{
+        if(ok){store.set('whoop_needs_reconnect',false);renderWhoopWidget();}
+      });
+    }
     cont.innerHTML=`<div class="card">
       <div class="whoop-header"><span class="whoop-lbl">WHOOP</span><span style="font-size:10px;color:var(--red)">Token expiré</span></div>
       <div style="text-align:center;padding:12px 0 8px">
         <div style="font-size:24px;margin-bottom:8px">🔑</div>
         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">Session expirée</div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.5">Reconnecte WHOOP dans Réglages<br>pour récupérer tes données</div>
-        <button class="whoop-sync-btn" onclick="openSettings();setTimeout(()=>document.getElementById('whoop-connect-btn')?.scrollIntoView({behavior:'smooth'}),300)" style="font-size:11px">→ Aller aux Réglages</button>
+        <button class="whoop-sync-btn" onclick="store.set('whoop_tokens',null);store.set('whoop_needs_reconnect',false);openSettings();setTimeout(()=>document.getElementById('whoop-connect-btn')?.scrollIntoView({behavior:'smooth'}),300)" style="font-size:11px">→ Se reconnecter</button>
       </div>
     </div>`;
     return;
