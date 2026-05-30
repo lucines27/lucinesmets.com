@@ -6026,7 +6026,7 @@ async function fetchWhoopData(){
       cache.sleepH = (totalSleepMs/3600000).toFixed(2);
       const santeKey = 'sante_' + todayStr;
       const santeData = store.get(santeKey, {});
-      santeData.sleep = Math.round(totalSleepMs/60000)/60;
+      santeData.sleep = Math.floor(totalSleepMs/60000)/60;
       store.set(santeKey, santeData);
     }
   }
