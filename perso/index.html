@@ -6011,10 +6011,10 @@ async function fetchWhoopData(){
                     || 0;
       if(sleepMs > 0){
         const todayStr = todayKey();
-        cache.sleepH = (sleepMs/3600000).toFixed(1);
+        cache.sleepH = (sleepMs/3600000).toFixed(2);
         const santeKey = 'sante_' + todayStr;
         const santeData = store.get(santeKey, {});
-        santeData.sleep = parseFloat((sleepMs/3600000).toFixed(1));
+        santeData.sleep = Math.round(sleepMs/60000)/60; // précision à la minute
         store.set(santeKey, santeData);
       }
     }
