@@ -1892,7 +1892,7 @@ body.focus-mode #focus-exit-btn{display:flex}
 <!-- LOCK SCREEN -->
 <div id="lock">
   <div style="text-align:center">
-    <div class="lock-logo">lucine mets</div>
+    <div class="lock-logo">lucine smets</div>
     <div class="lock-title">Espace perso</div>
     <div class="lock-sub">Accès privé</div>
   </div>
@@ -3354,6 +3354,7 @@ function checkPwd(){
   if(v === pwd){
     document.getElementById('lock').classList.add('hidden');
     document.getElementById('app').classList.add('visible');
+    document.getElementById('jarvis-fab').style.display='flex';
     initSupabase().then(init).catch(init);
   } else {
     document.getElementById('lock-err').textContent = 'Mot de passe incorrect';
@@ -12579,6 +12580,7 @@ function jarvisImportChatGPT(input){
 <style>
 /* ── Bouton flottant ── */
 #jarvis-fab{
+  display:none;
   position:fixed;bottom:24px;right:24px;z-index:9999;
   width:56px;height:56px;border-radius:50%;
   background:#0d9488;border:none;cursor:pointer;
