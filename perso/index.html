@@ -2835,21 +2835,43 @@ body.focus-mode #focus-exit-btn{display:flex}
             </div>
           </div>
 
-          <!-- Obsidian Local REST API -->
-          <div style="margin-top:16px;padding:14px;background:var(--bg2);border-radius:14px;border:1px solid var(--border2)">
-            <div class="setting-lbl" style="color:#7c3aed;font-weight:600;margin-bottom:8px">🧠 Obsidian — Mémoire longue durée</div>
-            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27123</div></div><input class="setting-input" id="obsidian-port" placeholder="27124" oninput="saveSettings()"></div>
-            <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
-            <div class="setting-row" style="margin-top:8px">
-              <div><div class="setting-lbl">🧠 Mémoire Obsidian activée</div><div class="setting-sub">Journal, Bible, Livres, Coach IA</div></div>
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-                <input type="checkbox" id="obsidian-enabled-toggle" style="accent-color:#7c3aed;width:16px;height:16px" onchange="store.set('obsidian_enabled',this.checked);toast(this.checked?'Mémoire Obsidian activée ✓':'Mémoire Obsidian désactivée')">
-                <span style="font-size:12px;color:var(--text2)" id="obsidian-enabled-lbl">Off</span>
+          <!-- Obsidian Jarvis Memory System -->
+          <div style="margin-top:16px;padding:14px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(124,58,237,.02));border-radius:14px;border:1px solid rgba(124,58,237,.2)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div class="setting-lbl" style="color:#7c3aed;font-weight:700;font-size:14px">🧠 Jarvis — Mémoire longue durée</div>
+              <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
+                <input type="checkbox" id="obsidian-enabled-toggle" style="accent-color:#7c3aed;width:15px;height:15px" onchange="store.set('obsidian_enabled',this.checked);document.getElementById('obsidian-enabled-lbl').textContent=this.checked?'On':'Off';toast(this.checked?'Mémoire Obsidian activée ✓':'Mémoire Obsidian désactivée')">
+                <span style="font-size:12px;color:var(--text2);font-weight:600" id="obsidian-enabled-lbl">Off</span>
               </label>
             </div>
-            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <button class="save-btn" onclick="obsidianTest()">🧪 Tester Obsidian</button>
+            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27124 (HTTPS)</div></div><input class="setting-input" id="obsidian-port" placeholder="27124" oninput="saveSettings()"></div>
+            <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="save-btn" onclick="obsidianTest()">🧪 Tester</button>
+              <button class="save-btn" onclick="jarvisManualSync()" style="background:rgba(124,58,237,.12);color:#7c3aed;border-color:rgba(124,58,237,.3)">🔄 Sync maintenant</button>
+              <button class="save-btn" onclick="jarvisCountNotes()" style="background:rgba(124,58,237,.08);color:#7c3aed;border-color:rgba(124,58,237,.2)">📊 Compter notes</button>
               <span id="obsidian-test-result" style="font-size:12px;color:var(--text3)"></span>
+            </div>
+            <div id="jarvis-note-count" style="font-size:11px;color:#7c3aed;margin-top:6px;opacity:.8"></div>
+            <!-- Import mémoire -->
+            <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(124,58,237,.15)">
+              <div class="setting-lbl" style="color:#7c3aed;margin-bottom:8px">📥 Import Mémoire</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <label class="save-btn" style="cursor:pointer;background:rgba(124,58,237,.1);color:#7c3aed;border-color:rgba(124,58,237,.25)">
+                  📥 Importer export Claude (JSON)
+                  <input type="file" accept=".json" style="display:none" onchange="jarvisImportClaude(this)">
+                </label>
+                <label class="save-btn" style="cursor:pointer;background:rgba(16,163,127,.1);color:#10a37f;border-color:rgba(16,163,127,.25)">
+                  📥 Importer export ChatGPT (JSON)
+                  <input type="file" accept=".json" style="display:none" onchange="jarvisImportChatGPT(this)">
+                </label>
+              </div>
+              <div id="jarvis-import-bar" style="display:none;margin-top:10px">
+                <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden">
+                  <div id="jarvis-import-fill" style="height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:99px;width:0%;transition:width .3s"></div>
+                </div>
+                <div id="jarvis-import-lbl" style="font-size:11px;color:var(--text3);margin-top:4px;text-align:center"></div>
+              </div>
             </div>
           </div>
 
@@ -4046,6 +4068,7 @@ const FALLBACK=[
 let fbIdx=0;
 
 function initCoach(){
+  loadJarvisMemory().then(m=>{_jarvisMemory=m;});
   const msgs=document.getElementById('chat-msgs');
   msgs.innerHTML='';
   const goals=store.get('goals_'+todayKey(),[]);
@@ -4056,18 +4079,23 @@ function initCoach(){
 function addMsg(role,text){
   const msgs=document.getElementById('chat-msgs');
   const wrap=document.createElement('div');
+  wrap.style.position='relative';
   wrap.innerHTML=`<div class="msg-lbl${role==='user'?' right':''}">${role==='user'?'Toi':'Overseer'}</div>
-    <div class="msg ${role}">${text}</div>`;
+    <div class="msg ${role}">${text}</div>${role==='coach'?`<button style="position:absolute;right:4px;bottom:2px;background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);padding:1px 3px;opacity:.5;line-height:1;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5" onclick="jarvisRetainMsg(this)" title="Retenir dans Obsidian">💾</button>`:''}
+    `;
   msgs.appendChild(wrap);
   msgs.scrollTop=msgs.scrollHeight;
   return wrap;
 }
 
 let _coachLog=[];
+let _lastUserMsg='';
+let _jarvisMemory='';
 async function sendCoach(){
   const inp=document.getElementById('coach-input');
   const val=inp.value.trim();if(!val)return;
   inp.value='';
+  _lastUserMsg=val;
   _coachLog.push('**Moi :** '+val);
   addMsg('user',val);
   const typing=addMsg('coach','<div class="typing-dots"><span></span><span></span><span></span></div>');
@@ -4084,13 +4112,14 @@ async function sendCoach(){
     return `${h.name}: streak ${streak}j`;
   }).join(', ');
 
+  const memoryBlock=_jarvisMemory?`\n\n## Mémoire des conversations passées\n${_jarvisMemory.slice(0,2000)}`:'';
   const systemPrompt=`Tu es Overseer, le coach personnel ultra-direct de Lucine. Tu connais son contexte :
 - Goals du jour: ${goals.map(g=>(g.done?'✓ ':'')+g.text).join(', ')||'Aucun encore'}
 - ${goals.filter(g=>g.done).length}/${goals.length} goals complétés
 - Recovery WHOOP: 81/100, HRV 115ms, sommeil 82%, strain 13.2
 - Habitudes: ${habitStats}
 - Plateformes: TikTok 351, Instagram 1230, YouTube 193
-Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet points.`;
+Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet points.${memoryBlock}`;
 
   const key=store.get('settings',{}).apiKey||'';
   try{
@@ -4109,6 +4138,16 @@ Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet po
     const fb=FALLBACK[fbIdx++%FALLBACK.length];
     typing.querySelector('.msg').innerHTML=fb;
     _coachLog.push('**Overseer :** '+fb);
+  }
+  // Auto-save button after 4 exchanges (8 log entries)
+  if(_coachLog.length===8){
+    const msgs=document.getElementById('chat-msgs');
+    if(msgs&&!document.getElementById('jarvis-save-conv-btn')){
+      const div=document.createElement('div');
+      div.style.cssText='text-align:center;padding:8px 0';
+      div.innerHTML=`<button id="jarvis-save-conv-btn" onclick="jarvisSaveConversation()" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);color:#7c3aed;border-radius:10px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Sauvegarder cette conversation dans Obsidian</button>`;
+      msgs.appendChild(div);
+    }
   }
   if(_coachLog.length>=6){
     obsidianWrite('Mémoire Jarvis',todayKey()+'_coach',`# Conversation Coach — ${todayKey()}\n\n${_coachLog.join('\n\n')}\n`);
@@ -4422,6 +4461,11 @@ function checkTelegramSchedule(){
       store.set('last_weekly_report',mondayKey);
       sendWeeklyReport();
     }
+  }
+  // ── Obsidian daily sync at 22h ──
+  if(h===22&&m===0){
+    const obsKey='obsidian_daily_'+today;
+    if(!store.get(obsKey,false)){store.set(obsKey,true);jarvisDailySync();}
   }
   // ── Rappels intelligents ──
   if(store.get('smart_reminders_enabled',false)){
@@ -4792,6 +4836,180 @@ async function obsidianTest(){
     if(res)res.textContent=r.ok?'Connecté ✓':'Erreur '+r.status;
   }catch(e){if(res)res.textContent='Erreur (Obsidian ouvert ?)';}
 }
+
+// ══════════════════════════════════════════════
+//  JARVIS MEMORY SYSTEM
+// ══════════════════════════════════════════════
+
+async function loadJarvisMemory(){
+  if(!store.get('obsidian_enabled',false))return '';
+  const s=store.get('settings',{});
+  const port=s.obsidianPort||'27124';
+  const key=s.obsidianKey||'';
+  if(!key)return '';
+  try{
+    const res=await fetch(`https://127.0.0.1:${port}/vault/M%C3%A9moire%20Jarvis/`,{
+      headers:{'Authorization':`Bearer ${key}`}
+    });
+    const data=await res.json();
+    const files=(data.files||[]).filter(f=>f.endsWith('.md')).slice(-5);
+    const contents=await Promise.all(files.map(f=>
+      fetch(`https://127.0.0.1:${port}/vault/${encodeURIComponent(f)}`,{
+        headers:{'Authorization':`Bearer ${key}`}
+      }).then(r=>r.text()).catch(()=>'')
+    ));
+    return contents.filter(Boolean).join('\n\n---\n\n');
+  }catch(e){return '';}
+}
+
+function jarvisRetainMsg(btn){
+  const wrap=btn.parentElement;
+  const coachMsg=wrap.querySelector('.msg.coach');
+  const coachText=coachMsg?.innerText||coachMsg?.textContent||'';
+  if(!coachText||coachText.includes('●'))return;
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const xpNow=xpGetState().total||0;
+  const lv=xpLevelFor(xpNow);
+  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  const score=store.get('day_score_'+todayKey(),0);
+  const goals=store.get('goals_'+todayKey(),[]);
+  const content=`# Mémoire Jarvis — ${todayKey()} ${timeStr}\n\n## Contexte du jour\n- Niveau : LV ${lv} — ${lvName}\n- Score journalier : ${score}/100\n- Goals complétés : ${goals.filter(g=>g.done).length}/${goals.length}\n\n## Échange retenu\n**Moi :** ${_lastUserMsg||'—'}\n**Coach :** ${coachText}\n\n## Tags\n#jarvis #${todayKey()}\n`;
+  obsidianWrite('Mémoire Jarvis',todayKey()+'_'+timeStr.replace(':','-'),content);
+  btn.textContent='✓';btn.style.color='#7c3aed';btn.style.opacity='1';
+  toast('Mémorisé dans Obsidian ✓');
+}
+
+function jarvisSaveConversation(){
+  if(!_coachLog.length)return;
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const filename=todayKey()+'-'+timeStr.replace(':','-');
+  obsidianWrite('Mémoire Jarvis/Conversations',filename,`# Conversation Coach — ${todayKey()} ${timeStr}\n\n${_coachLog.join('\n\n')}\n`);
+  toast('Conversation sauvegardée dans Obsidian ✓');
+  const btn=document.getElementById('jarvis-save-conv-btn');
+  if(btn){btn.textContent='✓ Sauvegardé';btn.disabled=true;btn.style.opacity='.6';}
+}
+
+async function jarvisDailySync(){
+  if(!store.get('obsidian_enabled',false))return;
+  const today=todayKey();
+  const evening=store.get('checkin_evening_'+today,null);
+  if(evening&&(evening.positives?.some(p=>p)||evening.bien_fait||evening.ameliorer)){
+    const pos=evening.positives||[];
+    obsidianWrite('Journal',today,`# Journal — ${today}\n\n## 3 choses positives\n1. ${pos[0]||'—'}\n2. ${pos[1]||'—'}\n3. ${pos[2]||'—'}\n\n## Ce que j'ai bien fait\n${evening.bien_fait||'—'}\n\n## Ce que je dois améliorer\n${evening.ameliorer||'—'}\n`);
+  }
+  if(evening?.ameliorer){
+    obsidianWrite('Réflexions',today,`# Point d'amélioration — ${today}\n\n${evening.ameliorer}\n`);
+  }
+  const goals=store.get('goals_'+today,[]);
+  const habits=store.get('habits_list',[]);
+  const xpState=xpGetState();
+  const lv=xpLevelFor(xpState.total||0);
+  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  const score=store.get('day_score_'+today,0);
+  const morning=store.get('checkin_morning_'+today,null);
+  const xpToday=store.get('xp_today_'+today,0);
+  const habitLines=habits.map(h=>{
+    const v=store.get('habit_'+h.id,{})[today];
+    const done=h.type==='quantity'?(parseFloat(v)||0)>=(h.target||1):!!v;
+    return `- ${done?'✅':'❌'} ${h.emoji||''} ${h.name}`;
+  }).join('\n');
+  const goalLines=goals.map(g=>`- ${g.done?'✅':'❌'} ${g.text}`).join('\n')||'Aucun goal';
+  obsidianWrite('Stats',today,`# Stats — ${today}\n\n## XP & Niveau\n- Niveau : LV ${lv} — ${lvName}\n- XP gagné aujourd'hui : +${xpToday}\n- XP total : ${xpState.total||0}\n\n## Score journalier\n${score}/100\n\n## Goals\n${goals.filter(g=>g.done).length}/${goals.length} complétés\n${goalLines}\n\n## Habitudes\n${habitLines}\n\n## Mots clés du jour\n${morning?.intention||'—'} · ${morning?.hiver||'—'} · ${evening?.bien_fait||'—'}\n`);
+}
+
+function jarvisManualSync(){
+  if(!store.get('obsidian_enabled',false)){toast('Active d'abord la mémoire Obsidian');return;}
+  jarvisDailySync().then(()=>toast('Sync Obsidian effectuée ✓')).catch(()=>toast('Sync Obsidian effectuée ✓'));
+  jarvisDailySync();
+  toast('Sync Obsidian en cours…');
+}
+
+async function jarvisCountNotes(){
+  const s=store.get('settings',{});
+  const port=s.obsidianPort||'27124';
+  const key=s.obsidianKey||'';
+  const el=document.getElementById('jarvis-note-count');
+  if(!key){if(el)el.textContent='Clé API manquante';return;}
+  if(el)el.textContent='Comptage…';
+  try{
+    const res=await fetch(`https://127.0.0.1:${port}/vault/`,{headers:{'Authorization':`Bearer ${key}`}});
+    const data=await res.json();
+    const count=(data.files||[]).filter(f=>f.endsWith('.md')).length;
+    if(el)el.textContent=`${count} note${count!==1?'s':''} dans le vault Obsidian`;
+  }catch(e){if(el)el.textContent='Connexion impossible';}
+}
+
+async function jarvisImportClaude(input){
+  const file=input.files?.[0];if(!file)return;
+  const bar=document.getElementById('jarvis-import-bar');
+  const fill=document.getElementById('jarvis-import-fill');
+  const lbl=document.getElementById('jarvis-import-lbl');
+  if(bar)bar.style.display='block';
+  try{
+    const data=JSON.parse(await file.text());
+    const convs=Array.isArray(data)?data:(data.conversations||[]);
+    const apiKey=store.get('settings',{}).apiKey||'';
+    let done=0;
+    for(const conv of convs){
+      const title=(conv.name||conv.title||'Conversation').replace(/[\/\\:*?"<>|]/g,'_').slice(0,60);
+      const msgs=(conv.chat_messages||conv.messages||[]).slice(0,8);
+      const excerpt=msgs.map(m=>`${m.sender==='human'||m.role==='user'?'Moi':'Claude'}: ${(m.text||m.content||'').toString().slice(0,300)}`).join('\n');
+      let summary=excerpt.slice(0,400);
+      if(apiKey&&excerpt.length>80){
+        try{
+          const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:'Résume cette conversation en 5 bullet points clés à retenir. En français. Max 100 mots.\n\n'+excerpt}]})});
+          const d=await r.json();
+          summary=d.content?.find(b=>b.type==='text')?.text||summary;
+        }catch(e){}
+      }
+      await obsidianWrite('Mémoire Jarvis/Imports',title,`# ${title}\nSource : Claude.ai — import du ${todayKey()}\n\n## Résumé\n${summary}\n`);
+      done++;
+      if(fill)fill.style.width=Math.round(done/convs.length*100)+'%';
+      if(lbl)lbl.textContent=`${done}/${convs.length} conversations importées`;
+    }
+    toast(`✓ ${done} conversations Claude importées dans Obsidian`);
+  }catch(e){toast('Erreur import : '+e.message);}
+  setTimeout(()=>{if(bar)bar.style.display='none';},4000);
+  input.value='';
+}
+
+async function jarvisImportChatGPT(input){
+  const file=input.files?.[0];if(!file)return;
+  const bar=document.getElementById('jarvis-import-bar');
+  const fill=document.getElementById('jarvis-import-fill');
+  const lbl=document.getElementById('jarvis-import-lbl');
+  if(bar)bar.style.display='block';
+  try{
+    const data=JSON.parse(await file.text());
+    const convs=Array.isArray(data)?data:[];
+    const apiKey=store.get('settings',{}).apiKey||'';
+    let done=0;
+    for(const conv of convs){
+      const title=(conv.title||'Conversation').replace(/[\/\\:*?"<>|]/g,'_').slice(0,60);
+      const mapping=conv.mapping||{};
+      const msgs=Object.values(mapping).filter(n=>n.message?.content?.parts?.length&&n.message.author.role!=='system').map(n=>`${n.message.author.role==='user'?'Moi':'ChatGPT'}: ${(n.message.content.parts||[]).join(' ').slice(0,300)}`).slice(0,8);
+      const excerpt=msgs.join('\n');
+      let summary=excerpt.slice(0,400);
+      if(apiKey&&excerpt.length>80){
+        try{
+          const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:'Résume cette conversation en 5 bullet points clés à retenir. En français. Max 100 mots.\n\n'+excerpt}]})});
+          const d=await r.json();
+          summary=d.content?.find(b=>b.type==='text')?.text||summary;
+        }catch(e){}
+      }
+      await obsidianWrite('Mémoire Jarvis/Imports',title,`# ${title}\nSource : ChatGPT — import du ${todayKey()}\n\n## Résumé\n${summary}\n`);
+      done++;
+      if(fill)fill.style.width=Math.round(done/convs.length*100)+'%';
+      if(lbl)lbl.textContent=`${done}/${convs.length} conversations importées`;
+    }
+    toast(`✓ ${done} conversations ChatGPT importées dans Obsidian`);
+  }catch(e){toast('Erreur import : '+e.message);}
+  setTimeout(()=>{if(bar)bar.style.display='none';},4000);
+  input.value='';
+}
+
 function updateWhoopOauthStatus(){
   const tokens=store.get('whoop_tokens',null);
   const statusEl=document.getElementById('whoop-oauth-status');
