@@ -2838,7 +2838,7 @@ body.focus-mode #focus-exit-btn{display:flex}
           <!-- Obsidian Local REST API -->
           <div style="margin-top:16px;padding:14px;background:var(--bg2);border-radius:14px;border:1px solid var(--border2)">
             <div class="setting-lbl" style="color:#7c3aed;font-weight:600;margin-bottom:8px">🧠 Obsidian — Mémoire longue durée</div>
-            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27123</div></div><input class="setting-input" id="obsidian-port" placeholder="27123" oninput="saveSettings()"></div>
+            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27123</div></div><input class="setting-input" id="obsidian-port" placeholder="27124" oninput="saveSettings()"></div>
             <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
             <div class="setting-row" style="margin-top:8px">
               <div><div class="setting-lbl">🧠 Mémoire Obsidian activée</div><div class="setting-sub">Journal, Bible, Livres, Coach IA</div></div>
@@ -4760,7 +4760,7 @@ function saveSettings(){
     googleClientSecret:document.getElementById('gcal-client-secret').value.trim()||GOOGLE_CLIENT_SECRET_DEFAULT,
     nordigenSecretId:document.getElementById('nordigen-secret-id').value.trim(),
     nordigenSecretKey:document.getElementById('nordigen-secret-key').value.trim(),
-    obsidianPort:document.getElementById('obsidian-port')?.value.trim()||'27123',
+    obsidianPort:document.getElementById('obsidian-port')?.value.trim()||'27124',
     obsidianKey:document.getElementById('obsidian-key')?.value.trim()||'',
   };
   store.set('settings',s);
@@ -4770,11 +4770,11 @@ function saveSettings(){
 async function obsidianWrite(folder,filename,content){
   if(!store.get('obsidian_enabled',false))return;
   const s=store.get('settings',{});
-  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27124';
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return;
   try{
-    await fetch(`http://localhost:${port}/vault/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}.md`,{
+    await fetch(`https://127.0.0.1:${port}/vault/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}.md`,{
       method:'PUT',
       headers:{'Authorization':`Bearer ${key}`,'Content-Type':'text/markdown'},
       body:content
@@ -4788,7 +4788,7 @@ async function obsidianTest(){
   const res=document.getElementById('obsidian-test-result');
   if(!key){if(res)res.textContent='⚠ Clé API manquante';return;}
   try{
-    const r=await fetch(`http://localhost:${port}/`,{headers:{'Authorization':`Bearer ${key}`}});
+    const r=await fetch(`https://127.0.0.1:${port}/`,{headers:{'Authorization':`Bearer ${key}`}});
     if(res)res.textContent=r.ok?'Connecté ✓':'Erreur '+r.status;
   }catch(e){if(res)res.textContent='Erreur (Obsidian ouvert ?)';}
 }
