@@ -1876,7 +1876,7 @@ body.focus-mode #focus-exit-btn{display:flex}
 <!-- LOCK SCREEN -->
 <div id="lock">
   <div style="text-align:center">
-    <div class="lock-logo">lucine smets</div>
+    <div class="lock-logo">lucine mets</div>
     <div class="lock-title">Espace perso</div>
     <div class="lock-sub">Accès privé</div>
   </div>
@@ -2835,43 +2835,21 @@ body.focus-mode #focus-exit-btn{display:flex}
             </div>
           </div>
 
-          <!-- Obsidian Jarvis Memory System -->
-          <div style="margin-top:16px;padding:14px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(124,58,237,.02));border-radius:14px;border:1px solid rgba(124,58,237,.2)">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <div class="setting-lbl" style="color:#7c3aed;font-weight:700;font-size:14px">🧠 Jarvis — Mémoire longue durée</div>
-              <label style="display:flex;align-items:center;gap:5px;cursor:pointer">
-                <input type="checkbox" id="obsidian-enabled-toggle" style="accent-color:#7c3aed;width:15px;height:15px" onchange="store.set('obsidian_enabled',this.checked);document.getElementById('obsidian-enabled-lbl').textContent=this.checked?'On':'Off';toast(this.checked?'Mémoire Obsidian activée ✓':'Mémoire Obsidian désactivée')">
-                <span style="font-size:12px;color:var(--text2);font-weight:600" id="obsidian-enabled-lbl">Off</span>
+          <!-- Obsidian Local REST API -->
+          <div style="margin-top:16px;padding:14px;background:var(--bg2);border-radius:14px;border:1px solid var(--border2)">
+            <div class="setting-lbl" style="color:#7c3aed;font-weight:600;margin-bottom:8px">🧠 Obsidian — Mémoire longue durée</div>
+            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27123</div></div><input class="setting-input" id="obsidian-port" placeholder="27123" oninput="saveSettings()"></div>
+            <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
+            <div class="setting-row" style="margin-top:8px">
+              <div><div class="setting-lbl">🧠 Mémoire Obsidian activée</div><div class="setting-sub">Journal, Bible, Livres, Coach IA</div></div>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="obsidian-enabled-toggle" style="accent-color:#7c3aed;width:16px;height:16px" onchange="store.set('obsidian_enabled',this.checked);toast(this.checked?'Mémoire Obsidian activée ✓':'Mémoire Obsidian désactivée')">
+                <span style="font-size:12px;color:var(--text2)" id="obsidian-enabled-lbl">Off</span>
               </label>
             </div>
-            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27124 (HTTPS)</div></div><input class="setting-input" id="obsidian-port" placeholder="27124" oninput="saveSettings()"></div>
-            <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <button class="save-btn" onclick="obsidianTest()">🧪 Tester</button>
-              <button class="save-btn" onclick="jarvisManualSync()" style="background:rgba(124,58,237,.12);color:#7c3aed;border-color:rgba(124,58,237,.3)">🔄 Sync maintenant</button>
-              <button class="save-btn" onclick="jarvisCountNotes()" style="background:rgba(124,58,237,.08);color:#7c3aed;border-color:rgba(124,58,237,.2)">📊 Compter notes</button>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="save-btn" onclick="obsidianTest()">🧪 Tester Obsidian</button>
               <span id="obsidian-test-result" style="font-size:12px;color:var(--text3)"></span>
-            </div>
-            <div id="jarvis-note-count" style="font-size:11px;color:#7c3aed;margin-top:6px;opacity:.8"></div>
-            <!-- Import mémoire -->
-            <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(124,58,237,.15)">
-              <div class="setting-lbl" style="color:#7c3aed;margin-bottom:8px">📥 Import Mémoire</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <label class="save-btn" style="cursor:pointer;background:rgba(124,58,237,.1);color:#7c3aed;border-color:rgba(124,58,237,.25)">
-                  📥 Importer export Claude (JSON)
-                  <input type="file" accept=".json" style="display:none" onchange="jarvisImportClaude(this)">
-                </label>
-                <label class="save-btn" style="cursor:pointer;background:rgba(16,163,127,.1);color:#10a37f;border-color:rgba(16,163,127,.25)">
-                  📥 Importer export ChatGPT (JSON)
-                  <input type="file" accept=".json" style="display:none" onchange="jarvisImportChatGPT(this)">
-                </label>
-              </div>
-              <div id="jarvis-import-bar" style="display:none;margin-top:10px">
-                <div style="background:var(--bg3);border-radius:99px;height:6px;overflow:hidden">
-                  <div id="jarvis-import-fill" style="height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:99px;width:0%;transition:width .3s"></div>
-                </div>
-                <div id="jarvis-import-lbl" style="font-size:11px;color:var(--text3);margin-top:4px;text-align:center"></div>
-              </div>
             </div>
           </div>
 
@@ -4068,7 +4046,6 @@ const FALLBACK=[
 let fbIdx=0;
 
 function initCoach(){
-  loadJarvisMemory().then(m=>{_jarvisMemory=m;});
   const msgs=document.getElementById('chat-msgs');
   msgs.innerHTML='';
   const goals=store.get('goals_'+todayKey(),[]);
@@ -4079,23 +4056,18 @@ function initCoach(){
 function addMsg(role,text){
   const msgs=document.getElementById('chat-msgs');
   const wrap=document.createElement('div');
-  wrap.style.position='relative';
   wrap.innerHTML=`<div class="msg-lbl${role==='user'?' right':''}">${role==='user'?'Toi':'Overseer'}</div>
-    <div class="msg ${role}">${text}</div>${role==='coach'?`<button style="position:absolute;right:4px;bottom:2px;background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);padding:1px 3px;opacity:.5;line-height:1;transition:opacity .15s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5" onclick="jarvisRetainMsg(this)" title="Retenir dans Obsidian">💾</button>`:''}
-    `;
+    <div class="msg ${role}">${text}</div>`;
   msgs.appendChild(wrap);
   msgs.scrollTop=msgs.scrollHeight;
   return wrap;
 }
 
 let _coachLog=[];
-let _lastUserMsg='';
-let _jarvisMemory='';
 async function sendCoach(){
   const inp=document.getElementById('coach-input');
   const val=inp.value.trim();if(!val)return;
   inp.value='';
-  _lastUserMsg=val;
   _coachLog.push('**Moi :** '+val);
   addMsg('user',val);
   const typing=addMsg('coach','<div class="typing-dots"><span></span><span></span><span></span></div>');
@@ -4112,14 +4084,13 @@ async function sendCoach(){
     return `${h.name}: streak ${streak}j`;
   }).join(', ');
 
-  const memoryBlock=_jarvisMemory?`\n\n## Mémoire des conversations passées\n${_jarvisMemory.slice(0,2000)}`:'';
   const systemPrompt=`Tu es Overseer, le coach personnel ultra-direct de Lucine. Tu connais son contexte :
 - Goals du jour: ${goals.map(g=>(g.done?'✓ ':'')+g.text).join(', ')||'Aucun encore'}
 - ${goals.filter(g=>g.done).length}/${goals.length} goals complétés
 - Recovery WHOOP: 81/100, HRV 115ms, sommeil 82%, strain 13.2
 - Habitudes: ${habitStats}
 - Plateformes: TikTok 351, Instagram 1230, YouTube 193
-Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet points.${memoryBlock}`;
+Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet points.`;
 
   const key=store.get('settings',{}).apiKey||'';
   try{
@@ -4138,16 +4109,6 @@ Réponds en français, max 2-3 phrases, direct et bienveillant. Pas de bullet po
     const fb=FALLBACK[fbIdx++%FALLBACK.length];
     typing.querySelector('.msg').innerHTML=fb;
     _coachLog.push('**Overseer :** '+fb);
-  }
-  // Auto-save button after 4 exchanges (8 log entries)
-  if(_coachLog.length===8){
-    const msgs=document.getElementById('chat-msgs');
-    if(msgs&&!document.getElementById('jarvis-save-conv-btn')){
-      const div=document.createElement('div');
-      div.style.cssText='text-align:center;padding:8px 0';
-      div.innerHTML=`<button id="jarvis-save-conv-btn" onclick="jarvisSaveConversation()" style="background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.3);color:#7c3aed;border-radius:10px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Sauvegarder cette conversation dans Obsidian</button>`;
-      msgs.appendChild(div);
-    }
   }
   if(_coachLog.length>=6){
     obsidianWrite('Mémoire Jarvis',todayKey()+'_coach',`# Conversation Coach — ${todayKey()}\n\n${_coachLog.join('\n\n')}\n`);
@@ -4461,11 +4422,6 @@ function checkTelegramSchedule(){
       store.set('last_weekly_report',mondayKey);
       sendWeeklyReport();
     }
-  }
-  // ── Obsidian daily sync at 22h ──
-  if(h===22&&m===0){
-    const obsKey='obsidian_daily_'+today;
-    if(!store.get(obsKey,false)){store.set(obsKey,true);jarvisDailySync();}
   }
   // ── Rappels intelligents ──
   if(store.get('smart_reminders_enabled',false)){
@@ -4804,27 +4760,28 @@ function saveSettings(){
     googleClientSecret:document.getElementById('gcal-client-secret').value.trim()||GOOGLE_CLIENT_SECRET_DEFAULT,
     nordigenSecretId:document.getElementById('nordigen-secret-id').value.trim(),
     nordigenSecretKey:document.getElementById('nordigen-secret-key').value.trim(),
-    obsidianPort:document.getElementById('obsidian-port')?.value.trim()||'27124',
+    obsidianPort:document.getElementById('obsidian-port')?.value.trim()||'27123',
     obsidianKey:document.getElementById('obsidian-key')?.value.trim()||'',
   };
   store.set('settings',s);
 }
 
 // ── OBSIDIAN INTEGRATION ──
-async function obsidianWrite(folder,filename,content){
+async function obsidianWrite(folder, filename, content){
   if(!store.get('obsidian_enabled',false))return;
   const s=store.get('settings',{});
-  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27124';
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return;
   try{
-    await fetch(`https://127.0.0.1:${port}/vault/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}.md`,{
+    await fetch(`http://localhost:${port}/vault/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}.md`,{
       method:'PUT',
       headers:{'Authorization':`Bearer ${key}`,'Content-Type':'text/markdown'},
       body:content
     });
   }catch(e){console.log('Obsidian write error:',e);}
 }
+
 async function obsidianTest(){
   const s=store.get('settings',{});
   const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
@@ -4832,182 +4789,9 @@ async function obsidianTest(){
   const res=document.getElementById('obsidian-test-result');
   if(!key){if(res)res.textContent='⚠ Clé API manquante';return;}
   try{
-    const r=await fetch(`https://127.0.0.1:${port}/`,{headers:{'Authorization':`Bearer ${key}`}});
+    const r=await fetch(`http://localhost:${port}/`,{headers:{'Authorization':`Bearer ${key}`}});
     if(res)res.textContent=r.ok?'Connecté ✓':'Erreur '+r.status;
   }catch(e){if(res)res.textContent='Erreur (Obsidian ouvert ?)';}
-}
-
-// ══════════════════════════════════════════════
-//  JARVIS MEMORY SYSTEM
-// ══════════════════════════════════════════════
-
-async function loadJarvisMemory(){
-  if(!store.get('obsidian_enabled',false))return '';
-  const s=store.get('settings',{});
-  const port=s.obsidianPort||'27124';
-  const key=s.obsidianKey||'';
-  if(!key)return '';
-  try{
-    const res=await fetch(`https://127.0.0.1:${port}/vault/M%C3%A9moire%20Jarvis/`,{
-      headers:{'Authorization':`Bearer ${key}`}
-    });
-    const data=await res.json();
-    const files=(data.files||[]).filter(f=>f.endsWith('.md')).slice(-5);
-    const contents=await Promise.all(files.map(f=>
-      fetch(`https://127.0.0.1:${port}/vault/${encodeURIComponent(f)}`,{
-        headers:{'Authorization':`Bearer ${key}`}
-      }).then(r=>r.text()).catch(()=>'')
-    ));
-    return contents.filter(Boolean).join('\n\n---\n\n');
-  }catch(e){return '';}
-}
-
-function jarvisRetainMsg(btn){
-  const wrap=btn.parentElement;
-  const coachMsg=wrap.querySelector('.msg.coach');
-  const coachText=coachMsg?.innerText||coachMsg?.textContent||'';
-  if(!coachText||coachText.includes('●'))return;
-  const now=new Date();
-  const timeStr=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const xpNow=xpGetState().total||0;
-  const lv=xpLevelFor(xpNow);
-  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
-  const score=store.get('day_score_'+todayKey(),0);
-  const goals=store.get('goals_'+todayKey(),[]);
-  const content=`# Mémoire Jarvis — ${todayKey()} ${timeStr}\n\n## Contexte du jour\n- Niveau : LV ${lv} — ${lvName}\n- Score journalier : ${score}/100\n- Goals complétés : ${goals.filter(g=>g.done).length}/${goals.length}\n\n## Échange retenu\n**Moi :** ${_lastUserMsg||'—'}\n**Coach :** ${coachText}\n\n## Tags\n#jarvis #${todayKey()}\n`;
-  obsidianWrite('Mémoire Jarvis',todayKey()+'_'+timeStr.replace(':','-'),content);
-  btn.textContent='✓';btn.style.color='#7c3aed';btn.style.opacity='1';
-  toast('Mémorisé dans Obsidian ✓');
-}
-
-function jarvisSaveConversation(){
-  if(!_coachLog.length)return;
-  const now=new Date();
-  const timeStr=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const filename=todayKey()+'-'+timeStr.replace(':','-');
-  obsidianWrite('Mémoire Jarvis/Conversations',filename,`# Conversation Coach — ${todayKey()} ${timeStr}\n\n${_coachLog.join('\n\n')}\n`);
-  toast('Conversation sauvegardée dans Obsidian ✓');
-  const btn=document.getElementById('jarvis-save-conv-btn');
-  if(btn){btn.textContent='✓ Sauvegardé';btn.disabled=true;btn.style.opacity='.6';}
-}
-
-async function jarvisDailySync(){
-  if(!store.get('obsidian_enabled',false))return;
-  const today=todayKey();
-  const evening=store.get('checkin_evening_'+today,null);
-  if(evening&&(evening.positives?.some(p=>p)||evening.bien_fait||evening.ameliorer)){
-    const pos=evening.positives||[];
-    obsidianWrite('Journal',today,`# Journal — ${today}\n\n## 3 choses positives\n1. ${pos[0]||'—'}\n2. ${pos[1]||'—'}\n3. ${pos[2]||'—'}\n\n## Ce que j'ai bien fait\n${evening.bien_fait||'—'}\n\n## Ce que je dois améliorer\n${evening.ameliorer||'—'}\n`);
-  }
-  if(evening?.ameliorer){
-    obsidianWrite('Réflexions',today,`# Point d'amélioration — ${today}\n\n${evening.ameliorer}\n`);
-  }
-  const goals=store.get('goals_'+today,[]);
-  const habits=store.get('habits_list',[]);
-  const xpState=xpGetState();
-  const lv=xpLevelFor(xpState.total||0);
-  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
-  const score=store.get('day_score_'+today,0);
-  const morning=store.get('checkin_morning_'+today,null);
-  const xpToday=store.get('xp_today_'+today,0);
-  const habitLines=habits.map(h=>{
-    const v=store.get('habit_'+h.id,{})[today];
-    const done=h.type==='quantity'?(parseFloat(v)||0)>=(h.target||1):!!v;
-    return `- ${done?'✅':'❌'} ${h.emoji||''} ${h.name}`;
-  }).join('\n');
-  const goalLines=goals.map(g=>`- ${g.done?'✅':'❌'} ${g.text}`).join('\n')||'Aucun goal';
-  obsidianWrite('Stats',today,`# Stats — ${today}\n\n## XP & Niveau\n- Niveau : LV ${lv} — ${lvName}\n- XP gagné aujourd'hui : +${xpToday}\n- XP total : ${xpState.total||0}\n\n## Score journalier\n${score}/100\n\n## Goals\n${goals.filter(g=>g.done).length}/${goals.length} complétés\n${goalLines}\n\n## Habitudes\n${habitLines}\n\n## Mots clés du jour\n${morning?.intention||'—'} · ${morning?.hiver||'—'} · ${evening?.bien_fait||'—'}\n`);
-}
-
-function jarvisManualSync(){
-  if(!store.get('obsidian_enabled',false)){toast('Active la mémoire Obsidian dabord');return;}
-  jarvisDailySync().then(()=>toast('Sync Obsidian effectuée ✓')).catch(()=>toast('Sync Obsidian effectuée ✓'));
-  jarvisDailySync();
-  toast('Sync Obsidian en cours…');
-}
-
-async function jarvisCountNotes(){
-  const s=store.get('settings',{});
-  const port=s.obsidianPort||'27124';
-  const key=s.obsidianKey||'';
-  const el=document.getElementById('jarvis-note-count');
-  if(!key){if(el)el.textContent='Clé API manquante';return;}
-  if(el)el.textContent='Comptage…';
-  try{
-    const res=await fetch(`https://127.0.0.1:${port}/vault/`,{headers:{'Authorization':`Bearer ${key}`}});
-    const data=await res.json();
-    const count=(data.files||[]).filter(f=>f.endsWith('.md')).length;
-    if(el)el.textContent=`${count} note${count!==1?'s':''} dans le vault Obsidian`;
-  }catch(e){if(el)el.textContent='Connexion impossible';}
-}
-
-async function jarvisImportClaude(input){
-  const file=input.files?.[0];if(!file)return;
-  const bar=document.getElementById('jarvis-import-bar');
-  const fill=document.getElementById('jarvis-import-fill');
-  const lbl=document.getElementById('jarvis-import-lbl');
-  if(bar)bar.style.display='block';
-  try{
-    const data=JSON.parse(await file.text());
-    const convs=Array.isArray(data)?data:(data.conversations||[]);
-    const apiKey=store.get('settings',{}).apiKey||'';
-    let done=0;
-    for(const conv of convs){
-      const title=(conv.name||conv.title||'Conversation').replace(/[\/\\:*?"<>|]/g,'_').slice(0,60);
-      const msgs=(conv.chat_messages||conv.messages||[]).slice(0,8);
-      const excerpt=msgs.map(m=>`${m.sender==='human'||m.role==='user'?'Moi':'Claude'}: ${(m.text||m.content||'').toString().slice(0,300)}`).join('\n');
-      let summary=excerpt.slice(0,400);
-      if(apiKey&&excerpt.length>80){
-        try{
-          const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:'Résume cette conversation en 5 bullet points clés à retenir. En français. Max 100 mots.\n\n'+excerpt}]})});
-          const d=await r.json();
-          summary=d.content?.find(b=>b.type==='text')?.text||summary;
-        }catch(e){}
-      }
-      await obsidianWrite('Mémoire Jarvis/Imports',title,`# ${title}\nSource : Claude.ai — import du ${todayKey()}\n\n## Résumé\n${summary}\n`);
-      done++;
-      if(fill)fill.style.width=Math.round(done/convs.length*100)+'%';
-      if(lbl)lbl.textContent=`${done}/${convs.length} conversations importées`;
-    }
-    toast(`✓ ${done} conversations Claude importées dans Obsidian`);
-  }catch(e){toast('Erreur import : '+e.message);}
-  setTimeout(()=>{if(bar)bar.style.display='none';},4000);
-  input.value='';
-}
-
-async function jarvisImportChatGPT(input){
-  const file=input.files?.[0];if(!file)return;
-  const bar=document.getElementById('jarvis-import-bar');
-  const fill=document.getElementById('jarvis-import-fill');
-  const lbl=document.getElementById('jarvis-import-lbl');
-  if(bar)bar.style.display='block';
-  try{
-    const data=JSON.parse(await file.text());
-    const convs=Array.isArray(data)?data:[];
-    const apiKey=store.get('settings',{}).apiKey||'';
-    let done=0;
-    for(const conv of convs){
-      const title=(conv.title||'Conversation').replace(/[\/\\:*?"<>|]/g,'_').slice(0,60);
-      const mapping=conv.mapping||{};
-      const msgs=Object.values(mapping).filter(n=>n.message?.content?.parts?.length&&n.message.author.role!=='system').map(n=>`${n.message.author.role==='user'?'Moi':'ChatGPT'}: ${(n.message.content.parts||[]).join(' ').slice(0,300)}`).slice(0,8);
-      const excerpt=msgs.join('\n');
-      let summary=excerpt.slice(0,400);
-      if(apiKey&&excerpt.length>80){
-        try{
-          const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:'Résume cette conversation en 5 bullet points clés à retenir. En français. Max 100 mots.\n\n'+excerpt}]})});
-          const d=await r.json();
-          summary=d.content?.find(b=>b.type==='text')?.text||summary;
-        }catch(e){}
-      }
-      await obsidianWrite('Mémoire Jarvis/Imports',title,`# ${title}\nSource : ChatGPT — import du ${todayKey()}\n\n## Résumé\n${summary}\n`);
-      done++;
-      if(fill)fill.style.width=Math.round(done/convs.length*100)+'%';
-      if(lbl)lbl.textContent=`${done}/${convs.length} conversations importées`;
-    }
-    toast(`✓ ${done} conversations ChatGPT importées dans Obsidian`);
-  }catch(e){toast('Erreur import : '+e.message);}
-  setTimeout(()=>{if(bar)bar.style.display='none';},4000);
-  input.value='';
 }
 
 function updateWhoopOauthStatus(){
@@ -8995,7 +8779,7 @@ function libSave(){
     });
   }
   store.set('library_books',books);
-  // XP + Obsidian si on passe à 'lu'
+  // XP + Obsidian : seulement si on passe à 'lu' (pas si c'était déjà 'lu')
   if(newStatus==='lu'&&oldStatus!=='lu'&&xpItemId){
     const bkTitle=document.getElementById('lib-inp-title').value.trim();
     const bkAuthor=document.getElementById('lib-inp-author').value.trim();
@@ -12286,8 +12070,443 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(saveWeeklySnapshots,1200);
   setTimeout(()=>morningBriefingGenerate(false),1500);
   setTimeout(initPush,2000);
+  setTimeout(()=>jarvisInit(),2500);
 });
 
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     JARVIS FLOATING WIDGET
+══════════════════════════════════════════════════════ -->
+<style>
+/* ── Bouton flottant ── */
+#jarvis-fab{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  width:56px;height:56px;border-radius:50%;
+  background:#0d9488;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(13,148,136,.4);
+  transition:transform .2s,box-shadow .2s;
+  animation:jarvis-pulse-anim 3s ease-in-out infinite;
+}
+#jarvis-fab.open{animation:none;box-shadow:0 6px 28px rgba(13,148,136,.55);}
+#jarvis-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(13,148,136,.55);}
+#jarvis-fab-icon{font-size:24px;color:#fff;line-height:1;pointer-events:none;}
+#jarvis-badge{
+  position:absolute;top:4px;right:4px;width:14px;height:14px;
+  background:#f44685;border-radius:50%;border:2px solid #fff;
+  display:none;
+}
+@keyframes jarvis-pulse-anim{
+  0%,100%{box-shadow:0 4px 20px rgba(13,148,136,.4);}
+  50%{box-shadow:0 4px 28px rgba(13,148,136,.75),0 0 0 8px rgba(13,148,136,.1);}
+}
+
+/* ── Panneau ── */
+#jarvis-panel{
+  position:fixed;bottom:90px;right:24px;width:340px;max-height:500px;
+  background:#fff;border:1px solid var(--border);border-radius:16px;
+  box-shadow:0 8px 40px rgba(0,0,0,.18);
+  display:flex;flex-direction:column;z-index:9998;
+  opacity:0;transform:translateY(20px);pointer-events:none;
+  transition:opacity .2s,transform .2s;
+  overflow:hidden;
+}
+#jarvis-panel.open{opacity:1;transform:translateY(0);pointer-events:all;}
+
+/* Header */
+#jarvis-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px 10px;border-bottom:1px solid var(--border);
+  background:var(--bg2,#f8f8f8);flex-shrink:0;
+}
+#jarvis-title{font-size:15px;font-weight:700;color:#0d9488;letter-spacing:.02em;}
+#jarvis-sublevel{font-size:11px;color:var(--text3,#aaa);margin-left:6px;font-weight:400;}
+#jarvis-close{background:none;border:none;cursor:pointer;color:var(--text3,#aaa);font-size:18px;line-height:1;padding:0 2px;transition:color .15s;}
+#jarvis-close:hover{color:var(--text,#222);}
+
+/* Messages */
+#jarvis-messages{
+  flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;
+  min-height:0;
+}
+.jarvis-msg{max-width:90%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.5;word-break:break-word;position:relative;}
+.jarvis-msg.bot{background:var(--accent-bg,#e6faf9);color:var(--accent2,#0d9488);align-self:flex-start;border-bottom-left-radius:4px;}
+.jarvis-msg.user{background:var(--pink-bg,#fff0f5);color:var(--pink2,#f44685);align-self:flex-end;border-bottom-right-radius:4px;}
+.jarvis-msg.bot .jarvis-tts-btn{
+  display:inline-block;margin-left:6px;cursor:pointer;font-size:13px;opacity:.6;
+  background:none;border:none;padding:0;line-height:1;vertical-align:middle;
+}
+.jarvis-msg.bot .jarvis-tts-btn:hover{opacity:1;}
+.jarvis-typing{font-size:12px;color:var(--text3,#aaa);padding:4px 14px;font-style:italic;}
+
+/* Pills */
+#jarvis-pills{
+  display:flex;flex-wrap:wrap;gap:5px;padding:8px 14px 4px;
+  border-top:1px solid var(--border);flex-shrink:0;
+}
+.jarvis-pill{
+  padding:4px 10px;border-radius:12px;border:1.5px solid var(--border);
+  background:var(--surface,#fff);color:var(--text2,#555);font-size:11px;
+  font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;white-space:nowrap;
+}
+.jarvis-pill:hover{border-color:#0d9488;color:#0d9488;}
+
+/* Input row */
+#jarvis-input-row{
+  display:flex;gap:6px;align-items:center;padding:8px 10px 10px;
+  border-top:1px solid var(--border);flex-shrink:0;
+}
+#jarvis-input{
+  flex:1;border:1.5px solid var(--border);border-radius:10px;
+  padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;
+  outline:none;transition:border-color .15s;background:var(--bg,#fff);color:var(--text,#222);
+}
+#jarvis-input:focus{border-color:#0d9488;}
+#jarvis-send,#jarvis-mic{
+  width:34px;height:34px;border-radius:9px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  transition:background .15s;flex-shrink:0;
+}
+#jarvis-send{background:#0d9488;color:#fff;}
+#jarvis-send:hover{background:#0f766e;}
+#jarvis-mic{background:var(--bg2,#f0f0f0);color:var(--text2,#555);}
+#jarvis-mic:hover{background:#ffe4ef;color:#f44685;}
+#jarvis-mic.listening{background:#ffe4ef;color:#f44685;animation:jarvis-pulse-anim .8s infinite;}
+
+/* Mobile : plein écran slide-up */
+@media(max-width:600px){
+  #jarvis-panel{
+    bottom:0;right:0;left:0;width:100%;max-height:90vh;
+    border-radius:20px 20px 0 0;
+    transform:translateY(100%);
+  }
+  #jarvis-panel.open{transform:translateY(0);}
+  #jarvis-fab{bottom:16px;right:16px;}
+}
+</style>
+
+<!-- Bouton flottant -->
+<button id="jarvis-fab" onclick="jarvisToggle()" aria-label="Jarvis">
+  <span id="jarvis-fab-icon">✦</span>
+  <span id="jarvis-badge"></span>
+</button>
+
+<!-- Panneau -->
+<div id="jarvis-panel">
+  <div id="jarvis-header">
+    <div style="display:flex;align-items:baseline;gap:0;">
+      <span id="jarvis-title">✦ Jarvis</span>
+      <span id="jarvis-sublevel"></span>
+    </div>
+    <button id="jarvis-close" onclick="jarvisToggle()">✕</button>
+  </div>
+  <div id="jarvis-messages"></div>
+  <div id="jarvis-pills">
+    <button class="jarvis-pill" onclick="jarvisSendPill('Mon score aujourd\'hui')">📊 Score</button>
+    <button class="jarvis-pill" onclick="jarvisSendPill('Qu\'est-ce que je dois faire ?')">✅ Quoi faire ?</button>
+    <button class="jarvis-pill" onclick="jarvisSendPill('Motive-moi')">⚡ Motive-moi</button>
+    <button class="jarvis-pill" onclick="jarvisSendPill('Analyse ma semaine')">📈 Semaine</button>
+  </div>
+  <div id="jarvis-input-row">
+    <input id="jarvis-input" type="text" placeholder="Message à Jarvis…" onkeydown="if(event.key==='Enter')jarvisSend()">
+    <button id="jarvis-mic" onclick="jarvisMicToggle()" title="Voix">🎤</button>
+    <button id="jarvis-send" onclick="jarvisSend()" title="Envoyer">➤</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  JARVIS WIDGET
+// ══════════════════════════════════════════════════════
+let _jarvisOpen=false;
+let _jarvisSession=[];           // historique session (10 msgs max)
+let _jarvisCurrentPage='home';   // page active
+let _jarvisGreeted=false;        // greeting envoyé aujourd'hui ?
+let _jarvisSpeaking=false;
+let _jarvisRecog=null;
+
+// ── Init ──────────────────────────────────────────────
+function jarvisInit(){
+  // Mise à jour du sous-titre niveau
+  const xpS=xpGetState();
+  const lv=xpLevelFor(xpS.total||0);
+  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  const sub=document.getElementById('jarvis-sublevel');
+  if(sub) sub.textContent=' · '+lvName;
+
+  // Hook showPage pour suivre l'onglet actif
+  const _origShowPage=window.showPage;
+  window.showPage=function(id,btn){
+    _jarvisCurrentPage=id;
+    if(typeof _origShowPage==='function') _origShowPage(id,btn);
+  };
+
+  // Fonctions globales pour actions dashboard
+  window.addTodo=function(text){
+    const items=store.get(todoKey(0),[]);
+    items.push({id:'td_'+Date.now()+'_jv',text:text,done:false,difficulty:'medium',createdAt:Date.now()});
+    store.set(todoKey(0),items);
+    if(typeof renderHomeTodo==='function') renderHomeTodo();
+    if(typeof refreshTodoCharts==='function') refreshTodoCharts();
+  };
+  window.checkHabit=function(name){
+    const habits=store.get('habits_list',[]);
+    const h=habits.find(x=>(x.name||'').toLowerCase().includes(name.toLowerCase()));
+    if(h && typeof toggleHabitHome==='function') toggleHabitHome(h.id,todayKey());
+    return h?h.name:null;
+  };
+  window.startPomodoro=function(min){
+    if(typeof pomoSetDur==='function') pomoSetDur(min||25);
+    if(typeof pomoToggle==='function') pomoToggle();
+  };
+
+  // Badge si greeting non vu
+  const greetKey='jarvis_greeted_'+todayKey();
+  if(!store.get(greetKey,false)){
+    document.getElementById('jarvis-badge').style.display='block';
+  }
+
+  // Restore session du jour
+  const saved=store.get('jarvis_session',[]);
+  _jarvisSession=Array.isArray(saved)?saved:[];
+  if(_jarvisSession.length>0){
+    _jarvisSession.forEach(m=>_jarvisRenderMsg(m.role,m.content,false));
+  }
+}
+
+// ── Toggle panneau ──────────────────────────────────
+function jarvisToggle(){
+  _jarvisOpen=!_jarvisOpen;
+  const panel=document.getElementById('jarvis-panel');
+  const fab=document.getElementById('jarvis-fab');
+  const badge=document.getElementById('jarvis-badge');
+  panel.classList.toggle('open',_jarvisOpen);
+  fab.classList.toggle('open',_jarvisOpen);
+  if(_jarvisOpen){
+    badge.style.display='none';
+    const greetKey='jarvis_greeted_'+todayKey();
+    store.set(greetKey,true);
+    if(!_jarvisGreeted && _jarvisSession.length===0){
+      _jarvisGreeted=true;
+      setTimeout(jarvisGreeting,300);
+    }
+    setTimeout(()=>document.getElementById('jarvis-input')?.focus(),250);
+    _jarvisScrollBottom();
+  }
+}
+
+// ── Contexte selon page ──────────────────────────────
+function _jarvisPageContext(){
+  const p=_jarvisCurrentPage;
+  const xpS=xpGetState();
+  const lv=xpLevelFor(xpS.total||0);
+  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  const base=`Tu es Jarvis, l'assistant IA personnel de Lucine. Tu es direct, motivant, bienveillant. Tu réponds en français. Niveau actuel : ${lvName} (niveau ${lv}), XP total : ${xpS.total||0}.`;
+  const contexts={
+    home:`${base} Lucine est sur le Dashboard. Parle de ses objectifs du jour, son score XP, ses habitudes et sa progression générale.`,
+    goals:`${base} Lucine est sur la page Planification. Parle de ses priorités, to-do list, planning hebdomadaire et objectifs à atteindre.`,
+    sante:`${base} Lucine est sur la page Santé. Parle de ses métriques de santé, méditation, sport, sommeil et bien-être.`,
+    finance:`${base} Lucine est sur la page Finance. Parle de son capital, ses investissements, Atlas Sales Agency, ses revenus MLM et objectifs financiers.`,
+    savoir:`${base} Lucine est sur la page Savoir. Parle de son apprentissage de l'espagnol, lecture de la Bible, bibliothèque de livres et formation.`,
+  };
+  return contexts[p]||base;
+}
+
+// ── Greeting du matin ────────────────────────────────
+async function jarvisGreeting(){
+  const xpS=xpGetState();
+  const lv=xpLevelFor(xpS.total||0);
+  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  const apiKey=store.get('settings',{}).apiKey||'';
+  if(!apiKey){
+    _jarvisRenderMsg('bot','👋 Bonjour Lucine ! Configure ta clé API dans les Réglages pour activer Jarvis.');
+    return;
+  }
+  _jarvisShowTyping();
+  try{
+    const h=new Date().getHours();
+    const moment=h<12?'matin':h<18?'après-midi':'soirée';
+    const prompt=`Dis bonjour à Lucine en ce ${moment}. Elle est niveau ${lvName} avec ${xpS.total||0} XP. Fais une phrase d'accueil chaleureuse et contextuelle, courte (1-2 phrases max). Parle-lui directement.`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:120,system:_jarvisPageContext(),messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const reply=data.content?.[0]?.text||'Bonjour Lucine ! 👋';
+    _jarvisHideTyping();
+    _jarvisRenderMsg('bot',reply);
+    _jarvisSessionPush('assistant',reply);
+  }catch(e){
+    _jarvisHideTyping();
+    _jarvisRenderMsg('bot','Bonjour Lucine ! 👋');
+  }
+}
+
+// ── Envoyer message ──────────────────────────────────
+async function jarvisSend(){
+  const inp=document.getElementById('jarvis-input');
+  const text=(inp?.value||'').trim();
+  if(!text)return;
+  inp.value='';
+  await _jarvisSendText(text);
+}
+function jarvisSendPill(text){
+  _jarvisSendText(text);
+}
+
+async function _jarvisSendText(text){
+  const apiKey=store.get('settings',{}).apiKey||'';
+  if(!apiKey){toast('Clé API Anthropic manquante dans Réglages');return;}
+
+  _jarvisRenderMsg('user',text);
+  _jarvisSessionPush('user',text);
+  _jarvisShowTyping();
+
+  // Construit les messages (10 derniers)
+  const history=_jarvisSession.slice(-10).map(m=>({role:m.role==='bot'?'assistant':m.role,content:m.content}));
+
+  // System prompt avec instruction action
+  const system=_jarvisPageContext()+`
+
+Si la demande implique une action sur le dashboard, réponds UNIQUEMENT en JSON valide :
+{"action":"add_todo","params":{"text":"..."},"message":"..."}
+{"action":"check_habit","params":{"name":"..."},"message":"..."}
+{"action":"start_pomodoro","params":{"min":25},"message":"..."}
+{"action":"none","params":{},"message":"ta réponse normale"}
+Sinon, réponds normalement en texte (pas de JSON).`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:400,system:system,messages:history})
+    });
+    const data=await res.json();
+    const raw=data.content?.[0]?.text||'…';
+    _jarvisHideTyping();
+
+    // Tente de parser JSON pour actions
+    let reply=raw;
+    try{
+      const trimmed=raw.trim();
+      if(trimmed.startsWith('{')){
+        const obj=JSON.parse(trimmed);
+        reply=obj.message||raw;
+        _jarvisExecuteAction(obj);
+      }
+    }catch(e){}
+
+    _jarvisRenderMsg('bot',reply);
+    _jarvisSessionPush('assistant',reply);
+  }catch(e){
+    _jarvisHideTyping();
+    _jarvisRenderMsg('bot','Erreur réseau. Réessaie dans un instant.');
+  }
+}
+
+// ── Exécution actions ────────────────────────────────
+function _jarvisExecuteAction(obj){
+  if(!obj||obj.action==='none')return;
+  if(obj.action==='add_todo' && obj.params?.text){
+    window.addTodo(obj.params.text);
+    toast('✅ Tâche ajoutée : '+obj.params.text);
+  }else if(obj.action==='check_habit' && obj.params?.name){
+    const name=window.checkHabit(obj.params.name);
+    toast(name?'✅ Habitude cochée : '+name:'Habitude introuvable');
+  }else if(obj.action==='start_pomodoro'){
+    const min=obj.params?.min||25;
+    window.startPomodoro(min);
+    toast('⏱ Pomodoro '+min+' min lancé');
+    // Naviguer vers home où se trouve le pomodoro
+    if(typeof showPage==='function') document.querySelector('.nav-btn')?.click();
+  }
+}
+
+// ── Rendu messages ───────────────────────────────────
+function _jarvisRenderMsg(role,text,scroll=true){
+  const box=document.getElementById('jarvis-messages');
+  if(!box)return;
+  const div=document.createElement('div');
+  div.className='jarvis-msg '+(role==='user'?'user':'bot');
+  div.textContent=text;
+  if(role!=='user'){
+    const btn=document.createElement('button');
+    btn.className='jarvis-tts-btn';
+    btn.textContent='🔊';
+    btn.title='Lire à voix haute';
+    btn.onclick=()=>jarvisTTS(text,btn);
+    div.appendChild(btn);
+  }
+  box.appendChild(div);
+  if(scroll) _jarvisScrollBottom();
+}
+
+function _jarvisScrollBottom(){
+  const box=document.getElementById('jarvis-messages');
+  if(box) setTimeout(()=>{box.scrollTop=box.scrollHeight;},50);
+}
+
+// ── Typing indicator ─────────────────────────────────
+function _jarvisShowTyping(){
+  const box=document.getElementById('jarvis-messages');
+  if(!box||document.getElementById('jarvis-typing'))return;
+  const d=document.createElement('div');
+  d.className='jarvis-typing';d.id='jarvis-typing';
+  d.textContent='Jarvis réfléchit…';
+  box.appendChild(d);
+  _jarvisScrollBottom();
+}
+function _jarvisHideTyping(){
+  document.getElementById('jarvis-typing')?.remove();
+}
+
+// ── Session ──────────────────────────────────────────
+function _jarvisSessionPush(role,content){
+  _jarvisSession.push({role,content});
+  if(_jarvisSession.length>20) _jarvisSession=_jarvisSession.slice(-20);
+  store.set('jarvis_session',_jarvisSession);
+}
+
+// ── TTS ──────────────────────────────────────────────
+function jarvisTTS(text,btn){
+  if(!window.speechSynthesis)return;
+  if(_jarvisSpeaking){window.speechSynthesis.cancel();_jarvisSpeaking=false;return;}
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.lang='fr-FR';utt.rate=1.05;
+  utt.onend=()=>{_jarvisSpeaking=false;};
+  _jarvisSpeaking=true;
+  window.speechSynthesis.speak(utt);
+}
+
+// ── Micro STT ────────────────────────────────────────
+function jarvisMicToggle(){
+  const btn=document.getElementById('jarvis-mic');
+  if(!_jarvisRecog){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){toast('Reconnaissance vocale non supportée');return;}
+    _jarvisRecog=new SR();
+    _jarvisRecog.lang='fr-FR';
+    _jarvisRecog.interimResults=false;
+    _jarvisRecog.onresult=e=>{
+      const t=e.results[0][0].transcript;
+      const inp=document.getElementById('jarvis-input');
+      if(inp){inp.value=t;jarvisSend();}
+      btn.classList.remove('listening');
+      _jarvisRecog=null;
+    };
+    _jarvisRecog.onerror=()=>{btn.classList.remove('listening');_jarvisRecog=null;};
+    _jarvisRecog.onend=()=>{btn.classList.remove('listening');_jarvisRecog=null;};
+    _jarvisRecog.start();
+    btn.classList.add('listening');
+  }else{
+    _jarvisRecog.stop();
+    btn.classList.remove('listening');
+    _jarvisRecog=null;
+  }
+}
 </script>
 </body>
 </html>
