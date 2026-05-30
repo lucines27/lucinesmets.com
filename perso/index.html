@@ -527,6 +527,22 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .subtab-btn:hover:not(.active){border-color:var(--accent);color:var(--accent)}
 .subtab-pane{display:none}
 .subtab-pane.show{display:block}
+/* ── Contenu section ── */
+.followers-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.fc-platform{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:2px}
+.fc-handle{font-size:11px;color:var(--text2);margin-bottom:6px}
+.fc-count{font-size:24px;font-weight:700;color:var(--text);line-height:1}
+.fc-delta{font-size:12px;font-weight:600;margin-top:3px}
+.fc-delta.pos{color:#0d9488}.fc-delta.neg{color:#f44685}
+.posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.post-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px}
+.post-thumb{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;margin-bottom:6px;background:var(--border)}
+.post-stat{display:flex;align-items:center;gap:4px;color:var(--text2);margin-top:2px}
+.post-stat-val{font-weight:600;color:var(--text)}
+.content-plan-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.cp-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cp-status-dot.todo{background:#f97316}.cp-status-dot.filmed{background:#8b5cf6}.cp-status-dot.edited{background:#0891b2}.cp-status-dot.posted{background:#0d9488}
+@media(max-width:600px){.posts-grid{grid-template-columns:1fr}.followers-grid{grid-template-columns:1fr}}
 
 /* ── MÉDITATION ── */
 .med-section{background:#f4f9f9;border:1px solid var(--accent-light);border-radius:16px;padding:18px 16px;margin-bottom:14px}
@@ -2377,6 +2393,7 @@ body.focus-mode #focus-exit-btn{display:flex}
         <button class="subtab-btn active" data-tab="business" onclick="showSubTab('finance','business')">💼 Business</button>
         <button class="subtab-btn" data-tab="capital" onclick="showSubTab('finance','capital')">💰 Capital</button>
         <button class="subtab-btn" data-tab="depenses" onclick="showSubTab('finance','depenses')">💳 Dépenses</button>
+        <button class="subtab-btn" data-tab="contenu" onclick="showSubTab('finance','contenu');initContenu()">🎬 Contenu</button>
       </div>
 
       <!-- Business sub-tab -->
@@ -2640,6 +2657,189 @@ body.focus-mode #focus-exit-btn{display:flex}
         <div class="card" id="dep-tx-card" style="display:none;padding:4px 14px">
           <div id="dep-tx-list"></div>
         </div>
+
+      </div><!-- /finance-depenses-pane -->
+
+      <!-- CONTENU sub-tab -->
+      <div id="finance-contenu-pane" class="subtab-pane">
+
+        <!-- S1 : Abonnés -->
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#f44685;font-weight:700;text-transform:uppercase">Abonnés en temps réel</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="followers-last-update" style="font-size:11px;color:var(--text3)"></span>
+              <button class="save-btn" onclick="refreshFollowers(true)" style="padding:5px 10px;font-size:12px">🔄 Refresh</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="followers-grid">
+            <div class="followers-card" id="fc-ig-ugc">
+              <div class="fc-platform">📸 Instagram UGC</div>
+              <div class="fc-handle">@ugcbylucine</div>
+              <div class="fc-count" id="fc-ig-ugc-count">—</div>
+              <div class="fc-delta" id="fc-ig-ugc-delta"></div>
+            </div>
+            <div class="followers-card" id="fc-ig-zinrai">
+              <div class="fc-platform">📸 Instagram ZiNRAi</div>
+              <div class="fc-handle">@lucine_smets</div>
+              <div class="fc-count" id="fc-ig-zinrai-count">—</div>
+              <div class="fc-delta" id="fc-ig-zinrai-delta"></div>
+            </div>
+            <div class="followers-card" id="fc-tiktok">
+              <div class="fc-platform">🎵 TikTok</div>
+              <div class="fc-handle">@lucine_smets</div>
+              <div class="fc-count" id="fc-tiktok-count">—</div>
+              <div class="fc-delta" id="fc-tiktok-delta"></div>
+            </div>
+            <div class="followers-card" id="fc-youtube">
+              <div class="fc-platform">▶️ YouTube</div>
+              <div class="fc-handle">Lucine Smets</div>
+              <div class="fc-count" id="fc-youtube-count">—</div>
+              <div class="fc-delta" id="fc-youtube-delta"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- S2 : Derniers posts -->
+        <div class="card" style="margin-bottom:10px">
+          <div style="font-size:9px;letter-spacing:.18em;color:#f44685;font-weight:700;text-transform:uppercase;margin-bottom:12px">Performances — 3 derniers posts</div>
+          <div style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:6px">📸 Instagram UGC</div>
+          <div class="posts-grid" id="posts-ig-ugc"></div>
+          <div style="font-size:11px;color:var(--text3);font-weight:600;margin:10px 0 6px">📸 Instagram ZiNRAi</div>
+          <div class="posts-grid" id="posts-ig-zinrai"></div>
+          <div style="font-size:11px;color:var(--text3);font-weight:600;margin:10px 0 6px">▶️ YouTube</div>
+          <div class="posts-grid" id="posts-youtube"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px">
+            <div style="font-size:11px;color:var(--text3);font-weight:600">🎵 TikTok (saisie manuelle)</div>
+            <button class="save-btn" onclick="tiktokAddPost()" style="font-size:11px;padding:4px 10px">+ Ajouter post</button>
+          </div>
+          <div class="posts-grid" id="posts-tiktok"></div>
+          <div id="tiktok-add-form" style="display:none;background:var(--bg2);border-radius:10px;padding:12px;margin-top:8px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <input class="setting-input" id="tt-title" placeholder="Titre / sujet">
+              <input class="setting-input" id="tt-date" type="date">
+              <input class="setting-input" id="tt-views" type="number" placeholder="Vues">
+              <input class="setting-input" id="tt-likes" type="number" placeholder="Likes">
+              <input class="setting-input" id="tt-comments" type="number" placeholder="Commentaires">
+              <input class="setting-input" id="tt-shares" type="number" placeholder="Partages">
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="save-btn" onclick="tiktokSavePost()" style="background:var(--accent);color:#fff;border-color:var(--accent)">Sauvegarder</button>
+              <button class="save-btn" onclick="document.getElementById('tiktok-add-form').style.display='none'">Annuler</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- S3 : Planning mensuel -->
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#f44685;font-weight:700;text-transform:uppercase">Planning mensuel</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div id="content-plan-progress" style="font-size:12px;color:var(--accent);font-weight:600"></div>
+            </div>
+          </div>
+          <div class="cal-header" style="margin-bottom:8px">
+            <button class="cal-nav-btn" onclick="contentCalPrev()">‹</button>
+            <div class="cal-month-lbl" id="content-cal-lbl"></div>
+            <button class="cal-nav-btn" onclick="contentCalNext()">›</button>
+          </div>
+          <div class="cal-dow"><div class="cal-dow-cell">L</div><div class="cal-dow-cell">M</div><div class="cal-dow-cell">M</div><div class="cal-dow-cell">J</div><div class="cal-dow-cell">V</div><div class="cal-dow-cell we">S</div><div class="cal-dow-cell we">D</div></div>
+          <div class="cal-grid-inner" id="content-cal-grid"></div>
+          <!-- Modal ajout -->
+          <div id="content-day-panel" style="display:none;margin-top:10px;background:var(--bg2);border-radius:12px;padding:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="font-size:13px;font-weight:700" id="content-day-panel-date"></div>
+              <button onclick="document.getElementById('content-day-panel').style.display='none'" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--text3)">✕</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <select class="setting-input" id="cp-platform">
+                <option value="ig_reels">📸 Instagram Reels</option>
+                <option value="tiktok">🎵 TikTok</option>
+                <option value="yt_shorts">▶️ YouTube Shorts</option>
+                <option value="yt_long">🎬 YouTube Long</option>
+              </select>
+              <select class="setting-input" id="cp-type">
+                <option value="talk">🎤 Moi qui parle</option>
+                <option value="lowcontent">📝 Low-content</option>
+                <option value="ugc_collab">🤝 Collab UGC</option>
+                <option value="zinrai">📊 ZiNRAi éducatif</option>
+              </select>
+              <input class="setting-input" id="cp-subject" placeholder="Sujet / titre" style="grid-column:span 2">
+              <select class="setting-input" id="cp-status">
+                <option value="todo">📋 À filmer</option>
+                <option value="filmed">🎥 Filmé</option>
+                <option value="edited">✂️ Monté</option>
+                <option value="posted">✅ Posté</option>
+              </select>
+              <input class="setting-input" id="cp-link" placeholder="Lien (optionnel)">
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="save-btn" onclick="contentPlanSave()" style="background:var(--accent);color:#fff;border-color:var(--accent)">💾 Ajouter</button>
+              <button class="save-btn" onclick="contentGenScript()" style="background:#f0fffe;border-color:#0d9488;color:#0d9488">💡 Générer idée IA</button>
+            </div>
+          </div>
+          <!-- Liste du mois -->
+          <div style="margin-top:12px">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Liste du mois</div>
+            <div id="content-plan-list"></div>
+          </div>
+        </div>
+
+        <!-- S4 : Générateurs IA -->
+        <div class="card" style="margin-bottom:10px;background:#f0fffe;border:1px solid #0d9488">
+          <div style="font-size:9px;letter-spacing:.18em;color:#0d9488;font-weight:700;text-transform:uppercase;margin-bottom:12px">Générateurs de contenu IA</div>
+          <!-- Script "moi qui parle" -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">🎤 Script "Moi qui parle"</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input class="setting-input" id="gen-script-subject" placeholder="Sujet ou angle (ex: gagner mes premiers 500€)" style="flex:1">
+              <select class="setting-input" id="gen-script-duration" style="width:90px">
+                <option value="30s">30s</option>
+                <option value="60s" selected>60s</option>
+                <option value="90s">90s</option>
+              </select>
+            </div>
+            <button class="save-btn" onclick="genScript()" style="background:#0d9488;color:#fff;border-color:#0d9488;margin-bottom:8px">🎬 Générer script</button>
+            <textarea id="gen-script-result" style="width:100%;min-height:120px;border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px;font-family:inherit;resize:vertical;display:none;box-sizing:border-box;background:var(--bg)"></textarea>
+            <button id="gen-script-save-btn" onclick="genScriptSaveToPlan()" style="display:none;margin-top:6px" class="save-btn">💾 Sauvegarder dans le planning</button>
+          </div>
+          <!-- Low-content -->
+          <div style="border-top:1px solid rgba(13,148,136,.2);padding-top:12px;margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">📝 Low-content (texte sur footage)</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input class="setting-input" id="gen-low-message" placeholder="Message principal à transmettre" style="flex:1">
+              <select class="setting-input" id="gen-low-tone" style="width:120px">
+                <option value="Motivant">Motivant</option>
+                <option value="Éducatif">Éducatif</option>
+                <option value="Provocation">Provocation</option>
+                <option value="Storytelling">Storytelling</option>
+              </select>
+            </div>
+            <button class="save-btn" onclick="genLowContent()" style="background:#0d9488;color:#fff;border-color:#0d9488;margin-bottom:8px">✍️ Générer textes</button>
+            <div id="gen-low-result" style="display:none"></div>
+          </div>
+          <!-- Brief UGC -->
+          <div style="border-top:1px solid rgba(13,148,136,.2);padding-top:12px">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">🤝 Brief collab UGC</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input class="setting-input" id="gen-ugc-brand" placeholder="Nom de la marque" style="flex:1">
+              <input class="setting-input" id="gen-ugc-product" placeholder="Type de produit" style="flex:1">
+            </div>
+            <button class="save-btn" onclick="genUgcBrief()" style="background:#0d9488;color:#fff;border-color:#0d9488;margin-bottom:8px">📋 Générer brief créatif</button>
+            <div id="gen-ugc-result" style="display:none;background:var(--bg);border-radius:10px;padding:12px;font-size:13px;line-height:1.6;border:1px solid var(--border)"></div>
+          </div>
+        </div>
+
+        <!-- S5 : Analyse IA -->
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#f44685;font-weight:700;text-transform:uppercase">Analyse de performance IA</div>
+          </div>
+          <button class="save-btn" onclick="contentAnalyse()" style="background:var(--accent);color:#fff;border-color:var(--accent);width:100%;justify-content:center;margin-bottom:10px">🤖 Analyser mes performances</button>
+          <div id="content-analysis-result" style="display:none"></div>
+        </div>
+
+      </div><!-- /finance-contenu-pane -->
 
       </div><!-- /finance-depenses-pane -->
 
@@ -4513,6 +4713,9 @@ function checkTelegramSchedule(){
   }
   // ── Agent email toutes les heures ──
   if(m===0)runEmailAgent();
+
+  // ── Refresh abonnés à 8h ──
+  if(h===8&&m===0)refreshFollowers(false);
 
   // ── Sync Obsidian nightly 22h ──
   if(h===22&&m===0){
@@ -12512,6 +12715,471 @@ function jarvisImportChatGPT(input){
 </div>
 
 <script>
+// ══════════════════════════════════════════════════════
+//  CONTENU 🎬 — SECTION COMPLÈTE
+// ══════════════════════════════════════════════════════
+
+// ── Init ─────────────────────────────────────────────
+let _contenuInited=false;
+function initContenu(){
+  if(_contenuInited)return;
+  _contenuInited=true;
+  renderFollowers();
+  renderPostsAll();
+  contentCalRender();
+  renderContentPlanList();
+  renderContentPlanProgress();
+}
+
+// ── SECTION 1 : ABONNÉS ──────────────────────────────
+function renderFollowers(){
+  const today=todayKey();
+  const platforms=['ig-ugc','ig-zinrai','tiktok','youtube'];
+  platforms.forEach(p=>{
+    const curr=store.get('followers_'+p+'_'+today,null);
+    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+    const yKey=yesterday.toISOString().slice(0,10);
+    const prev=store.get('followers_'+p+'_'+yKey,null);
+    const countEl=document.getElementById('fc-'+p+'-count');
+    const deltaEl=document.getElementById('fc-'+p+'-delta');
+    if(countEl)countEl.textContent=curr!=null?fmtNum(curr):'—';
+    if(deltaEl&&curr!=null&&prev!=null){
+      const d=curr-prev;
+      deltaEl.textContent=(d>=0?'+':'')+fmtNum(d)+' vs hier';
+      deltaEl.className='fc-delta '+(d>=0?'pos':'neg');
+    }else if(deltaEl){deltaEl.textContent='';}
+  });
+  const lu=store.get('followers_last_update','');
+  const el=document.getElementById('followers-last-update');
+  if(el&&lu)el.textContent='Màj '+lu.slice(11,16);
+}
+
+function fmtNum(n){
+  if(n==null)return'—';
+  n=parseInt(n)||0;
+  if(Math.abs(n)>=1000)return(n/1000).toFixed(1)+'k';
+  return n.toString();
+}
+
+async function refreshFollowers(manual=false){
+  const today=todayKey();
+  const lastKey='followers_last_run';
+  if(!manual){
+    const last=store.get(lastKey,'');
+    if(last===today)return;
+  }
+  store.set(lastKey,today);
+  const s=store.get('settings',{});
+
+  // Instagram UGC
+  const igToken=store.get('instagram_token','');
+  if(igToken){
+    try{
+      // Fetch both accounts using pages token
+      const r=await fetch(`https://graph.instagram.com/me?fields=followers_count&access_token=${igToken}`);
+      const d=await r.json();
+      if(d.followers_count!=null){
+        store.set('followers_ig-ugc_'+today,d.followers_count);
+      }
+    }catch(e){}
+    // ZiNRAi - second IG account (needs separate token or business account)
+    try{
+      const r2=await fetch(`https://graph.instagram.com/me/accounts?access_token=${igToken}`);
+      const d2=await r2.json();
+      const zinrai=(d2.data||[]).find(a=>a.username==='lucine_smets');
+      if(zinrai){
+        const r3=await fetch(`https://graph.facebook.com/${zinrai.id}?fields=followers_count&access_token=${zinrai.access_token||igToken}`);
+        const d3=await r3.json();
+        if(d3.followers_count!=null)store.set('followers_ig-zinrai_'+today,d3.followers_count);
+      }
+    }catch(e){}
+  }
+
+  // YouTube
+  const ytKey=store.get('youtubeApiKey','');
+  if(ytKey){
+    try{
+      const r=await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true&key=${ytKey}`);
+      const d=await r.json();
+      const sub=parseInt(d.items?.[0]?.statistics?.subscriberCount)||null;
+      if(sub!=null)store.set('followers_youtube_'+today,sub);
+    }catch(e){}
+  }
+
+  // TikTok (scraping via proxy — souvent bloqué, on essaie)
+  try{
+    const proxy='https://cors-proxy-dashboard.rapid-wildflower-cf32.workers.dev/?url=';
+    const r=await fetch(proxy+'https://www.tiktok.com/@lucine_smets',{headers:{'Accept':'text/html'}});
+    const html=await r.text();
+    const m=html.match(/"followerCount":(\d+)/)||html.match(/followers":(\d+)/);
+    if(m)store.set('followers_tiktok_'+today,parseInt(m[1]));
+  }catch(e){}
+
+  store.set('followers_last_update',new Date().toISOString());
+  renderFollowers();
+  if(manual)toast('✓ Abonnés mis à jour');
+}
+
+// ── SECTION 2 : POSTS ────────────────────────────────
+async function renderPostsAll(){
+  renderTiktokPosts();
+  await fetchIgPosts('ig-ugc','ugcbylucine');
+  await fetchIgPosts('ig-zinrai','lucine_smets');
+  await fetchYtPosts();
+}
+
+async function fetchIgPosts(id,username){
+  const igToken=store.get('instagram_token','');
+  const el=document.getElementById('posts-'+id);
+  if(!el)return;
+  if(!igToken){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Token Instagram manquant (Réglages)</div>';return;}
+  try{
+    const r=await fetch(`https://graph.instagram.com/me/media?fields=id,caption,media_type,thumbnail_url,media_url,timestamp,like_count,comments_count&limit=3&access_token=${igToken}`);
+    const d=await r.json();
+    el.innerHTML=(d.data||[]).slice(0,3).map(p=>postCardHTML(
+      p.thumbnail_url||p.media_url||'',
+      (p.timestamp||'').slice(0,10),
+      p.like_count||0,0,p.comments_count||0,0,
+      (p.caption||'').substring(0,40)
+    )).join('')||'<div style="font-size:12px;color:var(--text3);padding:8px">Aucun post</div>';
+  }catch(e){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Erreur API</div>';}
+}
+
+async function fetchYtPosts(){
+  const ytKey=store.get('youtubeApiKey','');
+  const el=document.getElementById('posts-youtube');
+  if(!el)return;
+  if(!ytKey){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Clé YouTube API manquante (Réglages)</div>';return;}
+  try{
+    // Get channel uploads playlist
+    const rc=await fetch(`https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true&key=${ytKey}`);
+    const dc=await rc.json();
+    const playlistId=dc.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if(!playlistId){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Channel non trouvé</div>';return;}
+    const rp=await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&maxResults=3&key=${ytKey}`);
+    const dp=await rp.json();
+    const ids=(dp.items||[]).map(i=>i.contentDetails.videoId).join(',');
+    if(!ids){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Aucune vidéo</div>';return;}
+    const rv=await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${ids}&key=${ytKey}`);
+    const dv=await rv.json();
+    el.innerHTML=(dv.items||[]).map(v=>postCardHTML(
+      v.snippet?.thumbnails?.medium?.url||'',
+      (v.snippet?.publishedAt||'').slice(0,10),
+      parseInt(v.statistics?.likeCount)||0,
+      parseInt(v.statistics?.viewCount)||0,
+      parseInt(v.statistics?.commentCount)||0,0,
+      (v.snippet?.title||'').substring(0,40)
+    )).join('')||'<div style="font-size:12px;color:var(--text3);padding:8px">Aucune vidéo</div>';
+  }catch(e){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Erreur API</div>';}
+}
+
+function postCardHTML(thumb,date,likes,views,comments,shares,title){
+  return`<div class="post-card">
+    ${thumb?`<img class="post-thumb" src="${thumb}" loading="lazy" onerror="this.style.display='none'" alt="">`:'<div class="post-thumb"></div>'}
+    <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${date}${title?'<br><b style="color:var(--text)">'+title+'</b>':''}</div>
+    ${views?`<div class="post-stat">👁 <span class="post-stat-val">${fmtNum(views)}</span></div>`:''}
+    <div class="post-stat">❤️ <span class="post-stat-val">${fmtNum(likes)}</span></div>
+    <div class="post-stat">💬 <span class="post-stat-val">${fmtNum(comments)}</span></div>
+    ${shares?`<div class="post-stat">↗️ <span class="post-stat-val">${fmtNum(shares)}</span></div>`:''}
+  </div>`;
+}
+
+function renderTiktokPosts(){
+  const el=document.getElementById('posts-tiktok');
+  if(!el)return;
+  const posts=store.get('tiktok_posts',[]);
+  if(!posts.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Aucun post — ajoutes-en manuellement</div>';return;}
+  el.innerHTML=posts.slice(-3).reverse().map(p=>postCardHTML('',p.date,p.likes||0,p.views||0,p.comments||0,p.shares||0,p.title||'')).join('');
+}
+
+function tiktokAddPost(){
+  const f=document.getElementById('tiktok-add-form');
+  if(f)f.style.display=f.style.display==='none'?'block':'none';
+  const d=document.getElementById('tt-date');
+  if(d)d.value=todayKey();
+}
+
+function tiktokSavePost(){
+  const post={
+    title:document.getElementById('tt-title')?.value.trim()||'',
+    date:document.getElementById('tt-date')?.value||todayKey(),
+    views:parseInt(document.getElementById('tt-views')?.value)||0,
+    likes:parseInt(document.getElementById('tt-likes')?.value)||0,
+    comments:parseInt(document.getElementById('tt-comments')?.value)||0,
+    shares:parseInt(document.getElementById('tt-shares')?.value)||0,
+  };
+  const posts=store.get('tiktok_posts',[]);
+  posts.push(post);
+  store.set('tiktok_posts',posts);
+  document.getElementById('tiktok-add-form').style.display='none';
+  ['tt-title','tt-views','tt-likes','tt-comments','tt-shares'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderTiktokPosts();
+  toast('Post TikTok ajouté');
+}
+
+// ── SECTION 3 : PLANNING MENSUEL ─────────────────────
+let _contentCalOffset=0;
+
+function contentCalPrev(){_contentCalOffset--;contentCalRender();}
+function contentCalNext(){_contentCalOffset++;contentCalRender();}
+
+function _contentCalKey(){
+  const d=new Date();d.setMonth(d.getMonth()+_contentCalOffset);
+  return d.toISOString().slice(0,7);
+}
+
+function contentCalRender(){
+  const monthKey=_contentCalKey();
+  const [y,m]=monthKey.split('-').map(Number);
+  const lbl=document.getElementById('content-cal-lbl');
+  if(lbl)lbl.textContent=new Date(y,m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const grid=document.getElementById('content-cal-grid');
+  if(!grid)return;
+  const plan=store.get('content_plan_'+monthKey,[]);
+  const today=todayKey();
+  const firstDow=(new Date(y,m-1,1).getDay()+6)%7;
+  const daysInMonth=new Date(y,m,0).getDate();
+  const prevDays=new Date(y,m-1,0).getDate();
+  let html='';
+  for(let i=0;i<firstDow;i++){
+    html+=`<div class="cal-day other-month"><div class="cal-day-num">${prevDays-firstDow+1+i}</div></div>`;
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const dateKey=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=dateKey===today;
+    const isWe=new Date(y,m-1,d).getDay()===0||new Date(y,m-1,d).getDay()===6;
+    const dayPosts=plan.filter(p=>p.date===dateKey);
+    const pills=dayPosts.slice(0,3).map(p=>{
+      const colors={ig_reels:'#f44685',tiktok:'#222',yt_shorts:'#ff4444',yt_long:'#cc0000'};
+      const labels={ig_reels:'📸',tiktok:'🎵',yt_shorts:'▶',yt_long:'🎬'};
+      return`<span class="cal-pill" style="background:${colors[p.platform]||'#888'}">${labels[p.platform]||''} ${(p.subject||'').substring(0,10)}</span>`;
+    }).join('');
+    const hasTalk=dayPosts.some(p=>p.type==='talk');
+    // Check if already 1 "moi qui parle" this week
+    html+=`<div class="cal-day${isToday?' today':''}${isWe?' we':''}" onclick="contentDayClick('${dateKey}',${hasTalk})" data-date="${dateKey}">
+      <div class="cal-day-num">${d}</div>
+      ${pills}
+      ${dayPosts.length>3?`<span class="cal-pill-more">+${dayPosts.length-3}</span>`:''}
+    </div>`;
+  }
+  // Fill trailing cells
+  const total=firstDow+daysInMonth;
+  const trailing=(7-total%7)%7;
+  for(let i=1;i<=trailing;i++)html+=`<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
+  grid.innerHTML=html;
+  renderContentPlanList();
+  renderContentPlanProgress();
+}
+
+function contentDayClick(dateKey,hasTalk){
+  const panel=document.getElementById('content-day-panel');
+  const lbl=document.getElementById('content-day-panel-date');
+  if(!panel)return;
+  if(lbl)lbl.textContent=new Date(dateKey+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  panel._date=dateKey;
+  panel.style.display='block';
+  document.getElementById('cp-link').value='';
+  document.getElementById('cp-subject').value='';
+  // Warn if "talk" already this week
+  const warnEl=document.getElementById('cp-talk-warn');
+  if(hasTalk&&warnEl)warnEl.style.display='block';
+  else if(warnEl)warnEl.style.display='none';
+}
+
+function _talkCountThisWeek(dateKey){
+  const d=new Date(dateKey+'T12:00:00');
+  const dow=(d.getDay()+6)%7;
+  const monday=new Date(d);monday.setDate(d.getDate()-dow);
+  const monthKey=dateKey.slice(0,7);
+  const plan=store.get('content_plan_'+monthKey,[]);
+  let count=0;
+  for(let i=0;i<7;i++){
+    const k=new Date(monday);k.setDate(monday.getDate()+i);
+    const kStr=k.toISOString().slice(0,10);
+    if(plan.some(p=>p.date===kStr&&p.type==='talk'))count++;
+  }
+  return count;
+}
+
+function contentPlanSave(){
+  const panel=document.getElementById('content-day-panel');
+  const dateKey=panel?._date;
+  if(!dateKey)return;
+  const platform=document.getElementById('cp-platform')?.value;
+  const type=document.getElementById('cp-type')?.value;
+  const subject=document.getElementById('cp-subject')?.value.trim()||'';
+  const status=document.getElementById('cp-status')?.value;
+  const link=document.getElementById('cp-link')?.value.trim()||'';
+  if(type==='talk'&&_talkCountThisWeek(dateKey)>=1){
+    if(!confirm('Tu as déjà 1 contenu "Moi qui parle" cette semaine. Continuer quand même ?'))return;
+  }
+  const monthKey=dateKey.slice(0,7);
+  const plan=store.get('content_plan_'+monthKey,[]);
+  plan.push({id:'cp_'+Date.now(),date:dateKey,platform,type,subject,status,link,script:''});
+  store.set('content_plan_'+monthKey,plan);
+  panel.style.display='none';
+  contentCalRender();
+  toast('📅 Post ajouté au planning');
+}
+
+function contentPlanDelete(id,monthKey){
+  const plan=store.get('content_plan_'+monthKey,[]).filter(p=>p.id!==id);
+  store.set('content_plan_'+monthKey,plan);
+  contentCalRender();
+}
+
+function contentPlanUpdateStatus(id,monthKey,status){
+  const plan=store.get('content_plan_'+monthKey,[]);
+  const p=plan.find(x=>x.id===id);if(p)p.status=status;
+  store.set('content_plan_'+monthKey,plan);
+  renderContentPlanList();
+  renderContentPlanProgress();
+}
+
+function renderContentPlanList(){
+  const el=document.getElementById('content-plan-list');
+  if(!el)return;
+  const monthKey=_contentCalKey();
+  const plan=store.get('content_plan_'+monthKey,[]).sort((a,b)=>a.date.localeCompare(b.date));
+  const PLAT={ig_reels:'📸 IG Reels',tiktok:'🎵 TikTok',yt_shorts:'▶️ YT Shorts',yt_long:'🎬 YT Long'};
+  const STATUS={todo:'À filmer',filmed:'Filmé',edited:'Monté',posted:'Posté'};
+  if(!plan.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px">Aucun post planifié</div>';return;}
+  el.innerHTML=plan.map(p=>`<div class="content-plan-item">
+    <div class="cp-status-dot ${p.status||'todo'}"></div>
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.subject||'—'}</div>
+      <div style="color:var(--text3);font-size:11px">${p.date} · ${PLAT[p.platform]||p.platform}</div>
+    </div>
+    <select style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 4px;background:var(--bg);color:var(--text);font-family:inherit" onchange="contentPlanUpdateStatus('${p.id}','${monthKey}',this.value)">
+      ${Object.entries(STATUS).map(([v,l])=>`<option value="${v}"${p.status===v?' selected':''}>${l}</option>`).join('')}
+    </select>
+    <button onclick="contentPlanDelete('${p.id}','${monthKey}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 2px">✕</button>
+  </div>`).join('');
+}
+
+function renderContentPlanProgress(){
+  const el=document.getElementById('content-plan-progress');
+  if(!el)return;
+  const monthKey=_contentCalKey();
+  const plan=store.get('content_plan_'+monthKey,[]);
+  const posted=plan.filter(p=>p.status==='posted').length;
+  el.textContent=`${posted}/${plan.length} postés ce mois`;
+}
+
+// ── SECTION 4 : GÉNÉRATEURS IA ───────────────────────
+async function _callAI(system,userMsg,maxTokens=600){
+  const apiKey=store.get('settings',{}).apiKey||'';
+  if(!apiKey){toast('Clé API Anthropic manquante');return null;}
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:maxTokens,system,messages:[{role:'user',content:userMsg}]})
+  });
+  const data=await res.json();
+  return data.content?.find(b=>b.type==='text')?.text||null;
+}
+
+async function genScript(){
+  const subject=document.getElementById('gen-script-subject')?.value.trim();
+  const duration=document.getElementById('gen-script-duration')?.value||'60s';
+  if(!subject){toast('Entre un sujet');return;}
+  const btn=document.querySelector('[onclick="genScript()"]');
+  if(btn){btn.textContent='⏳ Génération…';btn.disabled=true;}
+  const system=`Tu es un expert en contenu short-form viral pour TikTok, Instagram Reels et YouTube Shorts. Lucine est une jeune femme belge, 20-25 ans, entrepreneure dans le digital business (ZiNRAi — plateforme de business digital), UGC, trading et investissement. Son objectif avec ce contenu : générer des leads pour ZiNRAi auprès de 18-25 ans (étudiants, jeunes actifs) cherchant une source de revenus en ligne. Son positionnement : authentique, ambitieuse, une des rares femmes dans ce milieu en Belgique/France.\n\nGénère un script court-format avec :\n1. HOOK (3-5 secondes, accrocheur, pattern interrupt)\n2. CORPS (développement en 3 points max, concret et actionnable)\n3. CTA (appel à l'action vers le lien en bio ou "envoie-moi un message")\nFormat : script parlé naturellement, pas de bullet points, comme si elle parlait face caméra.\nDurée cible : ${duration}`;
+  const reply=await _callAI(system,`Sujet : ${subject}`,700);
+  if(btn){btn.textContent='🎬 Générer script';btn.disabled=false;}
+  if(!reply)return;
+  const ta=document.getElementById('gen-script-result');
+  const sb=document.getElementById('gen-script-save-btn');
+  if(ta){ta.style.display='block';ta.value=reply;}
+  if(sb)sb.style.display='inline-flex';
+}
+
+function genScriptSaveToPlan(){
+  const script=document.getElementById('gen-script-result')?.value||'';
+  const subject=document.getElementById('gen-script-subject')?.value.trim()||'Script IA';
+  const monthKey=_contentCalKey();
+  const plan=store.get('content_plan_'+monthKey,[]);
+  plan.push({id:'cp_'+Date.now(),date:todayKey(),platform:'ig_reels',type:'talk',subject,status:'todo',link:'',script});
+  store.set('content_plan_'+monthKey,plan);
+  contentCalRender();
+  toast('💾 Script ajouté au planning');
+}
+
+async function genLowContent(){
+  const message=document.getElementById('gen-low-message')?.value.trim();
+  const tone=document.getElementById('gen-low-tone')?.value||'Motivant';
+  if(!message){toast('Entre un message');return;}
+  const btn=document.querySelector('[onclick="genLowContent()"]');
+  if(btn){btn.textContent='⏳ Génération…';btn.disabled=true;}
+  const system=`Tu es un expert en contenu short-form pour réseaux sociaux. Style : texte court sur footage vidéo, impactant et mémorable.`;
+  const prompt=`Message principal : "${message}"\nTon : ${tone}\n\nGénère 5 variations de texte court (max 10 mots chacun) style "texte sur vidéo" pour TikTok/Reels + 1 caption Instagram avec hashtags (digital business, ZiNRAi, entrepreneuriat, belgique). Format :\nVARIATION 1: ...\nVARIATION 2: ...\n...\nCAPTION: ...`;
+  const reply=await _callAI(system,prompt,400);
+  if(btn){btn.textContent='✍️ Générer textes';btn.disabled=false;}
+  const el=document.getElementById('gen-low-result');
+  if(!el||!reply)return;
+  el.style.display='block';
+  const lines=reply.split('\n').filter(Boolean);
+  el.innerHTML=lines.map(l=>{
+    const isCaption=l.toLowerCase().startsWith('caption');
+    return`<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);margin-bottom:6px">
+      <div style="flex:1;font-size:13px;${isCaption?'font-size:12px;color:var(--text2)':''}">${l}</div>
+      <button onclick="navigator.clipboard.writeText('${l.replace(/'/g,"\\'")}').then(()=>toast('Copié ✓'))" style="background:none;border:none;cursor:pointer;font-size:14px;flex-shrink:0;color:var(--text3)">📋</button>
+    </div>`;
+  }).join('');
+}
+
+async function genUgcBrief(){
+  const brand=document.getElementById('gen-ugc-brand')?.value.trim();
+  const product=document.getElementById('gen-ugc-product')?.value.trim();
+  if(!brand||!product){toast('Remplis marque et produit');return;}
+  const btn=document.querySelector('[onclick="genUgcBrief()"]');
+  if(btn){btn.textContent='⏳ Génération…';btn.disabled=true;}
+  const system=`Tu es un expert en UGC (User Generated Content) et création de briefs créatifs pour les marques. Tu travailles avec des créateurs de contenu.`;
+  const prompt=`Génère un brief UGC complet pour :\nMarque : ${brand}\nProduit : ${product}\n\nInclus : angles créatifs (3 min), hooks suggérés (3 min), points clés à montrer, durée recommandée, plateformes adaptées. Sois concret et actionnable. En français.`;
+  const reply=await _callAI(system,prompt,700);
+  if(btn){btn.textContent='📋 Générer brief créatif';btn.disabled=false;}
+  const el=document.getElementById('gen-ugc-result');
+  if(el&&reply){el.style.display='block';el.innerHTML=reply.replace(/\n/g,'<br>');}
+}
+
+function contentGenScript(){
+  // Scroll to generateur section and prefill subject
+  const subject=document.getElementById('cp-subject')?.value||'';
+  document.getElementById('gen-script-subject').value=subject;
+  document.getElementById('finance-contenu-pane').querySelector('[onclick="genScript()"]')?.scrollIntoView({behavior:'smooth'});
+  toast('💡 Sujet pré-rempli dans le générateur');
+}
+
+// ── SECTION 5 : ANALYSE IA ───────────────────────────
+async function contentAnalyse(){
+  const btn=document.querySelector('[onclick="contentAnalyse()"]');
+  if(btn){btn.textContent='⏳ Analyse en cours…';btn.disabled=true;}
+  const monthKey=_contentCalKey();
+  const plan=store.get('content_plan_'+monthKey,[]);
+  const tiktokPosts=store.get('tiktok_posts',[]).slice(-3);
+  const data={
+    planning:`${plan.length} posts planifiés, ${plan.filter(p=>p.status==='posted').length} postés`,
+    tiktok:tiktokPosts.map(p=>`${p.title} — ${fmtNum(p.views)} vues, ${fmtNum(p.likes)} likes`).join('; ')||'Aucune donnée',
+    instagram:'Données depuis API (voir posts)',
+    types:Object.entries(plan.reduce((acc,p)=>{acc[p.type]=(acc[p.type]||0)+1;return acc;},{})).map(([k,v])=>`${k}:${v}`).join(', ')
+  };
+  const system=`Tu es un analyste de contenu expert en short-form video.`;
+  const prompt=`Voici les performances des derniers posts de Lucine : ${JSON.stringify(data)}. Son objectif : générer des leads ZiNRAi. Analyse en 4 points clairement séparés par "§§§" : 1) Ce qui performe le mieux et pourquoi, 2) Ce qui performe moins bien et pourquoi, 3) Le meilleur type de contenu pour son objectif, 4) 3 recommandations concrètes pour le mois prochain. Sois direct et actionnable. En français.`;
+  const reply=await _callAI(system,prompt,800);
+  if(btn){btn.textContent='🤖 Analyser mes performances';btn.disabled=false;}
+  const el=document.getElementById('content-analysis-result');
+  if(!el||!reply)return;
+  const titles=['Ce qui performe le mieux','Ce qui performe moins bien','Meilleur type de contenu','Recommandations'];
+  const parts=reply.split('§§§');
+  el.style.display='block';
+  el.innerHTML=parts.map((p,i)=>`<div style="background:var(--bg2);border-radius:10px;padding:12px;margin-bottom:8px">
+    <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:6px">${titles[i]||''}</div>
+    <div style="font-size:13px;line-height:1.6">${p.trim().replace(/\n/g,'<br>')}</div>
+  </div>`).join('');
+  store.set('content_analysis_'+todayKey(),reply);
+}
+
 // ══════════════════════════════════════════════════════
 //  JARVIS HELPERS (aliases publics)
 // ══════════════════════════════════════════════════════
