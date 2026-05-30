@@ -5532,13 +5532,15 @@ function cancelHabitForm(fid,isEdit){
 }
 
 function deleteHabitConfig(hid){
-  if(!confirm('Supprimer cette habitude ?'))return;
   const habits=store.get('habits_list',DEFAULT_HABITS);
-  store.set('habits_list',habits.filter(h=>h.id!==hid));
-  renderHabitConfig();
-  renderHabits();
-  renderHomeHabits();
-  toast('Habitude supprimée');
+  const h=habits.find(x=>x.id===hid);
+  if(!h)return;
+  // Remplace confirm() par un toast avec bouton annuler (confirm bloqué sur certains navigateurs)
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;z-index:99999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+  t.innerHTML=`Supprimer "${h.name}" ? <button onclick="(()=>{const list=store.get('habits_list',[]).filter(x=>x.id!=='${hid}');store.set('habits_list',list);renderHabitConfig();renderHabits();renderHomeHabits();toast('Habitude supprimée');})()" style="background:#f44685;border:none;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600">Supprimer</button><button onclick="this.parentNode.remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:16px">✕</button>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),5000);
 }
 
 // ══════════════════════════════════════════════
