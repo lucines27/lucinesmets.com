@@ -5996,20 +5996,19 @@ async function fetchWhoopData(){
     cache.rhr=r.resting_heart_rate?Math.round(r.resting_heart_rate):null;
   }
   if(sleep?.records){
-    console.log('[WHOOP DEBUG] sleep.records:', JSON.stringify(sleep.records.slice(0,2)));
     // Prefer the most recent non-nap sleep for performance %; fall back if needed
     const mainSleep = sleep.records.find(r => r.nap === false) || sleep.records[0];
-    console.log('[WHOOP DEBUG] mainSleep:', JSON.stringify(mainSleep));
     if(mainSleep){
       const sl=mainSleep.score||{};
       cache.sleepPct=sl.sleep_performance_percentage?Math.round(sl.sleep_performance_percentage):null;
-      // Multiple fallback paths for WHOOP API v1/v2 differences
-      const sleepMs = sl.stage_summary?.total_sleep_time_milli
-                   || sl.total_sleep_time_milli
-                   || sl.stage_summary?.total_in_bed_time_milli
-                   || sl.total_in_bed_time_milli
-                   || (mainSleep.start&&mainSleep.end ? new Date(mainSleep.end)-new Date(mainSleep.start) : 0)
-                   || 0;
+      // Calcul réel : somme des stades (WHOOP n'expose pas total_sleep_time_milli)
+      const ss=sl.stage_summary||{};
+      const sleepMs = (ss.total_light_sleep_time_milli||0)
+                    + (ss.total_slow_wave_sleep_time_milli||0)
+                    + (ss.total_rem_sleep_time_milli||0)
+                    || ss.total_sleep_time_milli
+                    || (ss.total_in_bed_time_milli - (ss.total_awake_time_milli||0))
+                    || 0;
       if(sleepMs > 0){
         const todayStr = todayKey();
         cache.sleepH = (sleepMs/3600000).toFixed(1);
