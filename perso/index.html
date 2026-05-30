@@ -5996,9 +5996,12 @@ async function fetchWhoopData(){
     if(mainSleep){
       const sl=mainSleep.score||{};
       cache.sleepPct=sl.sleep_performance_percentage?Math.round(sl.sleep_performance_percentage):null;
-      // Use main sleep duration directly (avoids timezone-related date mismatch)
+      // Multiple fallback paths for WHOOP API v1/v2 differences
       const sleepMs = sl.stage_summary?.total_sleep_time_milli
+                   || sl.total_sleep_time_milli
                    || sl.stage_summary?.total_in_bed_time_milli
+                   || sl.total_in_bed_time_milli
+                   || (mainSleep.start&&mainSleep.end ? new Date(mainSleep.end)-new Date(mainSleep.start) : 0)
                    || 0;
       if(sleepMs > 0){
         const todayStr = todayKey();
