@@ -1876,7 +1876,7 @@ body.focus-mode #focus-exit-btn{display:flex}
 <!-- LOCK SCREEN -->
 <div id="lock">
   <div style="text-align:center">
-    <div class="lock-logo">lucine mets</div>
+    <div class="lock-logo">lucine smets</div>
     <div class="lock-title">Espace perso</div>
     <div class="lock-sub">Accès privé</div>
   </div>
@@ -4920,7 +4920,7 @@ async function jarvisDailySync(){
 }
 
 function jarvisManualSync(){
-  if(!store.get('obsidian_enabled',false)){toast('Active d'abord la mémoire Obsidian');return;}
+  if(!store.get('obsidian_enabled',false)){toast('Active la mémoire Obsidian dabord');return;}
   jarvisDailySync().then(()=>toast('Sync Obsidian effectuée ✓')).catch(()=>toast('Sync Obsidian effectuée ✓'));
   jarvisDailySync();
   toast('Sync Obsidian en cours…');
