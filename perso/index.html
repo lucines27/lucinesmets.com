@@ -5198,7 +5198,7 @@ async function jarvisRetainMsg(userText,coachText,btn){
   const score=calcDayScore();
   const goals=store.get('goals_'+today,[]);
   const done=goals.filter(g=>g.done).length;
-  const content=`# Mémoire Jarvis — ${today} ${hhmm}\n\n## Contexte du jour\n- Niveau : LV ${lv} — ${lvName}\n- Score journalier : ${score}/100\n- Goals complétés : ${done}/${goals.length}\n\n## Échange retenu\n**Moi :** ${userText}\n**Coach :** ${coachText}\n\n## Tags\n#jarvis #${today}\n`;
+  const content=`# Mémoire Jarvis — ${today} ${hhmm}\n\n[[Journal/${today}]] · [[Stats/${today}]]\n\n## Contexte du jour\n- Niveau : LV ${lv} — ${lvName}\n- Score journalier : ${score}/100\n- Goals complétés : ${done}/${goals.length}\n\n## Échange retenu\n**Moi :** ${userText}\n**Coach :** ${coachText}\n\n## Tags\n#jarvis #coach #${today}\n`;
   await obsidianWrite('Mémoire Jarvis',`${today}_${Date.now()}`,content);
   if(btn){btn.textContent='✅';btn.disabled=true;}
   toast('💾 Mémorisé dans Obsidian');
@@ -5209,7 +5209,7 @@ async function jarvisSaveConversation(){
   const now=new Date();
   const hhmm=`${String(now.getHours()).padStart(2,'0')}h${String(now.getMinutes()).padStart(2,'0')}`;
   const filename=`${today}-${hhmm}`;
-  const content=`# Conversation Coach — ${today} ${hhmm}\n\n${_coachLog.join('\n\n')}\n`;
+  const content=`# Conversation Coach — ${today} ${hhmm}\n\n[[Journal/${today}]] · [[Stats/${today}]] · [[Mémoire Jarvis]]\n\n${_coachLog.join('\n\n')}\n\n## Tags\n#coach #jarvis #${today}\n`;
   await obsidianWrite('Mémoire Jarvis/Conversations',filename,content);
   const btn=document.getElementById('coach-save-conv-btn');
   if(btn)btn.innerHTML='<span style="font-size:12px;color:var(--accent)">✅ Conversation sauvegardée</span>';
@@ -5252,13 +5252,13 @@ async function obsidianNightlySync(){
     return `- ${chk?'✅':'❌'} ${h.name}`;
   }).join('\n');
   const goalLines=goals.map(g=>`- ${g.done?'✅':'⬜'} ${g.text}`).join('\n')||'- Aucun goal';
-  const statsContent=`# Stats — ${today}\n\n## XP & Niveau\n- Niveau : LV ${lv} — ${lvName}\n- XP gagné aujourd'hui : +${xpToday}\n- XP total : ${xpS.total||0}\n\n## Score journalier\n${score}/100\n\n## Goals\n${doneCnt}/${goals.length} complétés\n${goalLines}\n\n## Habitudes\n${habitLines}\n\n## Santé\n- Eau : ${health.eau||0}ml\n- Protéines : ${health.prot||0}g\n- Sommeil : ${health.sleep||0}h\n- Sucre : ${health.sucre||0}g\n`;
+  const statsContent=`# Stats — ${today}\n\n[[Journal/${today}]] · [[Mémoire Jarvis]]\n\n## XP & Niveau\n- Niveau : LV ${lv} — ${lvName}\n- XP gagné aujourd'hui : +${xpToday}\n- XP total : ${xpS.total||0}\n\n## Score journalier\n${score}/100\n\n## Goals\n${doneCnt}/${goals.length} complétés\n${goalLines}\n\n## Habitudes\n${habitLines}\n\n## Santé\n- Eau : ${health.eau||0}ml\n- Protéines : ${health.prot||0}g\n- Sommeil : ${health.sleep||0}h\n- Sucre : ${health.sucre||0}g\n\n## Tags\n#stats #${today}\n`;
   obsidianWrite('Stats',today,statsContent);
 
   // Journal du soir si rempli
   const evening=store.get('checkin_evening_'+today,null);
   if(evening&&(evening.bien_fait||evening.ameliorer)){
-    const journalContent=`# Journal — ${today}\n\n## Ce que j'ai bien fait\n${evening.bien_fait||'—'}\n\n## Ce que je dois améliorer\n${evening.ameliorer||'—'}\n`;
+    const journalContent=`# Journal — ${today}\n\n[[Stats/${today}]] · [[Mémoire Jarvis]]\n\n## Ce que j'ai bien fait\n${evening.bien_fait||'—'}\n\n## Ce que je dois améliorer\n${evening.ameliorer||'—'}\n\n## Tags\n#journal #réflexion #${today}\n`;
     obsidianWrite('Journal',today,journalContent);
     if(evening.ameliorer){
       obsidianWrite('Réflexions/Améliorations',today,`# Amélioration — ${today}\n\n${evening.ameliorer}\n`);
@@ -12640,7 +12640,7 @@ async function _jarvisImportProcess(conversations,sourceName){
         summary=data.content?.[0]?.text||summary;
       }catch(e){}
     }
-    const content=`# ${title}\n_Source : ${sourceName}_\n\n## Résumé\n${summary}\n`;
+    const content=`# ${title}\n_Source : ${sourceName}_ — [[Mémoire Jarvis]]\n\n## Résumé\n${summary}\n\n## Tags\n#jarvis #import #${sourceName.toLowerCase().replace(/[^a-z0-9]/g,'_')} #${todayKey()}\n`;
     await obsidianWrite('Mémoire Jarvis/Imports',title,content);
     done++;
     await new Promise(r=>setTimeout(r,300));
