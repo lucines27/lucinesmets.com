@@ -12796,12 +12796,12 @@ function jarvisImportChatGPT(input){
 /* Mobile : plein écran slide-up */
 @media(max-width:600px){
   #jarvis-panel{
-    bottom:0;right:0;left:0;width:100%;max-height:90vh;
+    bottom:0;right:0;left:0;width:100%;max-height:92vh;
     border-radius:20px 20px 0 0;
     transform:translateY(100%);
   }
   #jarvis-panel.open{transform:translateY(0);}
-  #jarvis-fab{bottom:16px;right:16px;}
+  #jarvis-fab{bottom:80px;right:16px;}
 }
 </style>
 
@@ -13588,6 +13588,8 @@ function jarvisToggle(){
   const badge=document.getElementById('jarvis-badge');
   panel.classList.toggle('open',_jarvisOpen);
   fab.classList.toggle('open',_jarvisOpen);
+  // Sur mobile : cache le FAB quand le panneau est ouvert
+  if(window.innerWidth<=600) fab.style.display=_jarvisOpen?'none':'flex';
   if(_jarvisOpen){
     badge.style.display='none';
     const greetKey='jarvis_greeted_'+todayKey();
