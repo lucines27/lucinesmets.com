@@ -5154,7 +5154,7 @@ async function obsidianWrite(folder, filename, content){
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return;
   try{
-    await fetch(`http://localhost:${port}/vault/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}.md`,{
+    await fetch(`https://127.0.0.1:${port}/vault/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}.md`,{
       method:'PUT',
       headers:{'Authorization':`Bearer ${key}`,'Content-Type':'text/markdown'},
       body:content
@@ -5169,14 +5169,14 @@ async function loadJarvisMemory(){
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return'';
   try{
-    const res=await fetch(`http://localhost:${port}/vault/M%C3%A9moire%20Jarvis/`,{
+    const res=await fetch(`https://127.0.0.1:${port}/vault/M%C3%A9moire%20Jarvis/`,{
       headers:{'Authorization':`Bearer ${key}`}
     });
     if(!res.ok)return'';
     const data=await res.json();
     const files=(data.files||[]).filter(f=>f.endsWith('.md')).slice(-5);
     const contents=await Promise.all(files.map(f=>
-      fetch(`http://localhost:${port}/vault/${encodeURIComponent(f)}`,{
+      fetch(`https://127.0.0.1:${port}/vault/${encodeURIComponent(f)}`,{
         headers:{'Authorization':`Bearer ${key}`}
       }).then(r=>r.ok?r.text():'').catch(()=>'')
     ));
@@ -5219,7 +5219,7 @@ async function obsidianCountNotes(){
   const el=document.getElementById('obsidian-note-count');
   if(!key||!el)return;
   try{
-    const r=await fetch(`http://localhost:${port}/vault/M%C3%A9moire%20Jarvis/`,{headers:{'Authorization':`Bearer ${key}`}});
+    const r=await fetch(`https://127.0.0.1:${port}/vault/M%C3%A9moire%20Jarvis/`,{headers:{'Authorization':`Bearer ${key}`}});
     if(!r.ok){el.textContent='—';return;}
     const data=await r.json();
     el.textContent=(data.files||[]).filter(f=>f.endsWith('.md')).length+' notes';
@@ -5270,7 +5270,7 @@ async function obsidianTest(){
   const res=document.getElementById('obsidian-test-result');
   if(!key){if(res)res.textContent='⚠ Clé API manquante';return;}
   try{
-    const r=await fetch(`http://localhost:${port}/`,{headers:{'Authorization':`Bearer ${key}`}});
+    const r=await fetch(`https://127.0.0.1:${port}/`,{headers:{'Authorization':`Bearer ${key}`}});
     if(res)res.textContent=r.ok?'Connecté ✓':'Erreur '+r.status;
   }catch(e){if(res)res.textContent='Erreur (Obsidian ouvert ?)';}
 }
