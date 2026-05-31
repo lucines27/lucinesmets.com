@@ -9898,8 +9898,8 @@ function leitnerAnswer(correct){
     c.nextReview=Date.now()+days*86400000;
     leitnerSave(cards);
     // XP si progression
-    if(correct&&c.box===7)xpAdd(10,'Mot maîtrisé en espagnol');
-    else if(correct)xpAdd(2,'Flashcard correcte');
+    if(correct&&c.box===7)addXP(10,'fc_mastered_'+card.id,card.id);
+    else if(correct)addXP(2,'fc_correct_'+card.id+'_'+Date.now(),card.id);
   }
   _leitnerIdx++;
   setTimeout(leitnerShowCard,200);
