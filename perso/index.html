@@ -1904,7 +1904,7 @@ body.focus-mode #focus-exit-btn{display:flex}
 <!-- APP -->
 <div id="app">
   <nav class="nav" style="position:relative">
-    <button class="push-bell" id="push-bell-btn" onclick="togglePush()" title="Notifications" style="display:none">
+    <button class="push-bell" id="push-bell-btn" onclick="togglePush()" title="Notifications" style="display:none !important">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
     </button>
     <button class="nav-btn active" onclick="showPage('home',this)" aria-label="Dashboard">
@@ -3086,6 +3086,22 @@ body.focus-mode #focus-exit-btn{display:flex}
                   <div id="jarvis-import-bar" style="height:100%;background:#7c3aed;border-radius:3px;width:0%;transition:width .3s"></div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border-radius:12px;border:1px solid var(--border2)">
+            <div class="setting-lbl" style="color:#0d9488;font-weight:600;margin-bottom:8px">🔔 Notifications</div>
+            <div class="setting-row">
+              <div><div class="setting-lbl">Notifications activées</div><div class="setting-sub">Rappels, alertes streaks, morning check…</div></div>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="notif-toggle" style="accent-color:#0d9488;width:16px;height:16px" onchange="handleNotifToggle(this.checked)">
+                <span style="font-size:12px;color:var(--text2)" id="notif-toggle-lbl">Off</span>
+              </label>
+            </div>
+            <div style="margin-top:8px">
+              <button class="save-btn" onclick="notify('🔔 Test','Les notifications fonctionnent !')">🧪 Tester</button>
+              <span id="notif-status" style="font-size:11px;color:var(--text3);margin-left:8px"></span>
             </div>
           </div>
 
@@ -4751,14 +4767,34 @@ function checkTelegramSchedule(){
   }
 }
 
+async function handleNotifToggle(enabled){
+  const lbl=document.getElementById('notif-toggle-lbl');
+  const status=document.getElementById('notif-status');
+  if(enabled){
+    const perm=await Notification.requestPermission();
+    if(perm==='granted'){
+      store.set('notif_enabled',true);
+      if(lbl)lbl.textContent='On';
+      if(status)status.textContent='✓ Autorisées';
+    }else{
+      store.set('notif_enabled',false);
+      const t=document.getElementById('notif-toggle');
+      if(t)t.checked=false;
+      if(lbl)lbl.textContent='Off';
+      if(status)status.textContent='⚠ Bloquées par le navigateur — autorise dans les réglages Chrome';
+    }
+  }else{
+    store.set('notif_enabled',false);
+    if(lbl)lbl.textContent='Off';
+    if(status)status.textContent='';
+  }
+}
+
 function notify(title,body){
   if(!('Notification' in window))return;
+  if(!store.get('notif_enabled',false))return;
   if(Notification.permission==='granted'){
     new Notification(title,{body,icon:'/perso/icons/icon-192.png',badge:'/perso/icons/icon-192.png'});
-  }else if(Notification.permission==='default'){
-    Notification.requestPermission().then(p=>{
-      if(p==='granted') new Notification(title,{body,icon:'/perso/icons/icon-192.png'});
-    });
   }
 }
 
@@ -5066,6 +5102,15 @@ function loadSettings(){
   const obsToggle=document.getElementById('obsidian-enabled-toggle');
   const obsLbl=document.getElementById('obsidian-enabled-lbl');
   if(obsToggle){const en=store.get('obsidian_enabled',false);obsToggle.checked=en;if(obsLbl)obsLbl.textContent=en?'On':'Off';}
+  const notifToggle=document.getElementById('notif-toggle');
+  const notifLbl=document.getElementById('notif-toggle-lbl');
+  const notifStatus=document.getElementById('notif-status');
+  if(notifToggle){
+    const en=store.get('notif_enabled',false)&&Notification.permission==='granted';
+    notifToggle.checked=en;
+    if(notifLbl)notifLbl.textContent=en?'On':'Off';
+    if(notifStatus)notifStatus.textContent=en?'✓ Autorisées':Notification.permission==='denied'?'⚠ Bloquées par Chrome':'';
+  }
   const emailAgentToggle=document.getElementById('email-agent-toggle');
   const emailAgentLbl=document.getElementById('email-agent-lbl');
   if(emailAgentToggle){const en=store.get('email_agent_enabled',false);emailAgentToggle.checked=en;if(emailAgentLbl)emailAgentLbl.textContent=en?'On':'Off';}
