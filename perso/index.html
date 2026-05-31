@@ -9680,14 +9680,17 @@ function cecrlSyncProgress(lv){
   p[lv].total=lessons.length;
   p[lv].validated=lessons.filter(l=>l.status==='validated').length;
   // Check if next level should unlock
+  // Conditions : minimum 5 leçons validées + 80% du total
+  const MIN_VALIDATED=20;
   const idx=LEVEL_ORDER.indexOf(lv);
   if(idx>=0&&idx<LEVEL_ORDER.length-1&&p[lv].total>0){
-    const pct=p[lv].validated/p[lv].total;
+    const validated=p[lv].validated;
+    const pct=validated/p[lv].total;
     const nextLv=LEVEL_ORDER[idx+1];
-    if(pct>=0.8&&!p[nextLv].unlocked){
+    if(validated>=MIN_VALIDATED&&pct>=0.8&&!p[nextLv].unlocked){
       p[nextLv].unlocked=true;
       cecrlSaveProg(p);
-      toast(`🎉 Niveau ${nextLv} déverrouillé !`);
+      toast(`🎉 Niveau ${nextLv} déverrouillé ! (${validated} leçons validées)`);
       renderCecrlLevels();
       return;
     }
@@ -9828,7 +9831,106 @@ function _renderCecrlLesson(lesson){
       ${exHtml}
     </div>
     <div class="cecrl-section-title">💬 Dialogue</div>
-    <div class="cecrl-dialogue">${dlgHtml}</div>`;
+    <div class="cecrl-dialogue">${dlgHtml}</div>
+    <button onclick="cecrlDownloadFiche()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#f44685,#0d9488);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.01em">📄 Télécharger la fiche récapitulative</button>`;
+}
+
+function cecrlDownloadFiche(){
+  const lesson=_cecrlLesson;
+  if(!lesson?.content)return;
+  const c=lesson.content;
+  const lvColors={A1:'#0d9488',A2:'#0891b2',B1:'#7c3aed',B2:'#f59e0b',C1:'#f44685',C2:'#dc2626'};
+  const accent=lvColors[lesson.level]||'#0d9488';
+  const light=accent+'22';
+
+  const vocabRows=(c.vocabulary||[]).map((v,i)=>`
+    <tr style="background:${i%2===0?'#fff':light}">
+      <td style="padding:8px 14px;font-weight:700;color:${accent};font-size:15px">${v.es}</td>
+      <td style="padding:8px 14px;color:#444;font-size:14px">${v.fr}</td>
+    </tr>`).join('');
+
+  const gramExamples=(c.grammar_point?.examples||[]).map(e=>`
+    <div style="margin:6px 0;padding:8px 12px;background:#fff;border-radius:8px;border-left:3px solid ${accent}">
+      <div style="font-weight:700;color:${accent}">${e.es}</div>
+      <div style="color:#666;font-size:13px;font-style:italic">${e.fr}</div>
+    </div>`).join('');
+
+  const dialogue=(c.dialogue||[]).map((d,i)=>{
+    const isRight=i%2===1;
+    return `<div style="display:flex;justify-content:${isRight?'flex-end':'flex-start'};margin:6px 0">
+      <div style="max-width:65%;background:${isRight?accent:light};color:${isRight?'#fff':'#333'};border-radius:${isRight?'14px 14px 4px 14px':'14px 14px 14px 4px'};padding:10px 14px">
+        <div style="font-size:10px;font-weight:700;opacity:.7;margin-bottom:3px">${d.speaker}</div>
+        <div style="font-weight:600;margin-bottom:3px">${d.es}</div>
+        <div style="font-size:12px;opacity:.8;font-style:italic">${d.fr}</div>
+      </div>
+    </div>`;}).join('');
+
+  const testRows=(c.test||[]).map((q,i)=>`
+    <div style="margin:8px 0;padding:10px 14px;background:#fff;border-radius:10px;border:1px solid #e5e7eb">
+      <div style="font-weight:600;color:#333;margin-bottom:6px">${i+1}. ${q.question}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+        ${(q.options||[]).map((o,j)=>`<div style="padding:4px 8px;border-radius:6px;font-size:13px;${j===q.correct_index?`background:${light};color:${accent};font-weight:700;border:1.5px solid ${accent}`:'background:#f9fafb;color:#666'}">
+          ${j===q.correct_index?'✓ ':String.fromCharCode(65+j)+') '}${o}
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>Fiche — ${c.theme}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f8fafc;color:#222;padding:32px;max-width:800px;margin:0 auto}
+  @media print{body{padding:16px}button{display:none}}
+  .badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;background:${accent};color:#fff;letter-spacing:.08em}
+  h1{font-size:28px;font-weight:900;margin:10px 0 4px;color:#111}
+  h2{font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:${accent};margin:24px 0 10px;padding-bottom:6px;border-bottom:2px solid ${light}}
+  .vocab-table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  .grammar-box{background:${light};border-radius:12px;padding:16px;border-left:4px solid ${accent}}
+  .grammar-title{font-size:17px;font-weight:800;color:${accent};margin-bottom:6px}
+  .grammar-expl{color:#444;font-size:14px;line-height:1.6;margin-bottom:10px}
+  .dialogue-wrap{background:#f1f5f9;border-radius:14px;padding:16px}
+  .test-wrap{background:#f8fafc;border-radius:14px;padding:16px}
+  .footer{margin-top:28px;text-align:center;font-size:11px;color:#aaa}
+  .print-btn{display:block;margin:0 auto 24px;padding:10px 28px;background:${accent};color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+</style></head><body>
+<button class="print-btn" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
+<div class="badge">${lesson.level}</div>
+<h1>${c.theme}</h1>
+<p style="color:#888;font-size:13px;margin-bottom:8px">${c.grammar_point?.title||''} · Généré par Jarvis</p>
+
+<h2>📖 Vocabulaire (${(c.vocabulary||[]).length} mots)</h2>
+<table class="vocab-table">
+  <thead><tr style="background:${accent}">
+    <th style="padding:10px 14px;text-align:left;color:#fff">🇪🇸 Espagnol</th>
+    <th style="padding:10px 14px;text-align:left;color:#fff">🇫🇷 Français</th>
+  </tr></thead>
+  <tbody>${vocabRows}</tbody>
+</table>
+
+<h2>📐 Grammaire</h2>
+<div class="grammar-box">
+  <div class="grammar-title">${c.grammar_point?.title||''}</div>
+  <div class="grammar-expl">${c.grammar_point?.explanation||''}</div>
+  ${gramExamples}
+</div>
+
+<h2>💬 Dialogue</h2>
+<div class="dialogue-wrap">${dialogue}</div>
+
+<h2>✏️ Quiz (${(c.test||[]).length} questions)</h2>
+<div class="test-wrap">${testRows}</div>
+
+<div class="footer">lucinesmets.com/perso · Dashboard Lucine · ${new Date().toLocaleDateString('fr-FR')}</div>
+</body></html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`Fiche_${lesson.level}_${c.theme.replace(/[^a-zA-Z0-9àâéèêëîïôùûüç ]/g,'').trim().replace(/ +/g,'_')}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📄 Fiche téléchargée !');
 }
 
 // ── Lesson generation ──
@@ -9851,16 +9953,23 @@ async function cecrlGenerateLesson(){
   btn.disabled=true;btn.textContent='⏳ Génération en cours…';
 
   const avoidStr=usedThemes?`Thèmes déjà utilisés : ${usedThemes}. Choisis un thème DIFFÉRENT.`:'';
-  const prompt=`Crée une leçon d'espagnol niveau ${lv}. ${avoidStr}
+  const prompt=`Crée une leçon d'espagnol COMPLÈTE et EXHAUSTIVE niveau ${lv}. ${avoidStr}
 Thèmes suggérés pour ${lv} : ${CECRL_THEMES[lv]||CECRL_THEMES.A1}.
+
+RÈGLES IMPORTANTES :
+- Vocabulaire : MINIMUM 20 mots, idéalement 25-30. Couvre le thème EN ENTIER sans rien omettre (ex: chiffres 0-20, jours lun-dim, mois jan-déc, couleurs complètes, etc.)
+- Test : MINIMUM 12 questions, idéalement 15. Teste CHAQUE aspect du vocabulaire et de la grammaire.
+- Si le thème est trop grand, divise-le en chapitres bien remplis (ex: "Nombres 1-20" plutôt que "Nombres 1-10 incomplets")
+- Grammaire : explication claire avec au moins 5 exemples
+
 Réponds UNIQUEMENT avec du JSON valide, aucun texte avant ou après, aucun markdown ni backticks.
-{"theme":"...","level":"${lv}","vocabulary":[{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."}],"grammar_point":{"title":"...","explanation":"...","examples":[{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."}]},"dialogue":[{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."}],"test":[{"question":"...","options":["...","...","...","..."],"correct_index":0},{"question":"...","options":["...","...","...","..."],"correct_index":1},{"question":"...","options":["...","...","...","..."],"correct_index":2},{"question":"...","options":["...","...","...","..."],"correct_index":3},{"question":"...","options":["...","...","...","..."],"correct_index":0}]}`;
+{"theme":"...","level":"${lv}","vocabulary":[{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."}],"grammar_point":{"title":"...","explanation":"...","examples":[{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."}]},"dialogue":[{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."}],"test":[{"question":"...","options":["...","...","...","..."],"correct_index":0},{"question":"...","options":["...","...","...","..."],"correct_index":1},{"question":"...","options":["...","...","...","..."],"correct_index":2},{"question":"...","options":["...","...","...","..."],"correct_index":3},{"question":"...","options":["...","...","...","..."],"correct_index":0},{"question":"...","options":["...","...","...","..."],"correct_index":1},{"question":"...","options":["...","...","...","..."],"correct_index":2},{"question":"...","options":["...","...","...","..."],"correct_index":3},{"question":"...","options":["...","...","...","..."],"correct_index":0},{"question":"...","options":["...","...","...","..."],"correct_index":1},{"question":"...","options":["...","...","...","..."],"correct_index":2},{"question":"...","options":["...","...","...","..."],"correct_index":3}]}`;
 
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:4096,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:8192,messages:[{role:'user',content:prompt}]})
     });
     const data=await res.json();
     if(!res.ok){
