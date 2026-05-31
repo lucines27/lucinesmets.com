@@ -2862,12 +2862,62 @@ body.focus-mode #focus-exit-btn{display:flex}
       <!-- ── ESPAGNOL ── -->
       <div id="savoir-espagnol-pane" class="subtab-pane show">
 
-        <!-- Mot du jour -->
-        <div class="section-label" style="margin-top:0">Mot du jour 🇪🇸</div>
-        <div class="card" style="text-align:center;padding:20px 16px 18px">
-          <div style="font-size:30px;font-weight:800;color:var(--text);margin-bottom:5px;letter-spacing:.01em" id="mdj-es">—</div>
-          <div style="font-size:14px;color:var(--text3);font-style:italic;margin-bottom:4px" id="mdj-fr">—</div>
-          <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600" id="mdj-type"></div>
+
+        <!-- Parcours CECRL -->
+        <div class="section-label">Parcours CECRL</div>
+
+        <!-- Vue niveaux -->
+        <div id="cecrl-view-levels">
+          <div class="cecrl-grid" id="cecrl-levels-grid"></div>
+        </div>
+
+        <!-- Vue leçons -->
+        <div id="cecrl-view-lessons" style="display:none">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <button onclick="cecrlShowLevels()" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">←</button>
+            <div>
+              <div style="font-size:19px;font-weight:800;color:var(--text);line-height:1" id="cecrl-lessons-title">A1</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:2px" id="cecrl-lessons-sub"></div>
+            </div>
+          </div>
+          <div id="cecrl-lessons-list"></div>
+          <button class="cecrl-gen-btn" id="cecrl-gen-btn" onclick="cecrlGenerateLesson()">+ Générer une nouvelle leçon</button>
+        </div>
+
+        <!-- Vue leçon (contenu) -->
+        <div id="cecrl-view-lesson" style="display:none">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <button onclick="cecrlShowLessons()" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">←</button>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:16px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="cecrl-lesson-title"></div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px" id="cecrl-lesson-meta"></div>
+            </div>
+            <div id="cecrl-lesson-status-badge"></div>
+          </div>
+          <div id="cecrl-lesson-content"></div>
+          <button class="cecrl-test-btn" onclick="cecrlStartTest()">🎯 Passer le test</button>
+        </div>
+
+        <!-- Vue test -->
+        <div id="cecrl-view-test" style="display:none">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <button onclick="cecrlShowLesson()" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">←</button>
+            <div style="font-size:16px;font-weight:700;color:var(--text)">Test</div>
+          </div>
+          <div class="cecrl-test-prog-wrap">
+            <div class="cecrl-test-prog-bar" id="cecrl-test-bar" style="width:0%"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);text-align:right;margin-bottom:14px" id="cecrl-test-counter">1/5</div>
+          <div id="cecrl-test-question"></div>
+          <div id="cecrl-test-options"></div>
+          <div id="cecrl-test-feedback" style="display:none;padding:12px 14px;border-radius:10px;margin-top:12px;font-size:13px;font-weight:600;text-align:center"></div>
+          <button id="cecrl-test-next-btn" onclick="cecrlTestNext()" style="display:none;width:100%;margin-top:12px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Suivant →</button>
+          <div id="cecrl-test-result" style="display:none;text-align:center;padding:24px 0 8px">
+            <div style="font-size:44px;margin-bottom:8px" id="cecrl-score-emoji"></div>
+            <div style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px" id="cecrl-score-val"></div>
+            <div style="font-size:14px;color:var(--text2);margin-bottom:22px;line-height:1.5" id="cecrl-score-msg"></div>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="cecrl-result-btns"></div>
+          </div>
         </div>
 
         <!-- Flashcards -->
@@ -2929,6 +2979,15 @@ body.focus-mode #focus-exit-btn{display:flex}
           </div>
         </div>
 
+        <!-- Mot du jour -->
+        <div class="section-label" style="margin-top:0">Mot du jour 🇪🇸</div>
+        <div class="card" style="text-align:center;padding:20px 16px 18px">
+          <div style="font-size:30px;font-weight:800;color:var(--text);margin-bottom:5px;letter-spacing:.01em" id="mdj-es">—</div>
+          <div style="font-size:14px;color:var(--text3);font-style:italic;margin-bottom:4px" id="mdj-fr">—</div>
+          <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600" id="mdj-type"></div>
+        </div>
+
+
         <!-- CONVERSACIÓN -->
         <div class="section-label" style="color:#f44685">CONVERSACIÓN 🗣️</div>
         <div class="conv-es-wrap">
@@ -2957,63 +3016,6 @@ body.focus-mode #focus-exit-btn{display:flex}
           <div class="conv-stats-bar">
             <span id="conv-es-total">💬 0 message</span>
             <span id="conv-es-streak"></span>
-          </div>
-        </div>
-
-        <!-- Parcours CECRL -->
-        <div class="section-label">Parcours CECRL</div>
-
-        <!-- Vue niveaux -->
-        <div id="cecrl-view-levels">
-          <div class="cecrl-grid" id="cecrl-levels-grid"></div>
-        </div>
-
-        <!-- Vue leçons -->
-        <div id="cecrl-view-lessons" style="display:none">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-            <button onclick="cecrlShowLevels()" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">←</button>
-            <div>
-              <div style="font-size:19px;font-weight:800;color:var(--text);line-height:1" id="cecrl-lessons-title">A1</div>
-              <div style="font-size:12px;color:var(--text3);margin-top:2px" id="cecrl-lessons-sub"></div>
-            </div>
-          </div>
-          <div id="cecrl-lessons-list"></div>
-          <button class="cecrl-gen-btn" id="cecrl-gen-btn" onclick="cecrlGenerateLesson()">+ Générer une nouvelle leçon</button>
-        </div>
-
-        <!-- Vue leçon (contenu) -->
-        <div id="cecrl-view-lesson" style="display:none">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <button onclick="cecrlShowLessons()" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">←</button>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:16px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="cecrl-lesson-title"></div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px" id="cecrl-lesson-meta"></div>
-            </div>
-            <div id="cecrl-lesson-status-badge"></div>
-          </div>
-          <div id="cecrl-lesson-content"></div>
-          <button class="cecrl-test-btn" onclick="cecrlStartTest()">🎯 Passer le test</button>
-        </div>
-
-        <!-- Vue test -->
-        <div id="cecrl-view-test" style="display:none">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-            <button onclick="cecrlShowLesson()" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">←</button>
-            <div style="font-size:16px;font-weight:700;color:var(--text)">Test</div>
-          </div>
-          <div class="cecrl-test-prog-wrap">
-            <div class="cecrl-test-prog-bar" id="cecrl-test-bar" style="width:0%"></div>
-          </div>
-          <div style="font-size:11px;color:var(--text3);text-align:right;margin-bottom:14px" id="cecrl-test-counter">1/5</div>
-          <div id="cecrl-test-question"></div>
-          <div id="cecrl-test-options"></div>
-          <div id="cecrl-test-feedback" style="display:none;padding:12px 14px;border-radius:10px;margin-top:12px;font-size:13px;font-weight:600;text-align:center"></div>
-          <button id="cecrl-test-next-btn" onclick="cecrlTestNext()" style="display:none;width:100%;margin-top:12px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Suivant →</button>
-          <div id="cecrl-test-result" style="display:none;text-align:center;padding:24px 0 8px">
-            <div style="font-size:44px;margin-bottom:8px" id="cecrl-score-emoji"></div>
-            <div style="font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px" id="cecrl-score-val"></div>
-            <div style="font-size:14px;color:var(--text2);margin-bottom:22px;line-height:1.5" id="cecrl-score-msg"></div>
-            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="cecrl-result-btns"></div>
           </div>
         </div>
 
