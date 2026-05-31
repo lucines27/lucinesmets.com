@@ -3366,7 +3366,8 @@ async function _flushToSupabase() {
 const SUPABASE_SKIP_LOAD = new Set([
   'whoop_state', 'whoop_needs_reconnect',
   'gcal_state', 'gcal_verifier',
-  'gmail_state', 'gmail_verifier'
+  'gmail_state', 'gmail_verifier',
+  'pending_levelup'  // jamais restauré depuis Supabase — transitoire
 ]);
 
 async function initSupabase() {
@@ -9924,24 +9925,20 @@ function leitnerAnswer(correct){
   if(!card){_leitnerAnswering=false;return;}
 
   const cards=leitnerCards();
-  const idx=cards.findIndex(c=>c.id===card.id);
-  if(idx>=0){
-    const c=cards[idx];
-    if(correct){
-      c.box=Math.min(7,c.box+1);
-      c.streak=(c.streak||0)+1;
-    }else{
-      c.box=1; // Retour en boîte 1
-      c.streak=0;
-    }
-    // Calcule la prochaine révision
-    const days=LEITNER_INTERVALS[c.box]||1;
-    c.nextReview=Date.now()+days*86400000;
-    leitnerSave(cards);
-    // XP si progression
-    if(correct&&c.box===7)addXP(10,'fc_mastered_'+card.id,card.id);
-    else if(correct)addXP(2,'fc_correct_'+card.id+'_'+Date.now(),card.id);
-  }
+  const now=Date.now();
+  // Synchronise les deux directions (ES→FR et FR→ES) ensemble
+  const pair=cards.filter(c=>c.es===card.es&&c.fr===card.fr);
+  pair.forEach(c=>{
+    if(correct){c.box=Math.min(7,c.box+1);c.streak=(c.streak||0)+1;}
+    else{c.box=1;c.streak=0;}
+    c.nextReview=now+(LEITNER_INTERVALS[c.box]||1)*86400000;
+  });
+  leitnerSave(cards);
+  if(correct&&pair[0]?.box===7)addXP(10,'fc_mastered_'+card.es.slice(0,8),card.id);
+  else if(correct)addXP(2,'fc_correct_'+now,card.id);
+  // Retire l'autre direction de la session si encore présente
+  const otherId=pair.find(c=>c.id!==card.id)?.id;
+  if(otherId){const oi=_leitnerSession.findIndex((c,i)=>i>_leitnerIdx&&c.id===otherId);if(oi>=0)_leitnerSession.splice(oi,1);}
   _leitnerIdx++;
   const sid2=_leitnerSessionId;
   setTimeout(()=>{if(_leitnerSessionId===sid2){_leitnerAnswering=false;leitnerShowCard();}},300);
