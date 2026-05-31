@@ -9763,8 +9763,17 @@ function renderCecrlLessons(lv){
       <div class="cecrl-lesson-theme">${l.theme}</div>
       ${scoreHtml}
       <span class="cecrl-lesson-status ${st.cls}">${st.lbl}</span>
+      <button onclick="event.stopPropagation();cecrlDeleteLesson('${l.id}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;padding:0 0 0 6px;flex-shrink:0;line-height:1" title="Supprimer">✕</button>
     </div>`;
   }).join('');
+}
+
+function cecrlDeleteLesson(id){
+  const lessons=cecrlLessons(_cecrlLevel).filter(l=>l.id!==id);
+  cecrlSaveLessons(_cecrlLevel,lessons);
+  cecrlSyncProgress(_cecrlLevel);
+  renderCecrlLessons(_cecrlLevel);
+  toast('Leçon supprimée');
 }
 
 function cecrlOpenLesson(id){
