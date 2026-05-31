@@ -10128,9 +10128,13 @@ function _renderCecrlLesson(lesson){
   if(!cont)return;
 
   // Vocabulary
-  const vocabRows=(c.vocabulary||[]).map(v=>
-    `<tr><td class="cecrl-vocab-es">${v.es}</td><td class="cecrl-vocab-fr">${v.fr}</td></tr>`
-  ).join('');
+  const vocabRows=(c.vocabulary||[]).map(v=>{
+    const esc=v.es.replace(/'/g,'&apos;').replace(/"/g,'&quot;');
+    return`<tr>
+      <td class="cecrl-vocab-es" style="cursor:pointer" onclick="cecrlSpeak('${esc}')" title="Écouter">${v.es} <span style="opacity:.4;font-size:12px">🔊</span></td>
+      <td class="cecrl-vocab-fr">${v.fr}</td>
+    </tr>`;
+  }).join('');
 
   // Grammar examples
   const exHtml=(c.grammar_point?.examples||[]).map(e=>
@@ -10138,15 +10142,21 @@ function _renderCecrlLesson(lesson){
   ).join('');
 
   // Dialogue
-  const dlgHtml=(c.dialogue||[]).map((d,i)=>
-    `<div class="cecrl-bubble-wrap${i%2===1?' right':''}">
+  const dlgHtml=(c.dialogue||[]).map((d,i)=>{
+    const esc=d.es.replace(/'/g,'&apos;').replace(/"/g,'&quot;');
+    return`<div class="cecrl-bubble-wrap${i%2===1?' right':''}">
       <div class="cecrl-speaker">${d.speaker}</div>
-      <div class="cecrl-bubble">
-        <div class="cecrl-bubble-es">${d.es}</div>
-        <div class="cecrl-bubble-fr">${d.fr}</div>
+      <div class="cecrl-bubble" style="cursor:pointer" onclick="cecrlSpeak('${esc}')" title="Écouter la prononciation">
+        <div style="display:flex;align-items:flex-start;gap:6px">
+          <div style="flex:1">
+            <div class="cecrl-bubble-es">${d.es}</div>
+            <div class="cecrl-bubble-fr">${d.fr}</div>
+          </div>
+          <span style="font-size:14px;opacity:.5;flex-shrink:0;margin-top:2px">🔊</span>
+        </div>
       </div>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 
   cont.innerHTML=`
     <div class="cecrl-section-title">📖 Vocabulaire</div>
@@ -10168,6 +10178,18 @@ function _renderCecrlLesson(lesson){
       <button onclick="cecrlDownloadFiche()" style="flex:1;padding:12px;background:linear-gradient(135deg,#f44685,#0d9488);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📄 Fiche récap</button>
       <button id="leitner-import-btn" onclick="cecrlImportToFlashcards()" style="flex:1;padding:12px;background:var(--accent-bg);border:2px solid var(--accent);color:var(--accent);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📚 Ajouter aux flashcards</button>
     </div>`;
+}
+
+function cecrlSpeak(text){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='es-ES';u.rate=0.85;
+  // Préfère une voix espagnole si disponible
+  const voices=window.speechSynthesis.getVoices();
+  const esVoice=voices.find(v=>v.lang.startsWith('es'));
+  if(esVoice)u.voice=esVoice;
+  window.speechSynthesis.speak(u);
 }
 
 function cecrlImportToFlashcards(){
