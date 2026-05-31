@@ -2871,13 +2871,56 @@ body.focus-mode #focus-exit-btn{display:flex}
         </div>
 
         <!-- Flashcards -->
-        <div class="section-label">Mes flashcards</div>
-        <div id="fc-deck"></div>
-        <div class="card" style="margin-top:6px">
-          <div style="display:flex;gap:8px">
-            <input class="add-input" id="fc-inp-es" placeholder="Espagnol" style="margin:0;flex:1">
-            <input class="add-input" id="fc-inp-fr" placeholder="Français" style="margin:0;flex:1">
-            <button onclick="fcAdd()" style="padding:0 14px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:20px;font-weight:600;cursor:pointer;flex-shrink:0;line-height:1;height:42px">+</button>
+        <!-- LEITNER FLASHCARDS -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="section-label" style="margin-bottom:0">Flashcards — Boîtes de Leitner</div>
+          <button onclick="leitnerStartSession()" id="leitner-start-btn" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">▶ Réviser</button>
+        </div>
+
+        <!-- Vue boîtes -->
+        <div id="leitner-view-boxes">
+          <div id="leitner-boxes-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:10px"></div>
+          <div id="leitner-due-badge" style="text-align:center;font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px"></div>
+          <!-- Ajouter un mot -->
+          <div class="card" style="padding:10px">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Ajouter un mot</div>
+            <div style="display:flex;gap:8px">
+              <input class="add-input" id="fc-inp-es" placeholder="🇪🇸 Espagnol" style="margin:0;flex:1">
+              <input class="add-input" id="fc-inp-fr" placeholder="🇫🇷 Français" style="margin:0;flex:1">
+              <button onclick="leitnerAddCard()" style="padding:0 14px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:20px;cursor:pointer;flex-shrink:0;height:42px">+</button>
+            </div>
+          </div>
+          <!-- Stats globales -->
+          <div id="leitner-stats" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Vue session de révision -->
+        <div id="leitner-view-session" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <button onclick="leitnerEndSession()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;padding:0">←</button>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700" id="leitner-session-title">Révision</div>
+              <div style="font-size:11px;color:var(--text3)" id="leitner-session-progress"></div>
+            </div>
+          </div>
+          <!-- Carte -->
+          <div id="leitner-card-wrap" style="perspective:600px;margin-bottom:14px;cursor:pointer" onclick="leitnerFlipCard()">
+            <div id="leitner-card" style="position:relative;width:100%;min-height:160px;transform-style:preserve-3d;transition:transform .4s;border-radius:16px">
+              <div id="leitner-card-front" style="position:absolute;inset:0;backface-visibility:hidden;background:var(--surface);border:2px solid var(--accent);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:8px" id="leitner-card-dir"></div>
+                <div style="font-size:26px;font-weight:800;color:var(--text)" id="leitner-card-q"></div>
+                <div style="font-size:12px;color:var(--text3);margin-top:12px">Appuie pour retourner</div>
+              </div>
+              <div id="leitner-card-back" style="position:absolute;inset:0;backface-visibility:hidden;background:var(--accent-bg);border:2px solid var(--accent);border-radius:16px;transform:rotateY(180deg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center">
+                <div style="font-size:26px;font-weight:800;color:var(--accent)" id="leitner-card-a"></div>
+                <div style="font-size:12px;color:var(--text2);margin-top:8px" id="leitner-card-theme"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Boutons réponse (cachés jusqu'au flip) -->
+          <div id="leitner-answer-btns" style="display:none;gap:10px">
+            <button onclick="leitnerAnswer(false)" style="flex:1;padding:12px;background:#fff0f5;border:2px solid #f44685;border-radius:12px;color:#f44685;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✗ Raté</button>
+            <button onclick="leitnerAnswer(true)" style="flex:1;padding:12px;background:var(--accent-bg);border:2px solid var(--accent);border-radius:12px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✓ Connu</button>
           </div>
         </div>
 
@@ -9003,6 +9046,7 @@ function showSubTab(page, tab){
   if(btn)btn.classList.add('active');
   // Side effect: init capital when switching to it
   if(page==='finance'&&tab==='capital')renderCapital();
+  if(page==='savoir'&&tab==='espagnol')leitnerRender();
 }
 
 // ══════════════════════════════════════════════
@@ -9602,42 +9646,226 @@ function renderMotDuJour(){
   if(typeEl)typeEl.textContent=w.type||'';
 }
 
-function fcAdd(){
-  const esInp=document.getElementById('fc-inp-es');
-  const frInp=document.getElementById('fc-inp-fr');
-  const es=(esInp.value||'').trim();
-  const fr=(frInp.value||'').trim();
+// ══════════════════════════════════════════════
+//  LEITNER — Système Ebbinghaus 7 boîtes
+// ══════════════════════════════════════════════
+// Intervalles de révision (jours) par boîte 1→7
+const LEITNER_INTERVALS=[0,1,2,4,7,14,30,9999];
+// Box 7 = maîtrisé (9999 = jamais revu sauf reset)
+
+const LEITNER_COLORS=['#f44685','#f97316','#f59e0b','#84cc16','#0d9488','#0891b2','#7c3aed'];
+const LEITNER_LABELS=['1','2','3','4','5','6','★'];
+
+let _leitnerSession=[]; // cartes à réviser dans la session
+let _leitnerIdx=0;
+let _leitnerFlipped=false;
+
+// ── Données ────────────────────────────────────
+function leitnerCards(){return store.get('leitner_cards',[]);}
+function leitnerSave(cards){store.set('leitner_cards',cards);}
+
+function leitnerGetDue(){
+  const now=Date.now();
+  return leitnerCards().filter(c=>{
+    if(c.box>=7)return false; // maîtrisé
+    const interval=LEITNER_INTERVALS[c.box]||1;
+    return now>=(c.nextReview||0);
+  });
+}
+
+// ── Ajouter un mot (manuel) ─────────────────────
+function leitnerAddCard(){
+  const es=(document.getElementById('fc-inp-es')?.value||'').trim();
+  const fr=(document.getElementById('fc-inp-fr')?.value||'').trim();
   if(!es||!fr){toast('Remplis les deux champs');return;}
-  const cards=store.get('flashcards_list',[]);
-  cards.unshift({id:'fc'+Date.now(),es,fr});
-  store.set('flashcards_list',cards);
-  esInp.value='';frInp.value='';
-  renderFlashcards();
+  _leitnerAddPair(es,fr,'Manuel');
+  document.getElementById('fc-inp-es').value='';
+  document.getElementById('fc-inp-fr').value='';
+  leitnerRender();
+  toast('✓ Mot ajouté dans la boîte 1');
 }
 
-function renderFlashcards(){
-  const cont=document.getElementById('fc-deck');
-  if(!cont)return;
-  const cards=store.get('flashcards_list',[]);
-  if(!cards.length){
-    cont.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px 0">Aucune flashcard — ajoute des mots ci-dessous</div>';
-    return;
+function _leitnerAddPair(es,fr,theme){
+  const cards=leitnerCards();
+  const now=Date.now();
+  // Vérifie si déjà présent
+  const exists=cards.some(c=>c.es===es&&c.fr===fr);
+  if(exists)return false;
+  // Crée 2 cartes : ES→FR et FR→ES
+  cards.push({id:'lc_'+now+'a',es,fr,theme,dir:'es-fr',box:1,nextReview:now,streak:0});
+  cards.push({id:'lc_'+now+'b',es,fr,theme,dir:'fr-es',box:1,nextReview:now,streak:0});
+  leitnerSave(cards);
+  return true;
+}
+
+// ── Import automatique depuis leçon CECRL ──────
+function leitnerImportFromLesson(lesson){
+  if(!lesson?.content?.vocabulary)return 0;
+  const theme=lesson.content.theme||lesson.theme||'';
+  let added=0;
+  for(const v of lesson.content.vocabulary){
+    if(_leitnerAddPair(v.es,v.fr,theme))added++;
   }
-  cont.innerHTML=cards.map((c,i)=>`
-    <div class="fc-card" onclick="this.classList.toggle('flipped')">
-      <span class="fc-front">${c.es}</span>
-      <span class="fc-back">${c.fr}</span>
-      <span class="fc-hint">appuie pour retourner</span>
-      <button class="fc-del" onclick="event.stopPropagation();fcDelete(${i})" title="Supprimer">×</button>
-    </div>`).join('');
+  if(added>0){
+    leitnerRender();
+    toast(`📚 ${added} mots ajoutés aux flashcards (boîte 1)`);
+  }
+  return added;
 }
 
-function fcDelete(idx){
-  const cards=store.get('flashcards_list',[]);
-  cards.splice(idx,1);
-  store.set('flashcards_list',cards);
-  renderFlashcards();
+// ── Rendu boîtes ─────────────────────────────────
+function leitnerRender(){
+  const cards=leitnerCards();
+  const grid=document.getElementById('leitner-boxes-grid');
+  if(!grid)return;
+
+  // Compte par boîte
+  const counts=Array(8).fill(0);
+  cards.forEach(c=>counts[Math.min(c.box||1,7)]++);
+
+  grid.innerHTML=LEITNER_LABELS.map((lbl,i)=>{
+    const box=i+1;
+    const count=counts[box]||0;
+    const color=LEITNER_COLORS[i];
+    const interval=box<7?`${LEITNER_INTERVALS[box]}j`:'★';
+    return`<div style="background:${color}18;border:2px solid ${color};border-radius:12px;padding:8px 4px;text-align:center;cursor:pointer" onclick="leitnerShowBox(${box})" title="Boîte ${box}">
+      <div style="font-size:18px;font-weight:800;color:${color}">${count}</div>
+      <div style="font-size:9px;font-weight:700;color:${color};letter-spacing:.05em">Boîte ${lbl}</div>
+      <div style="font-size:9px;color:${color};opacity:.7">${interval}</div>
+    </div>`;
+  }).join('');
+
+  // Badge cartes dues
+  const due=leitnerGetDue();
+  const dueEl=document.getElementById('leitner-due-badge');
+  if(dueEl)dueEl.textContent=due.length>0?`${due.length} carte${due.length>1?'s':''} à réviser aujourd'hui`:'✓ Aucune révision en attente';
+
+  // Bouton réviser
+  const btn=document.getElementById('leitner-start-btn');
+  if(btn){btn.disabled=due.length===0;btn.style.opacity=due.length===0?'.4':'1';}
+
+  // Stats
+  const total=cards.length/2; // /2 car 2 cartes par mot
+  const mastered=counts[7]/2;
+  const statsEl=document.getElementById('leitner-stats');
+  if(statsEl&&total>0)statsEl.innerHTML=`<div style="font-size:12px;color:var(--text3);text-align:center">${Math.round(mastered)} / ${Math.round(total)} mots maîtrisés · ${cards.length} cartes au total</div>`;
 }
+
+function leitnerShowBox(box){
+  const cards=leitnerCards().filter(c=>c.box===box);
+  if(!cards.length){toast(`Boîte ${box} vide`);return;}
+  // Mini-modal liste
+  const color=LEITNER_COLORS[box-1];
+  const pairs=[...new Map(cards.map(c=>[c.es+'|'+c.fr,c])).values()];
+  const html=pairs.slice(0,20).map(c=>`<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="flex:1;font-weight:600;color:${color}">${c.es}</span><span style="flex:1;color:var(--text2)">${c.fr}</span><span style="font-size:10px;color:var(--text3)">${c.theme||''}</span></div>`).join('');
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  t.innerHTML=`<div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:70vh;overflow-y:auto;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-weight:700;color:${color}">Boîte ${box}${box===7?' ★':''} — ${pairs.length} mots</div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+    </div>${html}${pairs.length>20?`<div style="text-align:center;font-size:12px;color:var(--text3);padding-top:8px">+${pairs.length-20} autres</div>`:''}</div>`;
+  document.body.appendChild(t);
+}
+
+// ── Session de révision ──────────────────────────
+function leitnerStartSession(){
+  _leitnerSession=leitnerGetDue();
+  if(!_leitnerSession.length){toast('Aucune carte à réviser !');return;}
+  // Mélange
+  _leitnerSession.sort(()=>Math.random()-.5);
+  _leitnerIdx=0;
+  document.getElementById('leitner-view-boxes').style.display='none';
+  document.getElementById('leitner-view-session').style.display='block';
+  leitnerShowCard();
+}
+
+function leitnerEndSession(){
+  document.getElementById('leitner-view-session').style.display='none';
+  document.getElementById('leitner-view-boxes').style.display='block';
+  leitnerRender();
+}
+
+function leitnerShowCard(){
+  const total=_leitnerSession.length;
+  const card=_leitnerSession[_leitnerIdx];
+  if(!card){leitnerSessionDone();return;}
+
+  _leitnerFlipped=false;
+  const fc=document.getElementById('leitner-card');
+  if(fc)fc.style.transform='rotateY(0deg)';
+  const answerBtns=document.getElementById('leitner-answer-btns');
+  if(answerBtns)answerBtns.style.display='none';
+
+  const dirEl=document.getElementById('leitner-card-dir');
+  const qEl=document.getElementById('leitner-card-q');
+  const aEl=document.getElementById('leitner-card-a');
+  const thEl=document.getElementById('leitner-card-theme');
+  const progEl=document.getElementById('leitner-session-progress');
+  const titleEl=document.getElementById('leitner-session-title');
+
+  const isEsToFr=card.dir==='es-fr';
+  if(dirEl)dirEl.textContent=isEsToFr?'🇪🇸 → 🇫🇷':'🇫🇷 → 🇪🇸';
+  if(qEl)qEl.textContent=isEsToFr?card.es:card.fr;
+  if(aEl)aEl.textContent=isEsToFr?card.fr:card.es;
+  if(thEl)thEl.textContent=card.theme||'';
+  if(progEl)progEl.textContent=`${_leitnerIdx+1} / ${total} cartes`;
+  const color=LEITNER_COLORS[(card.box||1)-1];
+  if(titleEl)titleEl.innerHTML=`Révision · <span style="color:${color}">Boîte ${card.box}</span>`;
+}
+
+function leitnerFlipCard(){
+  if(_leitnerFlipped)return;
+  _leitnerFlipped=true;
+  const fc=document.getElementById('leitner-card');
+  if(fc)fc.style.transform='rotateY(180deg)';
+  const answerBtns=document.getElementById('leitner-answer-btns');
+  if(answerBtns){answerBtns.style.display='flex';}
+}
+
+function leitnerAnswer(correct){
+  const card=_leitnerSession[_leitnerIdx];
+  if(!card)return;
+
+  const cards=leitnerCards();
+  const idx=cards.findIndex(c=>c.id===card.id);
+  if(idx>=0){
+    const c=cards[idx];
+    if(correct){
+      c.box=Math.min(7,c.box+1);
+      c.streak=(c.streak||0)+1;
+    }else{
+      c.box=1; // Retour en boîte 1
+      c.streak=0;
+    }
+    // Calcule la prochaine révision
+    const days=LEITNER_INTERVALS[c.box]||1;
+    c.nextReview=Date.now()+days*86400000;
+    leitnerSave(cards);
+    // XP si progression
+    if(correct&&c.box===7)xpAdd(10,'Mot maîtrisé en espagnol');
+    else if(correct)xpAdd(2,'Flashcard correcte');
+  }
+  _leitnerIdx++;
+  setTimeout(leitnerShowCard,200);
+}
+
+function leitnerSessionDone(){
+  const correct=_leitnerSession.filter((c,i)=>{
+    const cards=leitnerCards();
+    const found=cards.find(x=>x.id===c.id);
+    return found&&found.box>c.box;
+  }).length;
+  document.getElementById('leitner-view-session').style.display='none';
+  document.getElementById('leitner-view-boxes').style.display='block';
+  const total=_leitnerSession.length;
+  toast(`✓ Session terminée : ${correct}/${total} correctes`);
+  leitnerRender();
+}
+
+// Compat ancienne API
+function fcAdd(){leitnerAddCard();}
+function renderFlashcards(){leitnerRender();}
 
 // ══════════════════════════════════════════════
 //  SAVOIR — PARCOURS CECRL
@@ -9789,6 +10017,19 @@ function cecrlOpenLesson(id){
   }
   _renderCecrlLesson(lesson);
   cecrlSetView('lesson');
+  // Propose d'importer le vocabulaire si nouveau
+  if(lesson.status==='todo'||lesson.status==='wip'){
+    const existing=leitnerCards().some(c=>c.theme===lesson.content?.theme);
+    if(!existing&&lesson.content?.vocabulary?.length){
+      setTimeout(()=>{
+        const t=document.createElement('div');
+        t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0d9488;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;z-index:99999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(13,148,136,.3);white-space:nowrap';
+        t.innerHTML=`📚 Ajouter le vocabulaire aux flashcards ? <button onclick="leitnerImportFromLesson(_cecrlLesson);this.parentNode.remove()" style="background:#fff;color:#0d9488;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:700">Oui</button><button onclick="this.parentNode.remove()" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:16px">✕</button>`;
+        document.body.appendChild(t);
+        setTimeout(()=>t.remove(),8000);
+      },600);
+    }
+  }
 }
 
 function _renderCecrlLesson(lesson){
@@ -12711,6 +12952,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>jarvisInit(),2500);
   setTimeout(()=>{if(store.get('obsidian_enabled',false))obsidianCountNotes();},3000);
   setTimeout(()=>{initStartDayBtn();renderUgcRelancesTable();},800);
+  setTimeout(()=>leitnerRender(),1000);
 });
 
 </script>
