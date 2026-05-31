@@ -13790,28 +13790,43 @@ function jarvisTTS(text,btn){
 // ── Micro STT ────────────────────────────────────────
 function jarvisMicToggle(){
   const btn=document.getElementById('jarvis-mic');
+  const inp=document.getElementById('jarvis-input');
   if(!_jarvisRecog){
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR){toast('Reconnaissance vocale non supportée');return;}
     _jarvisRecog=new SR();
     _jarvisRecog.lang='fr-FR';
-    _jarvisRecog.interimResults=false;
+    _jarvisRecog.interimResults=true;  // Affiche les mots en cours
+    _jarvisRecog.continuous=false;
     _jarvisRecog.onresult=e=>{
-      const t=e.results[0][0].transcript;
-      const inp=document.getElementById('jarvis-input');
-      if(inp){inp.value=t;jarvisSend();}
+      // Affiche dans le champ mais n'envoie PAS automatiquement
+      let interim='', final='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+        else interim+=e.results[i][0].transcript;
+      }
+      if(inp) inp.value=(final||interim).trim();
+    };
+    _jarvisRecog.onend=()=>{
       btn.classList.remove('listening');
       _jarvisRecog=null;
+      // Focus sur le champ pour que l'utilisateur puisse envoyer ou corriger
+      inp?.focus();
     };
-    _jarvisRecog.onerror=()=>{btn.classList.remove('listening');_jarvisRecog=null;};
-    _jarvisRecog.onend=()=>{btn.classList.remove('listening');_jarvisRecog=null;};
+    _jarvisRecog.onerror=e=>{
+      btn.classList.remove('listening');
+      _jarvisRecog=null;
+      if(e.error!=='no-speech')toast('Erreur micro : '+e.error);
+    };
     _jarvisRecog.start();
     btn.classList.add('listening');
+    if(inp) inp.placeholder='🎤 En écoute…';
   }else{
     _jarvisRecog.stop();
     btn.classList.remove('listening');
     _jarvisRecog=null;
   }
+  if(inp) inp.placeholder='Message à Jarvis…';
 }
 </script>
 </body>
