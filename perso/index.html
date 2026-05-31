@@ -2904,23 +2904,28 @@ body.focus-mode #focus-exit-btn{display:flex}
             </div>
           </div>
           <!-- Carte -->
-          <div id="leitner-card-wrap" style="perspective:600px;margin-bottom:14px;cursor:pointer" onclick="leitnerFlipCard()">
-            <div id="leitner-card" style="position:relative;width:100%;min-height:160px;transform-style:preserve-3d;transition:transform .4s;border-radius:16px">
-              <div id="leitner-card-front" style="position:absolute;inset:0;backface-visibility:hidden;background:var(--surface);border:2px solid var(--accent);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center">
-                <div style="font-size:11px;color:var(--text3);margin-bottom:8px" id="leitner-card-dir"></div>
-                <div style="font-size:26px;font-weight:800;color:var(--text)" id="leitner-card-q"></div>
-                <div style="font-size:12px;color:var(--text3);margin-top:12px">Appuie pour retourner</div>
-              </div>
-              <div id="leitner-card-back" style="position:absolute;inset:0;backface-visibility:hidden;background:var(--accent-bg);border:2px solid var(--accent);border-radius:16px;transform:rotateY(180deg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center">
-                <div style="font-size:26px;font-weight:800;color:var(--accent)" id="leitner-card-a"></div>
-                <div style="font-size:12px;color:var(--text2);margin-top:8px" id="leitner-card-theme"></div>
-              </div>
-            </div>
+          <div style="background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:24px;text-align:center;margin-bottom:14px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px" id="leitner-card-dir"></div>
+            <div style="font-size:28px;font-weight:800;color:var(--text);margin-bottom:4px" id="leitner-card-q"></div>
+            <div style="font-size:12px;color:var(--text3)" id="leitner-card-theme"></div>
           </div>
-          <!-- Boutons réponse (cachés jusqu'au flip) -->
+          <!-- Saisie réponse -->
+          <div id="leitner-input-wrap" style="margin-bottom:10px">
+            <input id="leitner-answer-input" type="text" placeholder="Tape ta réponse…"
+              style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-size:16px;font-family:inherit;outline:none;box-sizing:border-box;background:var(--bg);color:var(--text);transition:border-color .2s"
+              onkeydown="if(event.key==='Enter')leitnerCheckAnswer()">
+            <button onclick="leitnerCheckAnswer()" style="width:100%;margin-top:8px;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Vérifier →</button>
+          </div>
+          <!-- Résultat (caché jusqu'à la vérification) -->
+          <div id="leitner-result" style="display:none;border-radius:12px;padding:14px;text-align:center;margin-bottom:10px">
+            <div style="font-size:22px;font-weight:800;margin-bottom:4px" id="leitner-result-icon"></div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:2px" id="leitner-result-correct"></div>
+            <div style="font-size:13px;opacity:.7" id="leitner-result-msg"></div>
+          </div>
+          <!-- Boutons suivant (cachés jusqu'au résultat) -->
           <div id="leitner-answer-btns" style="display:none;gap:10px">
-            <button onclick="leitnerAnswer(false)" style="flex:1;padding:12px;background:#fff0f5;border:2px solid #f44685;border-radius:12px;color:#f44685;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✗ Raté</button>
-            <button onclick="leitnerAnswer(true)" style="flex:1;padding:12px;background:var(--accent-bg);border:2px solid var(--accent);border-radius:12px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✓ Connu</button>
+            <button id="leitner-btn-wrong" onclick="leitnerAnswer(false)" style="flex:1;padding:12px;background:#fff0f5;border:2px solid #f44685;border-radius:12px;color:#f44685;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✗ Raté →</button>
+            <button id="leitner-btn-correct" onclick="leitnerAnswer(true)" style="flex:1;padding:12px;background:var(--accent-bg);border:2px solid var(--accent);border-radius:12px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✓ Quand même correct</button>
           </div>
         </div>
 
@@ -9792,10 +9797,12 @@ function leitnerShowCard(){
   if(!card){leitnerSessionDone();return;}
 
   _leitnerFlipped=false;
-  const fc=document.getElementById('leitner-card');
-  if(fc)fc.style.transform='rotateY(0deg)';
   const answerBtns=document.getElementById('leitner-answer-btns');
-  if(answerBtns)answerBtns.style.display='none';
+  if(answerBtns){answerBtns.style.display='none';answerBtns.querySelectorAll('button').forEach(b=>b.style.display='flex');}
+  const resultEl=document.getElementById('leitner-result');
+  if(resultEl)resultEl.style.display='none';
+  const inp=document.getElementById('leitner-answer-input');
+  if(inp){inp.value='';inp.disabled=false;inp.style.borderColor='var(--border)';setTimeout(()=>inp.focus(),100);}
 
   const dirEl=document.getElementById('leitner-card-dir');
   const qEl=document.getElementById('leitner-card-q');
@@ -9814,14 +9821,62 @@ function leitnerShowCard(){
   if(titleEl)titleEl.innerHTML=`Révision · <span style="color:${color}">Boîte ${card.box}</span>`;
 }
 
-function leitnerFlipCard(){
-  if(_leitnerFlipped)return;
-  _leitnerFlipped=true;
-  const fc=document.getElementById('leitner-card');
-  if(fc)fc.style.transform='rotateY(180deg)';
-  const answerBtns=document.getElementById('leitner-answer-btns');
-  if(answerBtns){answerBtns.style.display='flex';}
+function _normalize(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[¡!¿?.,;:]/g,'').trim();
 }
+
+function leitnerCheckAnswer(){
+  const card=_leitnerSession[_leitnerIdx];
+  if(!card||_leitnerFlipped)return;
+  const input=document.getElementById('leitner-answer-input');
+  const typed=input?.value?.trim()||'';
+  if(!typed)return;
+
+  const isEsToFr=card.dir==='es-fr';
+  const correct=isEsToFr?card.fr:card.es;
+  const isCorrect=_normalize(typed)===_normalize(correct);
+
+  // Affiche le résultat
+  const resultEl=document.getElementById('leitner-result');
+  const iconEl=document.getElementById('leitner-result-icon');
+  const correctEl=document.getElementById('leitner-result-correct');
+  const msgEl=document.getElementById('leitner-result-msg');
+  const inputWrap=document.getElementById('leitner-input-wrap');
+  const answerBtns=document.getElementById('leitner-answer-btns');
+  const inputField=document.getElementById('leitner-answer-input');
+
+  if(inputField){
+    inputField.style.borderColor=isCorrect?'#0d9488':'#f44685';
+    inputField.disabled=true;
+  }
+
+  if(resultEl){
+    resultEl.style.display='block';
+    resultEl.style.background=isCorrect?'var(--accent-bg)':'#fff0f5';
+    resultEl.style.border=`2px solid ${isCorrect?'#0d9488':'#f44685'}`;
+  }
+  if(iconEl)iconEl.textContent=isCorrect?'✓':'✗';
+  if(correctEl)correctEl.style.color=isCorrect?'#0d9488':'#f44685';
+  if(correctEl)correctEl.textContent=isCorrect?'Correct !':'La bonne réponse était : '+correct;
+  if(msgEl)msgEl.textContent=isCorrect?`"${typed}" — parfait !`:`Tu as écrit : "${typed}"`;
+
+  _leitnerFlipped=true;
+
+  if(isCorrect){
+    // Correct → avance automatiquement, pas besoin de boutons
+    if(answerBtns)answerBtns.style.display='none';
+    setTimeout(()=>leitnerAnswer(true),1500);
+  }else{
+    // Incorrect → "Raté →" et "Quand même correct ✓"
+    const btnWrong=document.getElementById('leitner-btn-wrong');
+    const btnCorrect=document.getElementById('leitner-btn-correct');
+    if(btnWrong)btnWrong.style.display='flex';
+    if(btnCorrect)btnCorrect.style.display='flex';
+    if(answerBtns)answerBtns.style.display='flex';
+  }
+}
+
+function leitnerFlipCard(){}
 
 function leitnerAnswer(correct){
   const card=_leitnerSession[_leitnerIdx];
