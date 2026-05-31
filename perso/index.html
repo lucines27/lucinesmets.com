@@ -9661,9 +9661,11 @@ const LEITNER_INTERVALS=[0,1,2,4,7,14,30,9999];
 const LEITNER_COLORS=['#f44685','#f97316','#f59e0b','#84cc16','#0d9488','#0891b2','#7c3aed'];
 const LEITNER_LABELS=['1','2','3','4','5','6','★'];
 
-let _leitnerSession=[]; // cartes à réviser dans la session
+let _leitnerSession=[];
 let _leitnerIdx=0;
 let _leitnerFlipped=false;
+let _leitnerAnswering=false;
+let _leitnerSessionId=0; // annule les timeouts d'une session précédente
 
 // ── Données ────────────────────────────────────
 function leitnerCards(){return store.get('leitner_cards',[]);}
@@ -9764,8 +9766,8 @@ function leitnerShowBox(box){
   const pairs=[...new Map(cards.map(c=>[c.es+'|'+c.fr,c])).values()];
   const html=pairs.slice(0,20).map(c=>`<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="flex:1;font-weight:600;color:${color}">${c.es}</span><span style="flex:1;color:var(--text2)">${c.fr}</span><span style="font-size:10px;color:var(--text3)">${c.theme||''}</span></div>`).join('');
   const t=document.createElement('div');
-  t.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
-  t.innerHTML=`<div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:70vh;overflow-y:auto;padding:20px">
+  t.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  t.innerHTML=`<div style="background:var(--surface);border-radius:16px;width:100%;max-width:500px;max-height:75vh;overflow-y:auto;padding:20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="font-weight:700;color:${color}">Boîte ${box}${box===7?' ★':''} — ${pairs.length} mots</div>
       <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
@@ -9777,9 +9779,10 @@ function leitnerShowBox(box){
 function leitnerStartSession(){
   _leitnerSession=leitnerGetDue();
   if(!_leitnerSession.length){toast('Aucune carte à réviser !');return;}
-  // Mélange
   _leitnerSession.sort(()=>Math.random()-.5);
   _leitnerIdx=0;
+  _leitnerAnswering=false;
+  _leitnerSessionId++; // invalide tous les timeouts précédents
   document.getElementById('leitner-view-boxes').style.display='none';
   document.getElementById('leitner-view-session').style.display='block';
   leitnerShowCard();
@@ -9865,7 +9868,8 @@ function leitnerCheckAnswer(){
   if(isCorrect){
     // Correct → avance automatiquement, pas besoin de boutons
     if(answerBtns)answerBtns.style.display='none';
-    setTimeout(()=>leitnerAnswer(true),1500);
+    const sid=_leitnerSessionId;
+    setTimeout(()=>{if(_leitnerSessionId===sid)leitnerAnswer(true);},1500);
   }else{
     // Incorrect → "Raté →" et "Quand même correct ✓"
     const btnWrong=document.getElementById('leitner-btn-wrong');
@@ -9879,8 +9883,10 @@ function leitnerCheckAnswer(){
 function leitnerFlipCard(){}
 
 function leitnerAnswer(correct){
+  if(_leitnerAnswering)return;
+  _leitnerAnswering=true;
   const card=_leitnerSession[_leitnerIdx];
-  if(!card)return;
+  if(!card){_leitnerAnswering=false;return;}
 
   const cards=leitnerCards();
   const idx=cards.findIndex(c=>c.id===card.id);
@@ -9902,7 +9908,8 @@ function leitnerAnswer(correct){
     else if(correct)addXP(2,'fc_correct_'+card.id+'_'+Date.now(),card.id);
   }
   _leitnerIdx++;
-  setTimeout(leitnerShowCard,200);
+  const sid2=_leitnerSessionId;
+  setTimeout(()=>{if(_leitnerSessionId===sid2){_leitnerAnswering=false;leitnerShowCard();}},300);
 }
 
 function leitnerSessionDone(){
