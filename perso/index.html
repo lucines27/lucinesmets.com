@@ -9732,11 +9732,11 @@ function leitnerRender(){
 
   grid.innerHTML=LEITNER_LABELS.map((lbl,i)=>{
     const box=i+1;
-    const count=counts[box]||0;
+    const wordCount=Math.ceil((counts[box]||0)/2); // mots uniques (2 cartes par mot)
     const color=LEITNER_COLORS[i];
     const interval=box<7?`${LEITNER_INTERVALS[box]}j`:'★';
     return`<div style="background:${color}18;border:2px solid ${color};border-radius:12px;padding:8px 4px;text-align:center;cursor:pointer" onclick="leitnerShowBox(${box})" title="Boîte ${box}">
-      <div style="font-size:18px;font-weight:800;color:${color}">${count}</div>
+      <div style="font-size:18px;font-weight:800;color:${color}">${wordCount}</div>
       <div style="font-size:9px;font-weight:700;color:${color};letter-spacing:.05em">Boîte ${lbl}</div>
       <div style="font-size:9px;color:${color};opacity:.7">${interval}</div>
     </div>`;
@@ -9752,10 +9752,22 @@ function leitnerRender(){
   if(btn){btn.disabled=due.length===0;btn.style.opacity=due.length===0?'.4':'1';}
 
   // Stats
-  const total=cards.length/2; // /2 car 2 cartes par mot
-  const mastered=counts[7]/2;
+  const total=Math.ceil(cards.length/2);
+  const mastered=Math.ceil((counts[7]||0)/2);
   const statsEl=document.getElementById('leitner-stats');
   if(statsEl&&total>0)statsEl.innerHTML=`<div style="font-size:12px;color:var(--text3);text-align:center">${Math.round(mastered)} / ${Math.round(total)} mots maîtrisés · ${cards.length} cartes au total</div>`;
+}
+
+function leitnerResetWord(es,fr){
+  const cards=leitnerCards();
+  let changed=false;
+  cards.forEach(c=>{
+    if(c.es===es&&c.fr===fr){
+      c.box=1;c.streak=0;c.nextReview=Date.now();
+      changed=true;
+    }
+  });
+  if(changed){leitnerSave(cards);leitnerRender();toast('↺ Remis en boîte 1');}
 }
 
 function leitnerShowBox(box){
@@ -9764,7 +9776,12 @@ function leitnerShowBox(box){
   // Mini-modal liste
   const color=LEITNER_COLORS[box-1];
   const pairs=[...new Map(cards.map(c=>[c.es+'|'+c.fr,c])).values()];
-  const html=pairs.slice(0,20).map(c=>`<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="flex:1;font-weight:600;color:${color}">${c.es}</span><span style="flex:1;color:var(--text2)">${c.fr}</span><span style="font-size:10px;color:var(--text3)">${c.theme||''}</span></div>`).join('');
+  const html=pairs.slice(0,20).map(c=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+    <span style="flex:1;font-weight:600;color:${color}">${c.es}</span>
+    <span style="flex:1;color:var(--text2)">${c.fr}</span>
+    <span style="font-size:10px;color:var(--text3);flex:1">${c.theme||''}</span>
+    <button onclick="leitnerResetWord('${c.es.replace(/'/g,"\\'")}','${c.fr.replace(/'/g,"\\'")}');this.textContent='✓'" style="background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:11px;padding:2px 6px;color:var(--text3);flex-shrink:0" title="Remettre en boîte 1">↺</button>
+  </div>`).join('');
   const t=document.createElement('div');
   t.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
   t.innerHTML=`<div style="background:var(--surface);border-radius:16px;width:100%;max-width:500px;max-height:75vh;overflow-y:auto;padding:20px">
