@@ -9769,11 +9769,13 @@ function renderCecrlLessons(lv){
 }
 
 function cecrlDeleteLesson(id){
-  const lessons=cecrlLessons(_cecrlLevel).filter(l=>l.id!==id);
-  cecrlSaveLessons(_cecrlLevel,lessons);
-  cecrlSyncProgress(_cecrlLevel);
-  renderCecrlLessons(_cecrlLevel);
-  toast('Leçon supprimée');
+  const lesson=cecrlLessons(_cecrlLevel).find(l=>l.id===id);
+  const name=lesson?.theme||'cette leçon';
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;z-index:99999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+  t.innerHTML=`Supprimer "${name}" ? <button onclick="(()=>{const l=cecrlLessons(_cecrlLevel).filter(x=>x.id!=='${id}');cecrlSaveLessons(_cecrlLevel,l);cecrlSyncProgress(_cecrlLevel);renderCecrlLessons(_cecrlLevel);toast('Leçon supprimée');})()" style="background:#f44685;border:none;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600">Supprimer</button><button onclick="this.parentNode.remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:16px">✕</button>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),5000);
 }
 
 function cecrlOpenLesson(id){
@@ -10950,8 +10952,8 @@ function pwmMonthLabel(offset){
 }
 
 function pwmNav(type,dir){
-  if(type==='week') _pwmWeekOffset=Math.min(0,_pwmWeekOffset+dir);
-  else _pwmMonthOffset=Math.min(0,_pwmMonthOffset+dir);
+  if(type==='week') _pwmWeekOffset=Math.max(-52,Math.min(4,_pwmWeekOffset+dir)); // -52 à +4 semaines
+  else _pwmMonthOffset=Math.max(-24,Math.min(3,_pwmMonthOffset+dir)); // -24 à +3 mois
   renderPwm();
 }
 
@@ -10993,8 +10995,8 @@ function renderPwm(){
   const mNext=document.getElementById('pwm-month-next');
   if(wLbl)wLbl.textContent=pwmWeekLabel();
   if(mLbl)mLbl.textContent=pwmMonthLabel();
-  if(wNext)wNext.disabled=_pwmWeekOffset>=0;
-  if(mNext)mNext.disabled=_pwmMonthOffset>=0;
+  if(wNext)wNext.disabled=_pwmWeekOffset>=4;
+  if(mNext)mNext.disabled=_pwmMonthOffset>=3;
 
   const isPast={week:_pwmWeekOffset<0, month:_pwmMonthOffset<0};
 
