@@ -5154,11 +5154,15 @@ async function obsidianWrite(folder, filename, content){
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return;
   try{
-    await fetch(`https://127.0.0.1:${port}/vault/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}.md`,{
+    // Encode chaque segment séparément pour préserver les / dans le chemin
+    const folderPath=folder.split('/').map(s=>encodeURIComponent(s)).join('/');
+    const filePath=encodeURIComponent(filename);
+    const resp=await fetch(`https://127.0.0.1:${port}/vault/${folderPath}/${filePath}.md`,{
       method:'PUT',
       headers:{'Authorization':`Bearer ${key}`,'Content-Type':'text/markdown'},
       body:content
     });
+    if(!resp.ok)console.log('Obsidian write HTTP error:',resp.status,await resp.text().catch(()=>''));
   }catch(e){console.log('Obsidian write error:',e);}
 }
 
@@ -12607,11 +12611,20 @@ async function _jarvisImportProcess(conversations,sourceName){
     const title=(conv.title||conv.name||'Sans titre').replace(/[\/\\:*?"<>|]/g,'_').substring(0,60);
     if(status)status.textContent=`Import ${done+1}/${total} — ${title}`;
     if(bar)bar.style.width=`${Math.round((done/total)*100)}%`;
-    // Extrait le texte des messages
+    // Extrait le texte des messages — gère les formats Claude et ChatGPT
     let transcript='';
-    const msgs=conv.mapping?Object.values(conv.mapping).filter(n=>n?.message?.content?.parts).map(n=>({role:n.message.author?.role||'user',text:n.message.content.parts.join(' ')})):conv.messages||[];
-    if(Array.isArray(msgs)){
-      transcript=msgs.slice(0,40).map(m=>`${m.role==='assistant'?'Assistant':'Moi'}: ${(m.text||m.content||'').substring(0,500)}`).join('\n');
+    let msgs=[];
+    if(conv.chat_messages){
+      // Format Claude.ai export
+      msgs=conv.chat_messages.map(m=>({role:m.sender==='human'?'user':'assistant',text:m.text||''}));
+    }else if(conv.mapping){
+      // Format ChatGPT export
+      msgs=Object.values(conv.mapping).filter(n=>n?.message?.content?.parts).map(n=>({role:n.message.author?.role||'user',text:n.message.content.parts.filter(p=>typeof p==='string').join(' ')}));
+    }else if(conv.messages){
+      msgs=conv.messages.map(m=>({role:m.role||'user',text:m.content||m.text||''}));
+    }
+    if(Array.isArray(msgs)&&msgs.length){
+      transcript=msgs.slice(0,40).map(m=>`${m.role==='assistant'?'Assistant':'Moi'}: ${(m.text||'').substring(0,500)}`).join('\n');
     }
     if(!transcript){done++;continue;}
     // Résumé via API si clé dispo
