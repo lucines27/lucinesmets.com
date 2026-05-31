@@ -10048,7 +10048,8 @@ function renderCecrlLessons(lv){
   }
   cont.innerHTML=lessons.map(l=>{
     const st=LESSON_STATUS[l.status]||LESSON_STATUS.todo;
-    const scoreHtml=l.score!=null?`<span style="font-size:11px;color:var(--text3);margin-right:4px;flex-shrink:0">${l.score}/5</span>`:'';
+    const totalQ=l.content?.test?.length||12;
+    const scoreHtml=l.score!=null?`<span style="font-size:11px;color:var(--text3);margin-right:4px;flex-shrink:0">${l.score}/${totalQ}</span>`:'';
     return `<div class="cecrl-lesson-row" onclick="cecrlOpenLesson('${l.id}')">
       <div class="cecrl-lesson-theme">${l.theme}</div>
       ${scoreHtml}
@@ -10282,7 +10283,7 @@ Thèmes suggérés pour ${lv} : ${CECRL_THEMES[lv]||CECRL_THEMES.A1}.
 
 RÈGLES IMPORTANTES :
 - Vocabulaire : EXACTEMENT 15 à 20 entrées, pas plus. Si le thème demande plus de 20 mots (ex: chiffres, jours+mois, famille étendue), divise-le en parties distinctes et indique-le dans le nom (ex: "Les chiffres 0-10", "Les chiffres 11-20", "La famille — parents proches", "La famille — parents éloignés"). Ne mets JAMAIS plus de 20 mots dans un seul module. Si le thème contient une conjugaison verbale, CHAQUE forme (yo/tú/él/nosotros/vosotros/ellos) DOIT apparaître comme entrée séparée (ex: {"es":"yo soy","fr":"je suis"}, {"es":"vosotros sois","fr":"vous êtes"}).
-- Test : 10 à 12 questions UNIQUEMENT sur le vocabulaire et la grammaire de CETTE leçon. Chaque question doit tester un mot ou une règle enseignée ici. Zéro question sur du vocabulaire absent de la leçon.
+- Test : 10 à 12 questions UNIQUEMENT sur le vocabulaire et la grammaire de CETTE leçon. Chaque question doit tester un mot ou une règle enseignée ici. Zéro question sur du vocabulaire absent de la leçon. TYPES DE QUESTIONS AUTORISÉS SEULEMENT : (1) "Comment dit-on X en espagnol ?" avec 4 mots du vocabulaire de la leçon comme choix, (2) "Que signifie X ?" avec 4 traductions françaises comme choix, (3) "Quelle est la conjugaison de [verbe] à la forme [yo/tú/él/etc.] ?" si la conjugaison est dans le vocabulaire. INTERDIT : questions à trou sur des phrases si la réponse n'est pas un mot directement dans le tableau de vocabulaire de la leçon, questions sur du contexte non enseigné.
 - Grammaire : explication claire avec 3 à 5 exemples couvrant toutes les formes enseignées (inclure vosotros si verbe conjugué)
 
 Réponds UNIQUEMENT avec du JSON valide, aucun texte avant ou après, aucun markdown ni backticks.
