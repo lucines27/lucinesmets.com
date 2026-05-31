@@ -10017,19 +10017,19 @@ function cecrlOpenLesson(id){
   }
   _renderCecrlLesson(lesson);
   cecrlSetView('lesson');
-  // Propose d'importer le vocabulaire si nouveau
-  if(lesson.status==='todo'||lesson.status==='wip'){
-    const existing=leitnerCards().some(c=>c.theme===lesson.content?.theme);
-    if(!existing&&lesson.content?.vocabulary?.length){
-      setTimeout(()=>{
-        const t=document.createElement('div');
-        t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0d9488;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;z-index:99999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(13,148,136,.3);white-space:nowrap';
-        t.innerHTML=`📚 Ajouter le vocabulaire aux flashcards ? <button onclick="leitnerImportFromLesson(_cecrlLesson);this.parentNode.remove()" style="background:#fff;color:#0d9488;border:none;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:700">Oui</button><button onclick="this.parentNode.remove()" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:16px">✕</button>`;
-        document.body.appendChild(t);
-        setTimeout(()=>t.remove(),8000);
-      },600);
+  // Met à jour le bouton d'import selon si déjà importé
+  setTimeout(()=>{
+    const btn=document.getElementById('leitner-import-btn');
+    if(!btn)return;
+    const already=leitnerCards().some(c=>c.theme===lesson.content?.theme);
+    if(already){
+      btn.textContent='✅ Déjà dans les flashcards';
+      btn.disabled=true;btn.style.opacity='.5';
+    }else{
+      btn.textContent='📚 Ajouter aux flashcards';
+      btn.disabled=false;btn.style.opacity='1';
     }
-  }
+  },100);
 }
 
 function _renderCecrlLesson(lesson){
@@ -10084,7 +10084,17 @@ function _renderCecrlLesson(lesson){
     </div>
     <div class="cecrl-section-title">💬 Dialogue</div>
     <div class="cecrl-dialogue">${dlgHtml}</div>
-    <button onclick="cecrlDownloadFiche()" style="width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#f44685,#0d9488);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.01em">📄 Télécharger la fiche récapitulative</button>`;
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="cecrlDownloadFiche()" style="flex:1;padding:12px;background:linear-gradient(135deg,#f44685,#0d9488);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📄 Fiche récap</button>
+      <button id="leitner-import-btn" onclick="cecrlImportToFlashcards()" style="flex:1;padding:12px;background:var(--accent-bg);border:2px solid var(--accent);color:var(--accent);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📚 Ajouter aux flashcards</button>
+    </div>`;
+}
+
+function cecrlImportToFlashcards(){
+  const added=leitnerImportFromLesson(_cecrlLesson);
+  const btn=document.getElementById('leitner-import-btn');
+  if(btn){btn.textContent='✅ Déjà dans les flashcards';btn.disabled=true;btn.style.opacity='.5';}
+  if(!added)toast('Ces mots sont déjà dans tes flashcards');
 }
 
 function cecrlDownloadFiche(){
@@ -11989,7 +11999,7 @@ function addXP(amount,source,itemId){
       store.set('level_history',hist);
     }
     // Sauvegarder en localStorage pour l'afficher même si le toast est manqué
-    store.set('pending_levelup',{lv:newLv,name:def.name});
+    store.set('pending_levelup',null); // effacé immédiatement car toast affiché ci-dessous
     playSound('levelup');
     toast(`🎉 Level Up ! Tu es maintenant LV ${newLv} — ${def.name}`);
   }
