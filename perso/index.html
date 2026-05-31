@@ -9926,12 +9926,15 @@ function leitnerAnswer(correct){
 
   const cards=leitnerCards();
   const now=Date.now();
-  // Synchronise les deux directions (ES→FR et FR→ES) ensemble
+  // Synchronise les deux directions — on se base sur la boîte de la carte répondue
+  const answeredCard=cards.find(c=>c.id===card.id);
+  const currentBox=answeredCard?.box||1;
+  const newBox=correct?Math.min(7,currentBox+1):1;
   const pair=cards.filter(c=>c.es===card.es&&c.fr===card.fr);
   pair.forEach(c=>{
-    if(correct){c.box=Math.min(7,c.box+1);c.streak=(c.streak||0)+1;}
-    else{c.box=1;c.streak=0;}
-    c.nextReview=now+(LEITNER_INTERVALS[c.box]||1)*86400000;
+    c.box=newBox;
+    c.streak=correct?(c.streak||0)+1:0;
+    c.nextReview=now+(LEITNER_INTERVALS[newBox]||1)*86400000;
   });
   leitnerSave(cards);
   if(correct&&pair[0]?.box===7)addXP(10,'fc_mastered_'+card.es.slice(0,8),card.id);
@@ -10337,12 +10340,15 @@ Thèmes suggérés pour ${lv} : ${CECRL_THEMES[lv]||CECRL_THEMES.A1}.
 
 RÈGLES IMPORTANTES :
 - Vocabulaire : EXACTEMENT 15 à 20 entrées, pas plus. Si le thème demande plus de 20 mots (ex: chiffres, jours+mois, famille étendue), divise-le en parties distinctes et indique-le dans le nom (ex: "Les chiffres 0-10", "Les chiffres 11-20", "La famille — parents proches", "La famille — parents éloignés"). Ne mets JAMAIS plus de 20 mots dans un seul module. Si le thème contient une conjugaison verbale, CHAQUE forme (yo/tú/él/nosotros/vosotros/ellos) DOIT apparaître comme entrée séparée (ex: {"es":"yo soy","fr":"je suis"}, {"es":"vosotros sois","fr":"vous êtes"}).
-- Test : 10 à 12 questions UNIQUEMENT sur le vocabulaire et la grammaire de CETTE leçon. Chaque question doit tester un mot ou une règle enseignée ici. Zéro question sur du vocabulaire absent de la leçon. TYPES DE QUESTIONS AUTORISÉS SEULEMENT : (1) "Comment dit-on X en espagnol ?" avec 4 mots du vocabulaire de la leçon comme choix, (2) "Que signifie X ?" avec 4 traductions françaises comme choix, (3) "Quelle est la conjugaison de [verbe] à la forme [yo/tú/él/etc.] ?" si la conjugaison est dans le vocabulaire. INTERDIT : questions à trou sur des phrases si la réponse n'est pas un mot directement dans le tableau de vocabulaire de la leçon, questions sur du contexte non enseigné.
+- Test : EXACTEMENT 12 questions, 4 de chaque type ci-dessous. Toutes portent uniquement sur le vocabulaire/grammaire de CETTE leçon :
+  TYPE "choice" (4 questions) : QCM 4 options. JSON : {"type":"choice","question":"...","options":["...","...","...","..."],"correct_index":0}
+  TYPE "write" (4 questions) : L'élève écrit la traduction ou conjugaison. JSON : {"type":"write","question":"Comment dit-on 'X' en espagnol ?","answer":"..."}
+  TYPE "correct" (4 questions) : Une phrase avec UNE erreur grammaticale à corriger. JSON : {"type":"correct","question":"Corrigez : '[phrase avec erreur]'","answer":"[mot correct]","explanation":"[explication]"}
 - Grammaire : explication claire avec 3 à 5 exemples couvrant toutes les formes enseignées (inclure vosotros si verbe conjugué)
-- Les questions du test doivent être rédigées en français correct (pas de coupures de mots comme "utilis-on", "employ-on" — écrire "utilise-t-on" ou reformuler directement)
+- Questions rédigées en français correct (pas de coupures "utilis-on" — écrire "utilise-t-on" ou reformuler)
 
 Réponds UNIQUEMENT avec du JSON valide, aucun texte avant ou après, aucun markdown ni backticks.
-{"theme":"...","level":"${lv}","vocabulary":[{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."}],"grammar_point":{"title":"...","explanation":"...","examples":[{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."}]},"dialogue":[{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."}],"test":[{"question":"...","options":["...","...","...","..."],"correct_index":0},{"question":"...","options":["...","...","...","..."],"correct_index":1},{"question":"...","options":["...","...","...","..."],"correct_index":2},{"question":"...","options":["...","...","...","..."],"correct_index":3},{"question":"...","options":["...","...","...","..."],"correct_index":0},{"question":"...","options":["...","...","...","..."],"correct_index":1},{"question":"...","options":["...","...","...","..."],"correct_index":2},{"question":"...","options":["...","...","...","..."],"correct_index":3},{"question":"...","options":["...","...","...","..."],"correct_index":0},{"question":"...","options":["...","...","...","..."],"correct_index":1},{"question":"...","options":["...","...","...","..."],"correct_index":2},{"question":"...","options":["...","...","...","..."],"correct_index":3}]}`;
+{"theme":"...","level":"${lv}","vocabulary":[{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."}],"grammar_point":{"title":"...","explanation":"...","examples":[{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."},{"es":"...","fr":"..."}]},"dialogue":[{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."},{"speaker":"Ana","es":"...","fr":"..."},{"speaker":"Luis","es":"...","fr":"..."}],"test":[{"type":"choice","question":"...","options":["...","...","...","..."],"correct_index":0},{"type":"choice","question":"...","options":["...","...","...","..."],"correct_index":1},{"type":"choice","question":"...","options":["...","...","...","..."],"correct_index":2},{"type":"choice","question":"...","options":["...","...","...","..."],"correct_index":3},{"type":"write","question":"Comment dit-on '...' en espagnol ?","answer":"..."},{"type":"write","question":"Que signifie '...' en français ?","answer":"..."},{"type":"write","question":"Comment dit-on '...' en espagnol ?","answer":"..."},{"type":"write","question":"Que signifie '...' en français ?","answer":"..."},{"type":"correct","question":"Corrigez : '...'","answer":"...","explanation":"..."},{"type":"correct","question":"Corrigez : '...'","answer":"...","explanation":"..."},{"type":"correct","question":"Corrigez : '...'","answer":"...","explanation":"..."},{"type":"correct","question":"Corrigez : '...'","answer":"...","explanation":"..."}]}`;
 
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
@@ -10406,11 +10412,53 @@ function _cecrlRenderQ(){
   document.getElementById('cecrl-test-counter').textContent=`${_cecrlTestQ+1}/${total}`;
   document.getElementById('cecrl-test-feedback').style.display='none';
   document.getElementById('cecrl-test-next-btn').style.display='none';
-  document.getElementById('cecrl-test-question').innerHTML=`<div class="cecrl-test-q">${q.question}</div>`;
-  document.getElementById('cecrl-test-options').innerHTML=
-    `<div class="cecrl-test-opts">${q.options.map((opt,i)=>
+  const type=q.type||'choice';
+  const qEl=document.getElementById('cecrl-test-question');
+  const oEl=document.getElementById('cecrl-test-options');
+  const badge=type==='write'?'✍️ Écris ta réponse':type==='correct'?'🔍 Trouve l\'erreur':'';
+  qEl.innerHTML=`${badge?`<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px">${badge}</div>`:''}
+    <div class="cecrl-test-q">${q.question}</div>`;
+
+  if(type==='choice'){
+    oEl.innerHTML=`<div class="cecrl-test-opts">${(q.options||[]).map((opt,i)=>
       `<button class="cecrl-test-opt" onclick="cecrlAnswer(${i})">${opt}</button>`
     ).join('')}</div>`;
+  }else{
+    // write & correct : champ texte
+    oEl.innerHTML=`<div>
+      <input id="cecrl-write-inp" type="text" placeholder="Ta réponse…"
+        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;background:var(--bg);color:var(--text)"
+        onkeydown="if(event.key==='Enter')cecrlAnswerWrite()">
+      <button onclick="cecrlAnswerWrite()" class="cecrl-test-btn" style="margin-top:10px">Vérifier →</button>
+    </div>`;
+    setTimeout(()=>document.getElementById('cecrl-write-inp')?.focus(),100);
+  }
+}
+
+function cecrlAnswerWrite(){
+  const test=_cecrlLesson.content.test;
+  const q=test[_cecrlTestQ];
+  const inp=document.getElementById('cecrl-write-inp');
+  const typed=(inp?.value||'').trim();
+  if(!typed)return;
+  const correct=q.answer||'';
+  const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[¡!¿?.,;:]/g,'').trim();
+  const isOk=norm(typed)===norm(correct);
+  _cecrlTestAnswers[_cecrlTestQ]=isOk?q.correct_index??0:-1;
+  if(inp)inp.disabled=true;
+  if(inp)inp.style.borderColor=isOk?'#16a34a':'#f44685';
+  const fb=document.getElementById('cecrl-test-feedback');
+  fb.style.display='block';
+  if(isOk){
+    fb.style.cssText='display:block;padding:10px 14px;border-radius:10px;background:#dcfce7;color:#16a34a;font-weight:600';
+    fb.textContent='✓ Correct !';
+  }else{
+    fb.style.cssText='display:block;padding:10px 14px;border-radius:10px;background:var(--pink-bg);color:var(--pink);font-weight:600';
+    fb.textContent=`✗ Bonne réponse : "${correct}"${q.explanation?' — '+q.explanation:''}`;
+  }
+  const nextBtn=document.getElementById('cecrl-test-next-btn');
+  nextBtn.style.display='block';
+  nextBtn.textContent=_cecrlTestQ===test.length-1?'Voir le résultat →':'Suivant →';
 }
 
 function cecrlAnswer(chosen){
@@ -10424,10 +10472,10 @@ function cecrlAnswer(chosen){
   const fb=document.getElementById('cecrl-test-feedback');
   fb.style.display='block';
   if(chosen===q.correct_index){
-    fb.style.cssText+='background:#dcfce7;color:#16a34a;';
+    fb.style.cssText='display:block;padding:10px 14px;border-radius:10px;background:#dcfce7;color:#16a34a;font-weight:600';
     fb.textContent='✓ Correct !';
   }else{
-    fb.style.cssText+='background:var(--pink-bg);color:var(--pink);';
+    fb.style.cssText='display:block;padding:10px 14px;border-radius:10px;background:var(--pink-bg);color:var(--pink);font-weight:600';
     fb.textContent=`✗ Bonne réponse : ${q.options[q.correct_index]}`;
   }
   const nextBtn=document.getElementById('cecrl-test-next-btn');
@@ -10441,7 +10489,9 @@ function cecrlTestNext(){
     _cecrlTestQ++;
     _cecrlRenderQ();
   }else{
-    const score=_cecrlTestAnswers.filter((a,i)=>a===test[i].correct_index).length;
+    const score=_cecrlTestAnswers.filter((a,i)=>
+      (test[i].type==='write'||test[i].type==='correct') ? a>=0 : a===test[i].correct_index
+    ).length;
     _cecrlShowResult(score,test.length);
   }
 }
