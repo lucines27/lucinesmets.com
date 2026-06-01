@@ -13432,7 +13432,17 @@ function jarvisImportChatGPT(input){
       <div class="agent-panel-name" id="ap-name">Karen</div>
       <div class="agent-panel-role" id="ap-role">Emails & UGC</div>
     </div>
+    <button onclick="agentReset()" style="background:none;border:none;font-size:11px;cursor:pointer;color:var(--text3);font-family:inherit;padding:4px 8px;border:1px solid var(--border);border-radius:8px" title="Nouvelle conversation">🗑 Reset</button>
     <button onclick="agentClose()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+  </div>
+  <!-- Contrôles agent -->
+  <div id="ap-controls" style="display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap">
+    <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer">
+      <span>Depuis le</span>
+      <input type="date" id="ap-since-date" style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;background:var(--bg);color:var(--text);font-family:inherit" oninput="agentSetSince(this.value)">
+    </label>
+    <div style="flex:1"></div>
+    <button id="ap-pause-btn" onclick="agentTogglePause()" style="font-size:11px;padding:3px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-family:inherit;font-weight:600">⏸ Pause</button>
   </div>
   <div class="agent-panel-msgs" id="ap-msgs"></div>
   <div class="agent-panel-input">
@@ -13980,6 +13990,8 @@ const AGENTS={
 
 let _agentCurrent=null;
 let _agentSessions={};
+let _agentPaused={};
+let _agentSinceDate={};
 
 function agentOpen(id){
   const ag=AGENTS[id];if(!ag)return;
@@ -13989,6 +14001,12 @@ function agentOpen(id){
   document.getElementById('ap-name').textContent=ag.name;
   document.getElementById('ap-role').textContent=ag.role;
   document.getElementById('agent-panel').style.borderTopColor=ag.color;
+  // Restaure état pause/date
+  const pauseBtn=document.getElementById('ap-pause-btn');
+  const paused=_agentPaused[id]||false;
+  if(pauseBtn){pauseBtn.textContent=paused?'▶ Reprendre':'⏸ Pause';pauseBtn.style.borderColor=paused?'#f44685':'';}
+  const sinceInp=document.getElementById('ap-since-date');
+  if(sinceInp)sinceInp.value=_agentSinceDate[id]||'';
   // Active le chip
   document.querySelectorAll('.agent-chip').forEach(c=>c.classList.remove('active'));
   document.getElementById('agent-'+id)?.classList.add('active');
@@ -14009,6 +14027,29 @@ function agentOpen(id){
   document.getElementById('agent-panel').classList.add('open');
   document.getElementById('agent-overlay').style.display='block';
   setTimeout(()=>document.getElementById('ap-input')?.focus(),300);
+}
+
+function agentSetSince(val){
+  if(!_agentCurrent)return;
+  _agentSinceDate[_agentCurrent]=val;
+}
+
+function agentTogglePause(){
+  if(!_agentCurrent)return;
+  _agentPaused[_agentCurrent]=!_agentPaused[_agentCurrent];
+  const btn=document.getElementById('ap-pause-btn');
+  const paused=_agentPaused[_agentCurrent];
+  if(btn){btn.textContent=paused?'▶ Reprendre':'⏸ Pause';btn.style.borderColor=paused?'#f44685':'';}
+  if(paused)agentAddMsg('agent','Je me mets en pause. Clique sur Reprendre quand tu veux.',false);
+  else agentAddMsg('agent','Je reprends. Qu\'est-ce qu\'on fait ?');
+}
+
+function agentReset(){
+  if(!_agentCurrent)return;
+  delete _agentSessions[_agentCurrent];
+  const id=_agentCurrent;
+  agentClose();
+  agentOpen(id);
 }
 
 function agentClose(){
@@ -14046,6 +14087,8 @@ async function agentSendText(text,id){
   const apiKey=store.get('settings',{}).apiKey||'';
   if(!apiKey){agentAddMsg('agent','Configure ta clé API Anthropic dans les Réglages.');return;}
 
+  // Bloque si en pause
+  if(_agentPaused[id]){agentAddMsg('agent','Je suis en pause. Clique sur ▶ Reprendre d\'abord.',false);return;}
   agentAddMsg('user',text);
   // Typing indicator
   const msgs=document.getElementById('ap-msgs');
@@ -14089,10 +14132,28 @@ async function agentSendText(text,id){
 // ── Contextes agents ──────────────────────────────────
 async function _karenGetContext(){
   const today=todayKey();
-  const pipeline=store.get('ugc_pipeline',[]);
+  const since=_agentSinceDate['karen']||'';
   const followups=store.get('ugc_followups_log',[]);
-  const recent=followups.filter(f=>f.date>=today.slice(0,7)).length;
-  return `Boîtes Gmail : contact@ugcbylucine.be + Gmail perso.\nRelances envoyées ce mois : ${recent}.\nPipeline UGC : ${pipeline.length} marques.\nAujourd'hui : ${today}.`;
+  const recent=followups.filter(f=>f.date>=(today.slice(0,7))).length;
+  // Données réelles récupérées le 01/06/2026
+  const realData=`
+PROSPECTION UGC ENVOYÉE (mai 2026, sans réponse reçue — relances à faire) :
+- Humble Brush (louise@thehumble.co) — envoyé 06/05
+- Spotlight Oral Care (info@spotlightoralcare.com) — envoyé 06/05
+- Apivita (info@apivita.com) — envoyé 06/05
+- Davek (support@davekny.com) — envoyé 05/05
+- Fulton (sales@fultonumbrellas.com) — envoyé 05/05
+- Euroschirm (shop@euroschirm.com) — envoyé 05/05
+- Smati (eboutique@smati-paris.fr) — envoyé 05/05
+
+NON LUS IMPORTANTS dans contact@ugcbylucine.be :
+- Sefia.co (contact@sefia.co, 30/05) — OPPORTUNITÉ : propose routine skincare 60j gratuite, probable collab UGC
+- Viewy.fr (29/05 + 31/05) — programmes ambassadeurs UGC disponibles
+- URGENT : Anthropic paiement $30.25 raté (31/05) — carte à mettre à jour
+- Alerte sécurité Google (31/05) — nouvelle connexion Mac détectée
+
+Relances envoyées ce mois via dashboard : ${recent}`;
+  return `Boîtes Gmail : contact@ugcbylucine.be + Gmail perso.\nAujourd'hui : ${today}.${since?`\nTRAITER UNIQUEMENT depuis le : ${since}.`:''}${realData}`;
 }
 
 function _atlasGetContext(){
