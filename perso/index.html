@@ -9895,8 +9895,16 @@ function leitnerShowBox(box){
 
 // ── Session de révision ──────────────────────────
 function leitnerStartSession(){
-  _leitnerSession=leitnerGetDue();
-  if(!_leitnerSession.length){toast('Aucune carte à réviser !');return;}
+  const due=leitnerGetDue();
+  if(!due.length){toast('Aucune carte à réviser !');return;}
+  // Déduplique : une seule carte par paire (évite le double avancement)
+  const seen=new Set();
+  _leitnerSession=due.filter(c=>{
+    const key=c.es+'|'+c.fr;
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
   _leitnerSession.sort(()=>Math.random()-.5);
   _leitnerIdx=0;
   _leitnerAnswering=false;
