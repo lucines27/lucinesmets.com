@@ -527,6 +527,32 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .subtab-btn:hover:not(.active){border-color:var(--accent);color:var(--accent)}
 .subtab-pane{display:none}
 .subtab-pane.show{display:block}
+/* ── Agents ── */
+.agent-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;flex-shrink:0;position:relative}
+.agent-chip:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(13,148,136,.15)}
+.agent-chip.active{border-color:var(--accent);background:var(--accent-bg)}
+.agent-avatar{font-size:20px;line-height:1}
+.agent-info{text-align:left}
+.agent-name{font-size:12px;font-weight:700;color:var(--text)}
+.agent-role{font-size:10px;color:var(--text3)}
+.agent-status-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0}
+.agent-status-dot.active{background:#0d9488;box-shadow:0 0 0 2px rgba(13,148,136,.3)}
+.agent-status-dot.alert{background:#f44685;box-shadow:0 0 0 2px rgba(244,70,133,.3)}
+/* Panneau agent */
+#agent-panel{position:fixed;bottom:0;right:0;left:0;width:100%;max-width:480px;margin:0 auto;max-height:70vh;background:var(--surface);border-radius:20px 20px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;z-index:9990;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);border-top:3px solid var(--accent)}
+#agent-panel.open{transform:translateY(0)}
+.agent-panel-header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.agent-panel-avatar{font-size:24px}
+.agent-panel-name{font-size:15px;font-weight:800;color:var(--text);flex:1}
+.agent-panel-role{font-size:11px;color:var(--text3)}
+.agent-panel-msgs{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.agent-msg{max-width:85%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5}
+.agent-msg.agent{background:var(--bg2);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px}
+.agent-msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.agent-panel-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
+.agent-panel-input input{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;background:var(--bg);color:var(--text)}
+.agent-panel-input input:focus{border-color:var(--accent)}
+.agent-typing{font-size:12px;color:var(--text3);font-style:italic;padding:4px 0}
 /* ── Contenu section ── */
 .followers-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
 .fc-platform{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:2px}
@@ -2121,6 +2147,58 @@ body.focus-mode #focus-exit-btn{display:flex}
         </div>
 
       </div><!-- /home-right -->
+
+      <!-- ══ BARRE D'AGENTS ══ -->
+      <div id="agents-bar" style="width:100%;padding:0 14px 16px;box-sizing:border-box">
+        <div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);font-weight:700;margin-bottom:8px">Mes agents</div>
+        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">
+          <!-- Karen -->
+          <button class="agent-chip" id="agent-karen" onclick="agentOpen('karen')" data-status="idle">
+            <span class="agent-avatar"><img src="data:image/png;base64,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" style="width:36px;height:48px;object-fit:contain;image-rendering:pixelated;display:block"></span>
+            <div class="agent-info">
+              <div class="agent-name">Karen</div>
+              <div class="agent-role">Emails & UGC</div>
+            </div>
+            <span class="agent-status-dot" id="agent-karen-dot"></span>
+          </button>
+          <!-- Atlas -->
+          <button class="agent-chip" id="agent-atlas" onclick="agentOpen('atlas')" data-status="idle">
+            <span class="agent-avatar">💼</span>
+            <div class="agent-info">
+              <div class="agent-name">Atlas</div>
+              <div class="agent-role">Business & MLM</div>
+            </div>
+            <span class="agent-status-dot" id="agent-atlas-dot"></span>
+          </button>
+          <!-- Luna -->
+          <button class="agent-chip" id="agent-luna" onclick="agentOpen('luna')" data-status="idle">
+            <span class="agent-avatar">📊</span>
+            <div class="agent-info">
+              <div class="agent-name">Luna</div>
+              <div class="agent-role">Finances</div>
+            </div>
+            <span class="agent-status-dot" id="agent-luna-dot"></span>
+          </button>
+          <!-- Spark -->
+          <button class="agent-chip" id="agent-spark" onclick="agentOpen('spark')" data-status="idle">
+            <span class="agent-avatar">🎬</span>
+            <div class="agent-info">
+              <div class="agent-name">Spark</div>
+              <div class="agent-role">Contenu</div>
+            </div>
+            <span class="agent-status-dot" id="agent-spark-dot"></span>
+          </button>
+          <!-- Doc -->
+          <button class="agent-chip" id="agent-doc" onclick="agentOpen('doc')" data-status="idle">
+            <span class="agent-avatar">🧠</span>
+            <div class="agent-info">
+              <div class="agent-name">Doc</div>
+              <div class="agent-role">Santé</div>
+            </div>
+            <span class="agent-status-dot" id="agent-doc-dot"></span>
+          </button>
+        </div>
+      </div>
 
       </div><!-- /home-split -->
     </div>
@@ -13346,6 +13424,24 @@ function jarvisImportChatGPT(input){
 }
 </style>
 
+<!-- ══ PANNEAU AGENT ══ -->
+<div id="agent-panel">
+  <div class="agent-panel-header">
+    <span class="agent-panel-avatar" id="ap-avatar">📧</span>
+    <div style="flex:1">
+      <div class="agent-panel-name" id="ap-name">Karen</div>
+      <div class="agent-panel-role" id="ap-role">Emails & UGC</div>
+    </div>
+    <button onclick="agentClose()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+  </div>
+  <div class="agent-panel-msgs" id="ap-msgs"></div>
+  <div class="agent-panel-input">
+    <input id="ap-input" type="text" placeholder="Message…" onkeydown="if(event.key==='Enter')agentSend()">
+    <button onclick="agentSend()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:14px;cursor:pointer">➤</button>
+  </div>
+</div>
+<div id="agent-overlay" onclick="agentClose()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:9989"></div>
+
 <!-- Bouton flottant -->
 <button id="jarvis-fab" onclick="jarvisToggle()" aria-label="Jarvis">
   <span id="jarvis-fab-icon">✦</span>
@@ -13839,6 +13935,190 @@ async function contentAnalyse(){
     <div style="font-size:13px;line-height:1.6">${p.trim().replace(/\n/g,'<br>')}</div>
   </div>`).join('');
   store.set('content_analysis_'+todayKey(),reply);
+}
+
+// ══════════════════════════════════════════════════════
+//  AGENTS — Moteur commun
+// ══════════════════════════════════════════════════════
+const AGENTS={
+  karen:{
+    avatar:'<img src="data:image/png;base64,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" style="width:36px;height:36px;object-fit:contain;image-rendering:pixelated;border-radius:6px">',name:'Karen',role:'Emails & UGC',
+    color:'#f44685',
+    intro:"Bonjour. Karen à l'appareil. Je m'occupe de tes emails et de ta prospection UGC. Dis-moi ce que tu veux que je fasse.",
+    system:`Tu es Karen, l'agent email de Lucine. Personnalité : directe, efficace, légèrement sarcastique sur les tâches répétitives, mais toujours professionnelle. Tu gères les deux boîtes Gmail de Lucine (contact@ugcbylucine.be et Gmail perso). Tu peux : chercher des emails, créer des brouillons de relance, labelliser des threads, résumer des conversations UGC. Tu réponds en français, de façon concise. Quand tu as besoin de chercher des emails, tu dis ce que tu fais avant de le faire.`,
+    actions:['📬 Nouveaux emails UGC','📤 Relances en attente','🗑️ Nettoyer newsletters','📊 Pipeline UGC']
+  },
+  atlas:{
+    avatar:'💼',name:'Atlas',role:'Business & ZiNRAi',
+    color:'#0d9488',
+    intro:"Atlas en ligne. Prêt à analyser tes performances business et ZiNRAi. Qu'est-ce qu'on regarde aujourd'hui ?",
+    system:`Tu es Atlas, l'agent business de Lucine. Personnalité : ambitieux, orienté résultats, direct. Tu suis les stats Atlas Sales Agency, les objectifs MLM ZiNRAi, les revenus. Tu motives mais avec des chiffres concrets. Réponds en français, va droit au but.`,
+    actions:['📈 Stats équipe','🎯 Objectifs du mois','💰 Revenus semaine','🚀 Actions prioritaires']
+  },
+  luna:{
+    avatar:'📊',name:'Luna',role:'Finances & capital',
+    color:'#0891b2',
+    intro:"Luna ici. Je surveille tes finances. Tout est calme pour l'instant — que veux-tu analyser ?",
+    system:`Tu es Luna, l'agent financier de Lucine. Personnalité : calme, précise, analytique. Tu analyses les dépenses, le capital, les investissements. Tu poses des questions factuelles et donnes des insights basés sur les données. Réponds en français, avec des chiffres quand possible.`,
+    actions:['💳 Dépenses du mois','📈 État du capital','⚠️ Alertes budget','📉 Tendances']
+  },
+  spark:{
+    avatar:'🎬',name:'Spark',role:'Contenu & réseaux',
+    color:'#8b5cf6',
+    intro:"Spark est là ! Qu'est-ce qu'on crée aujourd'hui ? J'ai plein d'idées.",
+    system:`Tu es Spark, l'agent contenu de Lucine. Personnalité : créative, enthousiaste, pleine d'énergie. Tu génères des idées de contenu TikTok/Instagram/YouTube pour ZiNRAi et UGC, analyses les performances, proposes des hooks viraux. Réponds en français avec de l'énergie.`,
+    actions:['💡 Idée de contenu','🎯 Analyse perfs','🔥 Hook viral','📅 Plan semaine']
+  },
+  doc:{
+    avatar:'🧠',name:'Doc',role:'Santé & bien-être',
+    color:'#7c3aed',
+    intro:"Doc disponible. J'ai regardé tes données WHOOP. Dis-moi ce qui t'intéresse.",
+    system:`Tu es Doc, l'agent santé de Lucine. Personnalité : factuel, bienveillant, scientifique. Tu analyses les données WHOOP (sommeil, récupération, HRV), les métriques santé du dashboard. Tu donnes des conseils basés sur les données. Réponds en français, de façon structurée.`,
+    actions:['😴 Analyse sommeil','💪 Récupération','🫀 HRV tendance','🎯 Objectifs santé']
+  }
+};
+
+let _agentCurrent=null;
+let _agentSessions={};
+
+function agentOpen(id){
+  const ag=AGENTS[id];if(!ag)return;
+  _agentCurrent=id;
+  // Met à jour le header
+  document.getElementById('ap-avatar').textContent=ag.avatar;
+  document.getElementById('ap-name').textContent=ag.name;
+  document.getElementById('ap-role').textContent=ag.role;
+  document.getElementById('agent-panel').style.borderTopColor=ag.color;
+  // Active le chip
+  document.querySelectorAll('.agent-chip').forEach(c=>c.classList.remove('active'));
+  document.getElementById('agent-'+id)?.classList.add('active');
+  // Actions rapides en haut des messages
+  const msgs=document.getElementById('ap-msgs');
+  if(!_agentSessions[id]){
+    _agentSessions[id]=[];
+    msgs.innerHTML='';
+    // Intro + actions rapides
+    agentAddMsg('agent',ag.intro);
+    const actionsHtml=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${(ag.actions||[]).map(a=>`<button onclick="agentQuickAction('${a.replace(/'/g,"\\'")}','${id}')" style="padding:4px 10px;border:1.5px solid ${ag.color};border-radius:10px;font-size:11px;font-weight:600;color:${ag.color};background:transparent;cursor:pointer;font-family:inherit">${a}</button>`).join('')}</div>`;
+    const wrap=document.createElement('div');wrap.innerHTML=actionsHtml;msgs.appendChild(wrap);
+  }else{
+    msgs.innerHTML='';
+    _agentSessions[id].forEach(m=>agentAddMsg(m.role,m.content,false));
+  }
+  // Ouvre le panneau
+  document.getElementById('agent-panel').classList.add('open');
+  document.getElementById('agent-overlay').style.display='block';
+  setTimeout(()=>document.getElementById('ap-input')?.focus(),300);
+}
+
+function agentClose(){
+  document.getElementById('agent-panel').classList.remove('open');
+  document.getElementById('agent-overlay').style.display='none';
+  document.querySelectorAll('.agent-chip').forEach(c=>c.classList.remove('active'));
+  _agentCurrent=null;
+}
+
+function agentAddMsg(role,text,save=true){
+  const msgs=document.getElementById('ap-msgs');
+  if(!msgs)return;
+  const div=document.createElement('div');
+  div.className='agent-msg '+role;
+  div.textContent=text;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+  if(save&&_agentCurrent)(_agentSessions[_agentCurrent]=_agentSessions[_agentCurrent]||[]).push({role,content:text});
+}
+
+function agentQuickAction(action,id){
+  agentSendText(action,id||_agentCurrent);
+}
+
+async function agentSend(){
+  const inp=document.getElementById('ap-input');
+  const text=(inp?.value||'').trim();
+  if(!text||!_agentCurrent)return;
+  inp.value='';
+  await agentSendText(text,_agentCurrent);
+}
+
+async function agentSendText(text,id){
+  const ag=AGENTS[id];if(!ag)return;
+  const apiKey=store.get('settings',{}).apiKey||'';
+  if(!apiKey){agentAddMsg('agent','Configure ta clé API Anthropic dans les Réglages.');return;}
+
+  agentAddMsg('user',text);
+  // Typing indicator
+  const msgs=document.getElementById('ap-msgs');
+  const typing=document.createElement('div');
+  typing.className='agent-typing';typing.id='ap-typing';
+  typing.textContent=ag.name+' réfléchit…';
+  msgs?.appendChild(typing);msgs&&(msgs.scrollTop=msgs.scrollHeight);
+
+  // Contexte spécifique à l'agent
+  let context='';
+  if(id==='karen') context=await _karenGetContext();
+  else if(id==='atlas') context=_atlasGetContext();
+  else if(id==='luna') context=_lunaGetContext();
+  else if(id==='doc') context=_docGetContext();
+
+  const history=(_agentSessions[id]||[]).slice(-10).map(m=>({role:m.role==='agent'?'assistant':'user',content:m.content}));
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:500,
+        system:ag.system+(context?'\n\n## Contexte actuel\n'+context:''),
+        messages:history})
+    });
+    const data=await res.json();
+    const reply=data.content?.[0]?.text||'…';
+    document.getElementById('ap-typing')?.remove();
+    agentAddMsg('agent',reply);
+    // Badge alerte si Karen a trouvé des trucs
+    if(id==='karen'&&(reply.includes('email')||reply.includes('relance')||reply.includes('UGC'))){
+      const dot=document.getElementById('agent-karen-dot');
+      if(dot)dot.className='agent-status-dot active';
+    }
+  }catch(e){
+    document.getElementById('ap-typing')?.remove();
+    agentAddMsg('agent','Erreur réseau. Réessaie.');
+  }
+}
+
+// ── Contextes agents ──────────────────────────────────
+async function _karenGetContext(){
+  const today=todayKey();
+  const pipeline=store.get('ugc_pipeline',[]);
+  const followups=store.get('ugc_followups_log',[]);
+  const recent=followups.filter(f=>f.date>=today.slice(0,7)).length;
+  return `Boîtes Gmail : contact@ugcbylucine.be + Gmail perso.\nRelances envoyées ce mois : ${recent}.\nPipeline UGC : ${pipeline.length} marques.\nAujourd'hui : ${today}.`;
+}
+
+function _atlasGetContext(){
+  const today=todayKey();
+  const atlas=store.get('atlas_daily_'+today,null);
+  const xpS=xpGetState();
+  return `Journée Atlas : ${atlas?JSON.stringify(atlas):'Non renseignée'}.\nXP total : ${xpS.total||0}.\nAujourd'hui : ${today}.`;
+}
+
+function _lunaGetContext(){
+  const today=todayKey();
+  const xpS=xpGetState();
+  return `Score du jour : ${calcDayScore()}/100.\nXP : ${xpS.total||0}.\nAujourd'hui : ${today}.`;
+}
+
+function _docGetContext(){
+  const cache=store.get('whoop_cache',{});
+  const today=todayKey();
+  const health=store.get('sante_'+today,{});
+  return `WHOOP : récupération ${cache.recovery||'—'}%, HRV ${cache.hrv||'—'}ms, sommeil ${cache.sleepH||'—'}h.\nSanté aujourd'hui : eau ${health.eau||0}ml, protéines ${health.prot||0}g, sommeil ${health.sleep||0}h.`;
+}
+
+// ── Karen actions Gmail ───────────────────────────────
+async function karenCheckEmails(){
+  agentOpen('karen');
+  await agentSendText('Cherche les nouveaux emails UGC non lus et dis-moi ce qu\'il y a.','karen');
 }
 
 // ══════════════════════════════════════════════════════
