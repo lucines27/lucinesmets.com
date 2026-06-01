@@ -14559,11 +14559,12 @@ async function _jarvisSendText(text){
   // System prompt avec instruction action
   const system=_jarvisPageContext()+`
 
-Si la demande implique une action sur le dashboard, réponds UNIQUEMENT en JSON valide :
-{"action":"add_todo","params":{"text":"..."},"message":"..."}
-{"action":"check_habit","params":{"name":"..."},"message":"..."}
-{"action":"start_pomodoro","params":{"min":25},"message":"..."}
-{"action":"none","params":{},"message":"ta réponse normale"}
+Si la demande implique une action sur le dashboard, réponds UNIQUEMENT en JSON STRICT (pas de markdown, pas de backticks) :
+{"action":"add_todo","params":{"text":"..."},"message":"ta réponse en français"}
+{"action":"check_habit","params":{"name":"..."},"message":"ta réponse en français"}
+{"action":"start_pomodoro","params":{"min":25},"message":"ta réponse en français"}
+{"action":"none","params":{},"message":"ta réponse normale en français"}
+IMPORTANT : Google Calendar n'est pas accessible — pour les rendez-vous, ajoute-les dans la to-do avec l'heure dans le texte.
 Sinon, réponds normalement en texte (pas de JSON).`;
 
   try{
@@ -14576,10 +14577,10 @@ Sinon, réponds normalement en texte (pas de JSON).`;
     const raw=data.content?.[0]?.text||'…';
     _jarvisHideTyping();
 
-    // Tente de parser JSON pour actions
+    // Tente de parser JSON pour actions (strip markdown si besoin)
     let reply=raw;
     try{
-      const trimmed=raw.trim();
+      let trimmed=raw.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
       if(trimmed.startsWith('{')){
         const obj=JSON.parse(trimmed);
         reply=obj.message||raw;
