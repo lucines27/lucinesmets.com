@@ -10513,8 +10513,26 @@ function _cecrlRenderQ(){
     oEl.innerHTML=`<div class="cecrl-test-opts">${(q.options||[]).map((opt,i)=>
       `<button class="cecrl-test-opt" onclick="cecrlAnswer(${i})">${opt}</button>`
     ).join('')}</div>`;
+  }else if(type==='correct'){
+    // Phrase cliquable mot par mot
+    const sentence=(q.question||'').replace(/^Corrigez\s*:\s*['"«]?/i,'').replace(/['"»]?\s*$/,'');
+    const words=sentence.split(/(\s+|[.,;!?¡¿])/);
+    const clickableWords=words.map((w,i)=>{
+      if(!w.trim()||/^\s+$/.test(w))return w;
+      const punct=/^[.,;!?¡¿]$/.test(w);
+      if(punct)return w;
+      return`<span onclick="cecrlSelectWord(this,'${w.replace(/'/g,"\\'")}')" style="cursor:pointer;padding:2px 4px;border-radius:5px;border:1.5px solid transparent;transition:all .15s;display:inline-block" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="if(!this.classList.contains('selected'))this.style.borderColor='transparent'">${w}</span>`;
+    }).join('');
+    oEl.innerHTML=`<div>
+      <div style="font-size:16px;line-height:2;margin-bottom:10px;padding:10px 14px;background:var(--bg2);border-radius:10px">${clickableWords}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">👆 Clique sur le mot incorrect, puis corrige-le</div>
+      <input id="cecrl-write-inp" type="text" placeholder="Correction du mot sélectionné…"
+        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;background:var(--bg);color:var(--text)"
+        onkeydown="if(event.key==='Enter')cecrlAnswerWrite()">
+      <button onclick="cecrlAnswerWrite()" class="cecrl-test-btn" style="margin-top:10px">Vérifier →</button>
+    </div>`;
   }else{
-    // write & correct : champ texte
+    // write : champ texte simple
     oEl.innerHTML=`<div>
       <input id="cecrl-write-inp" type="text" placeholder="Ta réponse…"
         style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;background:var(--bg);color:var(--text)"
@@ -10523,6 +10541,21 @@ function _cecrlRenderQ(){
     </div>`;
     setTimeout(()=>document.getElementById('cecrl-write-inp')?.focus(),100);
   }
+}
+
+function cecrlSelectWord(el, word){
+  // Désélectionne tout
+  document.querySelectorAll('.cecrl-word-selected').forEach(e=>{
+    e.classList.remove('cecrl-word-selected');
+    e.style.background='transparent';e.style.borderColor='transparent';
+  });
+  // Sélectionne le mot cliqué
+  el.classList.add('cecrl-word-selected');
+  el.style.background='var(--accent-bg)';
+  el.style.borderColor='var(--accent)';
+  // Met le mot dans le champ
+  const inp=document.getElementById('cecrl-write-inp');
+  if(inp){inp.value=word;inp.focus();inp.select();}
 }
 
 function cecrlAnswerWrite(){
