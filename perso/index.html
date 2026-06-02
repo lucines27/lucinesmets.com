@@ -14463,6 +14463,13 @@ async function startMyDay(){
   const wrap=document.getElementById('start-day-wrap');
   if(wrap)wrap.style.display='none';
 
+  // Repart toujours d'une session propre pour le briefing matin
+  _jarvisSession=[];
+  store.set('jarvis_session',[]);
+  _jarvisGreeted=false;
+  const msgs=document.getElementById('jarvis-messages');
+  if(msgs)msgs.innerHTML='';
+
   openJarvisPanel();
 
   const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
