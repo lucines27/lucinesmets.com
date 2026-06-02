@@ -2306,6 +2306,46 @@ body.focus-mode #focus-exit-btn{display:flex}
         <button class="add-habit-btn" onclick="document.getElementById('recurring-add-form').style.display='block';document.getElementById('rec-text').focus()">+ Nouvelle tâche récurrente</button>
       </div>
 
+      <!-- Présets -->
+      <div class="section-label">Présets de journée</div>
+      <div class="card" style="margin-bottom:10px">
+        <div id="presets-list" style="margin-bottom:10px"></div>
+        <!-- Formulaire préset -->
+        <div id="preset-add-form" style="display:none;background:var(--bg2);border-radius:12px;padding:12px;margin-bottom:10px">
+          <input class="add-input" id="preset-name" placeholder="Nom du préset (ex: Office day, Gym day…)" style="margin:0 0 8px;width:100%;box-sizing:border-box">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600">TÂCHES DU PRÉSET</div>
+          <div id="preset-tasks-list"></div>
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <input class="add-input" id="preset-task-inp" placeholder="+ Ajouter une tâche…" style="margin:0;flex:1" onkeydown="if(event.key==='Enter')presetAddTask()">
+            <select class="setting-input" id="preset-task-cat" style="width:90px">
+              <option value="">Cat.</option>
+              <option value="Atlas">Atlas</option>
+              <option value="ZiNRAi">ZiNRAi</option>
+              <option value="Perso">Perso</option>
+            </select>
+            <button onclick="presetAddTask()" style="padding:0 12px;background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:18px">+</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600">RÉCURRENCE (optionnel)</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <select class="setting-input" id="preset-rec-type" style="flex:1" onchange="presetRecTypeChange()">
+              <option value="manual">Manuel uniquement</option>
+              <option value="daily">Chaque jour</option>
+              <option value="weekly">Chaque semaine</option>
+              <option value="weekdays">Jours de semaine (L-V)</option>
+              <option value="monthly">Chaque mois</option>
+            </select>
+            <div id="preset-days-wrap" style="display:none;gap:4px">
+              ${['L','M','M','J','V','S','D'].map((d,i)=>`<button type="button" class="preset-day-btn" data-day="${i}" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">${d}</button>`).join('')}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="save-btn" onclick="presetSave()" style="background:var(--accent);color:#fff;border-color:var(--accent)">✓ Créer le préset</button>
+            <button class="save-btn" onclick="document.getElementById('preset-add-form').style.display='none'">Annuler</button>
+          </div>
+        </div>
+        <button class="add-habit-btn" onclick="document.getElementById('preset-add-form').style.display='block';document.getElementById('preset-name').focus();_presetTempTasks=[]">+ Nouveau préset</button>
+      </div>
+
     </div>
 
     <!-- SANTÉ -->
@@ -7749,8 +7789,131 @@ function renderRecurring(){
   }).join('');
 }
 
+// ══════════════════════════════════════════════
+//  PRÉSETS DE JOURNÉE
+// ══════════════════════════════════════════════
+let _presetTempTasks=[];
+
+function presetRecTypeChange(){
+  const type=document.getElementById('preset-rec-type')?.value;
+  document.getElementById('preset-days-wrap').style.display=type==='weekly'?'flex':'none';
+}
+
+function presetToggleDay(btn){
+  btn.classList.toggle('selected');
+  const sel=btn.classList.contains('selected');
+  btn.style.background=sel?'var(--accent)':'var(--bg)';
+  btn.style.color=sel?'#fff':'var(--text2)';
+  btn.style.borderColor=sel?'var(--accent)':'var(--border)';
+}
+
+function presetAddTask(){
+  const inp=document.getElementById('preset-task-inp');
+  const cat=document.getElementById('preset-task-cat')?.value||'';
+  const text=(inp?.value||'').trim();
+  if(!text)return;
+  _presetTempTasks.push({text,cat,id:'pt_'+Date.now()+'_'+Math.random().toString(36).slice(2,5)});
+  inp.value='';
+  renderPresetTasksList();
+  inp.focus();
+}
+
+function presetRemoveTempTask(id){
+  _presetTempTasks=_presetTempTasks.filter(t=>t.id!==id);
+  renderPresetTasksList();
+}
+
+function renderPresetTasksList(){
+  const el=document.getElementById('preset-tasks-list');
+  if(!el)return;
+  if(!_presetTempTasks.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0 8px">Aucune tâche — ajoutes-en ci-dessous</div>';return;}
+  el.innerHTML=_presetTempTasks.map(t=>`
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;flex:1">${t.text}${t.cat?` <span style="font-size:10px;color:var(--text3)">${t.cat}</span>`:''}</span>
+      <button onclick="presetRemoveTempTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--text3)">✕</button>
+    </div>`).join('');
+}
+
+function presetSave(){
+  const name=document.getElementById('preset-name')?.value.trim();
+  if(!name){toast('Nomme ton préset');return;}
+  if(!_presetTempTasks.length){toast('Ajoute au moins une tâche');return;}
+  const type=document.getElementById('preset-rec-type')?.value||'manual';
+  const days=[];
+  if(type==='weekly') document.querySelectorAll('.preset-day-btn.selected').forEach(b=>days.push(parseInt(b.dataset.day)));
+  const preset={
+    id:'preset_'+Date.now(),name,
+    tasks:[..._presetTempTasks],
+    type,days,active:true,
+    createdAt:Date.now()
+  };
+  const presets=store.get('day_presets',[]);
+  presets.push(preset);
+  store.set('day_presets',presets);
+  // Reset
+  _presetTempTasks=[];
+  document.getElementById('preset-name').value='';
+  document.getElementById('preset-rec-type').value='manual';
+  document.getElementById('preset-add-form').style.display='none';
+  renderPresets();
+  toast(`✓ Préset "${name}" créé`);
+}
+
+function presetApply(id){
+  const preset=store.get('day_presets',[]).find(p=>p.id===id);
+  if(!preset)return;
+  const items=store.get(todoKey(0),[]);
+  let added=0;
+  preset.tasks.forEach(t=>{
+    const exists=items.some(x=>x.text===t.text&&x.presetId===id);
+    if(!exists){
+      items.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+        text:t.text,done:false,difficulty:'medium',createdAt:Date.now(),
+        category:t.cat||undefined,presetId:id});
+      added++;
+    }
+  });
+  store.set(todoKey(0),items);
+  if(typeof renderHomeTodo==='function')renderHomeTodo();
+  if(typeof refreshTodoCharts==='function')refreshTodoCharts();
+  toast(`✓ ${added} tâche${added>1?'s':''} de "${preset.name}" ajoutée${added>1?'s':''}`);
+}
+
+function presetDelete(id){
+  const p=store.get('day_presets',[]).find(x=>x.id===id);
+  if(!p)return;
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;z-index:99999;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.3)';
+  el.innerHTML=`Supprimer "${p.name}" ?<button onclick="store.set('day_presets',store.get('day_presets',[]).filter(x=>x.id!=='${id}'));renderPresets();this.parentNode.remove();toast('Supprimé')" style="background:#f44685;border:none;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600;margin-left:4px">Oui</button><button onclick="this.parentNode.remove()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:16px">✕</button>`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),5000);
+}
+
+function renderPresets(){
+  const el=document.getElementById('presets-list');
+  if(!el)return;
+  const presets=store.get('day_presets',[]);
+  if(!presets.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px">Aucun préset — crées-en un !</div>';return;}
+  el.innerHTML=presets.map(p=>{
+    const isDue=p.type!=='manual'&&_recurringIsDueToday(p);
+    const typeLabel=p.type==='manual'?'Manuel':p.type==='weekly'?`${REC_TYPE_LABEL.weekly} (${p.days?.map(d=>DOW_LABELS[d]).join(',')||'?'})`:REC_TYPE_LABEL[p.type]||p.type;
+    return`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        ${isDue?'<span style="font-size:9px;padding:2px 6px;background:var(--accent-bg);color:var(--accent);border-radius:6px;font-weight:700">Aujourd\'hui</span>':''}
+        <div style="font-weight:700;font-size:13px;flex:1">${p.name}</div>
+        <span style="font-size:10px;color:var(--text3)">${p.tasks.length} tâche${p.tasks.length>1?'s':''} · ${typeLabel}</span>
+        <button onclick="presetDelete('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 2px">✕</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+        ${p.tasks.map(t=>`<span style="font-size:11px;padding:2px 8px;background:var(--bg2);border-radius:6px;color:var(--text2)">${t.text}</span>`).join('')}
+      </div>
+      <button onclick="presetApply('${p.id}')" style="font-size:12px;font-weight:700;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit">▶ Appliquer aujourd'hui</button>
+    </div>`;
+  }).join('');
+}
+
 // Hook dans showPage goals
-function initRecurring(){renderRecurring();}
+function initRecurring(){renderRecurring();renderPresets();}
 
 function todoRollover(){
   const today=localKey(new Date());
@@ -7767,6 +7930,17 @@ function todoRollover(){
     };
     todayItems.push(copy);todayIds.add(copy.id);
   });
+  // Injecte les présets automatiques
+  const presets=store.get('day_presets',[]).filter(p=>p.type!=='manual'&&_recurringIsDueToday(p));
+  presets.forEach(p=>{
+    p.tasks.forEach(t=>{
+      const exists=todayItems.some(x=>x.presetId===p.id&&x.text===t.text);
+      if(!exists) todayItems.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+        text:t.text,done:false,difficulty:'medium',createdAt:Date.now(),
+        category:t.cat||undefined,presetId:p.id});
+    });
+  });
+
   // Injecte les tâches récurrentes actives
   const recurring=store.get('recurring_tasks',[]).filter(r=>r.active&&_recurringIsDueToday(r));
   recurring.forEach(r=>{
@@ -9337,7 +9511,7 @@ function showSubTab(page, tab){
   // Side effect: init capital when switching to it
   if(page==='finance'&&tab==='capital')renderCapital();
   if(page==='savoir'&&tab==='espagnol')leitnerRender();
-  if(page==='goals')renderRecurring();
+  if(page==='goals'){renderRecurring();renderPresets();}
 }
 
 // ══════════════════════════════════════════════
