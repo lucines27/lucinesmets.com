@@ -9819,7 +9819,6 @@ function leitnerGetDue(){
   const now=Date.now();
   return leitnerCards().filter(c=>{
     if(c.box>=7)return false; // maîtrisé
-    const interval=LEITNER_INTERVALS[c.box]||1;
     return now>=(c.nextReview||0);
   });
 }
@@ -10085,7 +10084,10 @@ function leitnerAnswer(correct){
   pair.forEach(c=>{
     c.box=newBox;
     c.streak=correct?(c.streak||0)+1:0;
-    c.nextReview=now+(LEITNER_INTERVALS[newBox]||1)*86400000;
+    // Minuit du jour J+N (logique calendaire, pas 48h exactes)
+    const _days=LEITNER_INTERVALS[newBox]||1;
+    const _d=new Date();_d.setDate(_d.getDate()+_days);_d.setHours(0,0,0,0);
+    c.nextReview=_d.getTime();
   });
   leitnerSave(cards);
   if(correct&&pair[0]?.box===7)addXP(10,'fc_mastered_'+card.es.slice(0,8),card.id);
@@ -14263,6 +14265,9 @@ async function _karenExecuteAction(obj){
   const dot=document.getElementById('agent-karen-dot');
   if(dot)dot.className='agent-status-dot active';
 
+  if(!obj||obj.karen_action==='none')return;
+  const dot=document.getElementById('agent-karen-dot');
+  if(dot)dot.className='agent-status-dot active';
   if(obj.karen_action==='trash_email'&&obj.message_id){
     const r=await karenTrashEmail(obj.message_id);
     agentAddMsg('agent',r?'✓ Email mis à la corbeille.':'❌ Erreur — vérifie que Gmail est connecté avec les bons droits.');
