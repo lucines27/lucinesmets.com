@@ -2315,7 +2315,7 @@ body.focus-mode #focus-exit-btn{display:flex}
             <button class="save-btn" onclick="document.getElementById('recurring-add-form').style.display='none'">Annuler</button>
           </div>
         </div>
-        <button class="add-habit-btn" onclick="document.getElementById('recurring-add-form').style.display='block';document.getElementById('rec-text').focus()">+ Nouvelle tâche récurrente</button>
+        <button class="add-habit-btn" onclick="document.getElementById('recurring-add-form').style.display='block';document.getElementById('rec-text').focus();recurringTypeChange()">+ Nouvelle tâche récurrente</button>
       </div>
 
       <!-- Présets -->
@@ -2366,7 +2366,7 @@ body.focus-mode #focus-exit-btn{display:flex}
             <button class="save-btn" onclick="document.getElementById('preset-add-form').style.display='none'">Annuler</button>
           </div>
         </div>
-        <button class="add-habit-btn" onclick="document.getElementById('preset-add-form').style.display='block';document.getElementById('preset-name').focus();_presetTempTasks=[]">+ Nouveau préset</button>
+        <button class="add-habit-btn" onclick="document.getElementById('preset-add-form').style.display='block';document.getElementById('preset-name').focus();_presetTempTasks=[];renderPresetTasksList();presetRecTypeChange()">+ Nouveau préset</button>
       </div>
 
     </div>
@@ -3547,7 +3547,10 @@ const SUPABASE_SKIP_LOAD = new Set([
   'whoop_state', 'whoop_needs_reconnect',
   'gcal_state', 'gcal_verifier',
   'gmail_state', 'gmail_verifier',
-  'pending_levelup'  // jamais restauré depuis Supabase — transitoire
+  'pending_levelup',
+  // Local wins — ne jamais écraser avec Supabase
+  'day_presets', 'recurring_tasks', 'leitner_cards', 'jarvis_session',
+  'email_agent_last_run', 'followers_last_run'
 ]);
 
 async function initSupabase() {
