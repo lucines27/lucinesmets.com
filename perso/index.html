@@ -2279,11 +2279,16 @@ body.focus-mode #focus-exit-btn{display:flex}
         <div id="recurring-add-form" style="display:none;background:var(--bg2);border-radius:12px;padding:12px;margin-bottom:10px">
           <div style="display:flex;gap:8px;margin-bottom:8px">
             <input class="add-input" id="rec-text" placeholder="Nom de la tâche…" style="margin:0;flex:1">
-            <select class="setting-input" id="rec-cat" style="width:100px">
-              <option value="">Catégorie</option>
+            <select class="setting-input" id="rec-cat" style="width:90px">
+              <option value="">Cat.</option>
               <option value="Atlas">Atlas</option>
               <option value="ZiNRAi">ZiNRAi</option>
               <option value="Perso">Perso</option>
+            </select>
+            <select class="setting-input" id="rec-diff" style="width:90px" title="Difficulté">
+              <option value="easy">🟢 Facile</option>
+              <option value="medium" selected>🟡 Moyen</option>
+              <option value="hard">🔴 Difficile</option>
             </select>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
@@ -2294,7 +2299,13 @@ body.focus-mode #focus-exit-btn{display:flex}
               <option value="weekdays">Jours de semaine (L-V)</option>
             </select>
             <div id="rec-days-wrap" style="display:none;gap:4px;flex-wrap:wrap">
-              ${['L','M','M','J','V','S','D'].map((d,i)=>`<button type="button" class="rec-day-btn" data-day="${i}" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">${d}</button>`).join('')}
+              <button type="button" class="rec-day-btn" data-day="0" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">L</button>
+              <button type="button" class="rec-day-btn" data-day="1" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">M</button>
+              <button type="button" class="rec-day-btn" data-day="2" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">M</button>
+              <button type="button" class="rec-day-btn" data-day="3" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">J</button>
+              <button type="button" class="rec-day-btn" data-day="4" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">V</button>
+              <button type="button" class="rec-day-btn" data-day="5" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">S</button>
+              <button type="button" class="rec-day-btn" data-day="6" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">D</button>
             </div>
             <input id="rec-month-day" type="number" min="1" max="31" placeholder="Jour du mois" class="setting-input" style="display:none;width:120px">
           </div>
@@ -2315,13 +2326,18 @@ body.focus-mode #focus-exit-btn{display:flex}
           <input class="add-input" id="preset-name" placeholder="Nom du préset (ex: Office day, Gym day…)" style="margin:0 0 8px;width:100%;box-sizing:border-box">
           <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600">TÂCHES DU PRÉSET</div>
           <div id="preset-tasks-list"></div>
-          <div style="display:flex;gap:6px;margin-bottom:10px">
-            <input class="add-input" id="preset-task-inp" placeholder="+ Ajouter une tâche…" style="margin:0;flex:1" onkeydown="if(event.key==='Enter')presetAddTask()">
-            <select class="setting-input" id="preset-task-cat" style="width:90px">
+          <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+            <input class="add-input" id="preset-task-inp" placeholder="+ Ajouter une tâche…" style="margin:0;flex:1;min-width:120px" onkeydown="if(event.key==='Enter')presetAddTask()">
+            <select class="setting-input" id="preset-task-cat" style="width:80px">
               <option value="">Cat.</option>
               <option value="Atlas">Atlas</option>
               <option value="ZiNRAi">ZiNRAi</option>
               <option value="Perso">Perso</option>
+            </select>
+            <select class="setting-input" id="preset-task-diff" style="width:90px">
+              <option value="easy">🟢 Facile</option>
+              <option value="medium" selected>🟡 Moyen</option>
+              <option value="hard">🔴 Difficile</option>
             </select>
             <button onclick="presetAddTask()" style="padding:0 12px;background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:18px">+</button>
           </div>
@@ -2335,7 +2351,13 @@ body.focus-mode #focus-exit-btn{display:flex}
               <option value="monthly">Chaque mois</option>
             </select>
             <div id="preset-days-wrap" style="display:none;gap:4px">
-              ${['L','M','M','J','V','S','D'].map((d,i)=>`<button type="button" class="preset-day-btn" data-day="${i}" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">${d}</button>`).join('')}
+              <button type="button" class="preset-day-btn" data-day="0" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">L</button>
+              <button type="button" class="preset-day-btn" data-day="1" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">M</button>
+              <button type="button" class="preset-day-btn" data-day="2" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">M</button>
+              <button type="button" class="preset-day-btn" data-day="3" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">J</button>
+              <button type="button" class="preset-day-btn" data-day="4" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">V</button>
+              <button type="button" class="preset-day-btn" data-day="5" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">S</button>
+              <button type="button" class="preset-day-btn" data-day="6" onclick="presetToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">D</button>
             </div>
           </div>
           <div style="display:flex;gap:8px">
@@ -7723,13 +7745,14 @@ function recurringSave(){
   if(!text){toast('Nomme ta tâche');return;}
   const type=document.getElementById('rec-type')?.value||'daily';
   const cat=document.getElementById('rec-cat')?.value||'';
+  const diff=document.getElementById('rec-diff')?.value||'medium';
   let days=[];
   if(type==='weekly'){
     document.querySelectorAll('.rec-day-btn.selected').forEach(b=>days.push(parseInt(b.dataset.day)));
     if(!days.length){toast('Sélectionne au moins un jour');return;}
   }
   const monthDay=parseInt(document.getElementById('rec-month-day')?.value)||1;
-  const rule={id:'rec_'+Date.now(),text,type,days,monthDay,cat,active:true,createdAt:Date.now()};
+  const rule={id:'rec_'+Date.now(),text,type,days,monthDay,cat,difficulty:diff,active:true,createdAt:Date.now()};
   const rules=store.get('recurring_tasks',[]);
   rules.push(rule);
   store.set('recurring_tasks',rules);
@@ -7810,9 +7833,10 @@ function presetToggleDay(btn){
 function presetAddTask(){
   const inp=document.getElementById('preset-task-inp');
   const cat=document.getElementById('preset-task-cat')?.value||'';
+  const diff=document.getElementById('preset-task-diff')?.value||'medium';
   const text=(inp?.value||'').trim();
   if(!text)return;
-  _presetTempTasks.push({text,cat,id:'pt_'+Date.now()+'_'+Math.random().toString(36).slice(2,5)});
+  _presetTempTasks.push({text,cat,difficulty:diff,id:'pt_'+Date.now()+'_'+Math.random().toString(36).slice(2,5)});
   inp.value='';
   renderPresetTasksList();
   inp.focus();
@@ -7829,7 +7853,7 @@ function renderPresetTasksList(){
   if(!_presetTempTasks.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0 8px">Aucune tâche — ajoutes-en ci-dessous</div>';return;}
   el.innerHTML=_presetTempTasks.map(t=>`
     <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:12px;flex:1">${t.text}${t.cat?` <span style="font-size:10px;color:var(--text3)">${t.cat}</span>`:''}</span>
+      <span style="font-size:12px;flex:1">${t.text}${t.cat?` <span style="font-size:10px;color:var(--text3)">${t.cat}</span>`:''} <span style="font-size:10px">${t.difficulty==='easy'?'🟢':t.difficulty==='hard'?'🔴':'🟡'}</span></span>
       <button onclick="presetRemoveTempTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--text3)">✕</button>
     </div>`).join('');
 }
@@ -7868,7 +7892,7 @@ function presetApply(id){
     const exists=items.some(x=>x.text===t.text&&x.presetId===id);
     if(!exists){
       items.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
-        text:t.text,done:false,difficulty:'medium',createdAt:Date.now(),
+        text:t.text,done:false,difficulty:t.difficulty||'medium',createdAt:Date.now(),
         category:t.cat||undefined,presetId:id});
       added++;
     }
@@ -7949,7 +7973,7 @@ function todoRollover(){
       todayItems.push({
         id:'td_rec_'+r.id+'_'+today,
         text:r.text,done:false,
-        difficulty:'medium',createdAt:Date.now(),
+        difficulty:r.difficulty||'medium',createdAt:Date.now(),
         category:r.cat||undefined,
         recurringId:r.id
       });
