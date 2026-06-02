@@ -10301,14 +10301,14 @@ function leitnerShowBox(box){
 function leitnerStartSession(){
   const due=leitnerGetDue();
   if(!due.length){toast('Aucune carte à réviser !');return;}
-  // Déduplique : une seule carte par paire (évite le double avancement)
-  const seen=new Set();
-  _leitnerSession=due.filter(c=>{
+  // Déduplique : une seule carte par paire, direction choisie aléatoirement
+  const pairMap=new Map();
+  due.forEach(c=>{
     const key=c.es+'|'+c.fr;
-    if(seen.has(key))return false;
-    seen.add(key);
-    return true;
+    if(!pairMap.has(key))pairMap.set(key,[]);
+    pairMap.get(key).push(c);
   });
+  _leitnerSession=[...pairMap.values()].map(pair=>pair[Math.floor(Math.random()*pair.length)]);
   _leitnerSession.sort(()=>Math.random()-.5);
   _leitnerIdx=0;
   _leitnerAnswering=false;
