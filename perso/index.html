@@ -3325,6 +3325,16 @@ body.focus-mode #focus-exit-btn{display:flex}
             </div>
           </div>
 
+          <!-- Gmail perso -->
+          <div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border-radius:12px;border:1px solid var(--border2)">
+            <div class="setting-lbl" style="color:#0d9488;font-weight:600;margin-bottom:8px">📬 Gmail perso (smets.lucine@gmail.com)</div>
+            <div id="gmail-perso-status" style="font-size:11px;margin:4px 0 10px;padding:7px 10px;border-radius:8px;background:var(--bg)">Non connecté</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="save-btn" id="gmail-perso-connect-btn" onclick="connectGmailPerso()">🔗 Connecter Gmail perso</button>
+              <button class="save-btn" id="gmail-perso-disconnect-btn" style="display:none;color:var(--red)" onclick="disconnectGmailPerso()">✕ Déconnecter</button>
+            </div>
+          </div>
+
           <!-- Agent email -->
           <div style="margin-top:12px;padding:12px 14px;background:var(--bg2);border-radius:12px;border:1px solid var(--border2)">
             <div class="setting-lbl" style="color:#0d9488;font-weight:600;margin-bottom:8px">📧 Agent Email Jarvis</div>
@@ -8505,7 +8515,15 @@ async function gmailPost(url, body, method='POST'){
 
 // Karen Gmail actions
 async function karenSearchEmails(query, maxResults=10){
-  const data=await gmailFetch(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`);
+  // Cherche dans les deux boîtes (UGC + perso) en parallèle
+  const [dataUgc, dataPerso]=await Promise.all([
+    gmailFetch(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`),
+    gmailPersoFetch(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`)
+  ]);
+  const allIds=[...(dataUgc?.messages||[]),...(dataPerso?.messages||[])];
+  if(!allIds.length)return[];
+  // Pour simplifier on utilise gmailFetch pour les détails UGC et gmailPersoFetch pour perso
+  const data={messages:allIds.slice(0,maxResults)};
   if(!data?.messages)return [];
   const details=await Promise.all(data.messages.slice(0,maxResults).map(m=>
     gmailFetch(`${GMAIL_API}/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=To`)
@@ -8543,6 +8561,90 @@ async function karenCreateDraft(to, subject, body, replyToMessageId){
 
 async function karenLabelThread(threadId, addLabels=[], removeLabels=[]){
   return await gmailPost(`${GMAIL_API}/threads/${threadId}/modify`,{addLabelIds:addLabels,removeLabelIds:removeLabels});
+}
+
+// Gmail perso (smets.lucine@gmail.com) — tokens séparés
+async function connectGmailPerso(){
+  const s=store.get('settings',{});
+  const clientId=s.googleClientId||GOOGLE_CLIENT_ID_DEFAULT;
+  const verifier=generateRandomString(64);
+  const challenge=await sha256base64url(verifier);
+  const state='gmailperso_'+Math.random().toString(36).slice(2);
+  store.set('gmail_perso_verifier',verifier);
+  store.set('gmail_perso_state',state);
+  const url=GOOGLE_AUTH_URL+'?'+new URLSearchParams({
+    client_id:clientId,redirect_uri:GOOGLE_REDIRECT,response_type:'code',
+    scope:GMAIL_SCOPE,state,code_challenge:challenge,
+    code_challenge_method:'S256',access_type:'offline',prompt:'consent',
+    login_hint:'smets.lucine@gmail.com'
+  });
+  window.location.href=url;
+}
+
+async function exchangeGmailPersoCode(code,state){
+  const savedState=store.get('gmail_perso_state',null);
+  if(state&&savedState&&state!==savedState)return;
+  const verifier=store.get('gmail_perso_verifier',null);if(!verifier)return;
+  const s=store.get('settings',{});
+  const clientId=s.googleClientId||GOOGLE_CLIENT_ID_DEFAULT;
+  const clientSecret=s.googleClientSecret||GOOGLE_CLIENT_SECRET_DEFAULT;
+  const res=await fetch(GOOGLE_TOKEN_URL,{method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams({code,client_id:clientId,client_secret:clientSecret,
+      redirect_uri:GOOGLE_REDIRECT,grant_type:'authorization_code',code_verifier:verifier}).toString()
+  });
+  const data=await res.json();
+  if(data.access_token){
+    store.set('gmail_perso_tokens',{access_token:data.access_token,
+      refresh_token:data.refresh_token||null,
+      expires_at:Date.now()+(data.expires_in||3600)*1000});
+    store.set('gmail_perso_verifier',null);
+    if(window.location.search)window.history.replaceState({},'',window.location.pathname);
+    toast('Gmail perso connecté ✓');
+    updateGmailPersoStatus();
+  }
+}
+
+async function gmailPersoFetch(url){
+  let tokens=store.get('gmail_perso_tokens',null);
+  if(!tokens?.access_token)return null;
+  if(tokens.expires_at&&Date.now()>tokens.expires_at-60000){
+    // Refresh
+    const s=store.get('settings',{});
+    const res=await fetch(GOOGLE_TOKEN_URL,{method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({grant_type:'refresh_token',refresh_token:tokens.refresh_token,
+        client_id:s.googleClientId||GOOGLE_CLIENT_ID_DEFAULT,
+        client_secret:s.googleClientSecret||GOOGLE_CLIENT_SECRET_DEFAULT}).toString()
+    });
+    const data=await res.json();
+    if(data.access_token){tokens={...tokens,access_token:data.access_token,expires_at:Date.now()+(data.expires_in||3600)*1000};store.set('gmail_perso_tokens',tokens);}
+    else return null;
+  }
+  try{const r=await fetch(url,{headers:{Authorization:'Bearer '+tokens.access_token}});if(!r.ok)return null;return await r.json();}catch(e){return null;}
+}
+
+function disconnectGmailPerso(){
+  store.set('gmail_perso_tokens',null);
+  updateGmailPersoStatus();
+  toast('Gmail perso déconnecté');
+}
+
+function updateGmailPersoStatus(){
+  const tokens=store.get('gmail_perso_tokens',null);
+  const statusEl=document.getElementById('gmail-perso-status');
+  const connectBtn=document.getElementById('gmail-perso-connect-btn');
+  const disconnectBtn=document.getElementById('gmail-perso-disconnect-btn');
+  if(!statusEl)return;
+  if(tokens?.access_token){
+    statusEl.innerHTML='<span style="color:#16a34a;font-weight:600">✓ Connecté — smets.lucine@gmail.com</span>';
+    if(connectBtn)connectBtn.style.display='none';
+    if(disconnectBtn)disconnectBtn.style.display='inline-flex';
+  }else{
+    statusEl.textContent='Non connecté';
+    if(connectBtn)connectBtn.style.display='inline-flex';
+    if(disconnectBtn)disconnectBtn.style.display='none';
+  }
 }
 
 function renderGmailStatus(){
@@ -9488,9 +9590,11 @@ function initBusiness(){
   if(window._pendingGmailCode){
     const {code,state}=window._pendingGmailCode;
     window._pendingGmailCode=null;
-    exchangeGmailCode(code,state);
+    if(state&&state.startsWith('gmailperso_')) exchangeGmailPersoCode(code,state);
+    else exchangeGmailCode(code,state);
   }
   renderGmailStatus();
+  updateGmailPersoStatus();
   renderGmailMails();
   // Notion
   const notionToken=store.get('notionToken','');
