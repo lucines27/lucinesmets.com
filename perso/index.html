@@ -8515,19 +8515,24 @@ async function gmailPost(url, body, method='POST'){
 
 // Karen Gmail actions
 async function karenSearchEmails(query, maxResults=10){
-  // Cherche dans les deux boîtes (UGC + perso) en parallèle
-  const [dataUgc, dataPerso]=await Promise.all([
-    gmailFetch(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`),
-    gmailPersoFetch(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`)
-  ]);
-  const allIds=[...(dataUgc?.messages||[]),...(dataPerso?.messages||[])];
+  // Utilise le token disponible : perso en priorité, sinon UGC
+  const fetchFn=store.get('gmail_perso_tokens',null)?.access_token ? gmailPersoFetch : gmailFetch;
+  // Cherche aussi dans UGC si dispo
+  const fetchUgc=store.get('gmail_tokens',null)?.access_token ? gmailFetch : null;
+  const promises=[fetchFn(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`)];
+  if(fetchUgc&&fetchUgc!==fetchFn) promises.push(fetchUgc(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`));
+  const results=await Promise.all(promises);
+  const allIds=[...new Set([...results.flatMap(r=>r?.messages||[]).map(m=>m.id)])].slice(0,maxResults).map(id=>({id}));
   if(!allIds.length)return[];
-  // Pour simplifier on utilise gmailFetch pour les détails UGC et gmailPersoFetch pour perso
-  const data={messages:allIds.slice(0,maxResults)};
+  const data={messages:allIds};
   if(!data?.messages)return [];
-  const details=await Promise.all(data.messages.slice(0,maxResults).map(m=>
-    gmailFetch(`${GMAIL_API}/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=To`)
-  ));
+  const details=await Promise.all(data.messages.slice(0,maxResults).map(async m=>{
+    // Essaie perso d'abord, puis UGC
+    const r=await fetchFn(`${GMAIL_API}/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=To`);
+    if(r)return r;
+    if(fetchUgc) return fetchUgc(`${GMAIL_API}/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=To`);
+    return null;
+  }));
   return details.filter(Boolean).map(m=>{
     const h=m.payload?.headers||[];
     const get=name=>h.find(x=>x.name===name)?.value||'';
