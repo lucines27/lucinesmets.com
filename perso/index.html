@@ -2145,15 +2145,7 @@ body.focus-mode #focus-exit-btn{display:flex}
           </div>
         </div>
 
-        <!-- Morning Briefing -->
-        <div id="morning-briefing-card" style="display:none;position:relative;background:#f0fffe;border-left:3px solid var(--accent);border-radius:12px;padding:14px 38px 14px 14px;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-            <span style="font-size:15px;line-height:1">☀️</span>
-            <span style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#f44685;font-weight:700">Morning Briefing</span>
-          </div>
-          <p id="morning-briefing-text" style="margin:0;font-size:13px;font-style:italic;color:var(--text2);line-height:1.6">...</p>
-          <button onclick="morningBriefingRegenerate()" title="Régénérer" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:15px;color:var(--text3);cursor:pointer;line-height:1;padding:2px 4px;border-radius:6px;opacity:.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">↻</button>
-        </div>
+        <!-- Morning Briefing désactivé -->
 
         <!-- Phrase du jour -->
         <div class="daily-ai-card" id="daily-quote-card">
@@ -13918,7 +13910,10 @@ function jarvisImportChatGPT(input){
       <span id="jarvis-title">✦ Jarvis</span>
       <span id="jarvis-sublevel"></span>
     </div>
-    <button id="jarvis-close" onclick="jarvisToggle()">✕</button>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="jarvisNewConv()" style="background:none;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:11px;padding:3px 8px;color:var(--text3);font-family:inherit" title="Nouvelle conversation">🗑 Reset</button>
+      <button id="jarvis-close" onclick="jarvisToggle()">✕</button>
+    </div>
   </div>
   <div id="jarvis-messages"></div>
   <div id="jarvis-pills">
@@ -15010,6 +15005,15 @@ function jarvisInit(){
 }
 
 // ── Toggle panneau ──────────────────────────────────
+function jarvisNewConv(){
+  _jarvisSession=[];
+  _jarvisGreeted=false;
+  store.set('jarvis_session',[]);
+  const msgs=document.getElementById('jarvis-messages');
+  if(msgs)msgs.innerHTML='';
+  setTimeout(()=>jarvisGreeting(),200);
+}
+
 function jarvisToggle(){
   _jarvisOpen=!_jarvisOpen;
   const panel=document.getElementById('jarvis-panel');
