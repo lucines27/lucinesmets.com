@@ -14519,12 +14519,23 @@ function agentClose(){
   _agentCurrent=null;
 }
 
+function _mdToHtml(text){
+  if(!text)return'';
+  // Échappe le HTML d'abord
+  const e=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return e
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')  // **gras**
+    .replace(/\*(.+?)\*/g,'<strong>$1</strong>')       // *gras*
+    .replace(/_(.+?)_/g,'<em>$1</em>')                 // _italique_
+    .replace(/\n/g,'<br>');                            // sauts de ligne
+}
+
 function agentAddMsg(role,text,save=true){
   const msgs=document.getElementById('ap-msgs');
   if(!msgs)return;
   const div=document.createElement('div');
   div.className='agent-msg '+role;
-  div.textContent=text;
+  div.innerHTML=_mdToHtml(text);
   msgs.appendChild(div);
   msgs.scrollTop=msgs.scrollHeight;
   if(save&&_agentCurrent)(_agentSessions[_agentCurrent]=_agentSessions[_agentCurrent]||[]).push({role,content:text});
@@ -14581,13 +14592,16 @@ async function agentSendText(text,id){
     // Exécute les actions Karen si JSON
     if(id==='karen'){
       try{
-        const trimmed=raw.trim().replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
-        if(trimmed.startsWith('{')){
-          const obj=JSON.parse(trimmed);
-          const msg=obj.message||raw;
-          agentAddMsg('agent',msg);
-          _karenExecuteAction(obj);
-          return;
+        // Extrait le premier objet JSON valide même si du texte suit
+        const jsonMatch=raw.match(/\{[\s\S]*?\}(?=\s*(?:`|$|\n[^{]))/)||raw.match(/\{[\s\S]*\}/);
+        if(jsonMatch){
+          const obj=JSON.parse(jsonMatch[0]);
+          if(obj.karen_action){
+            const msg=obj.message||raw;
+            agentAddMsg('agent',msg);
+            _karenExecuteAction(obj);
+            return;
+          }
         }
       }catch(e){}
     }
@@ -15150,7 +15164,7 @@ function _jarvisRenderMsg(role,text,scroll=true){
   if(!box)return;
   const div=document.createElement('div');
   div.className='jarvis-msg '+(role==='user'?'user':'bot');
-  div.textContent=text;
+  div.innerHTML=_mdToHtml(text);
   if(role!=='user'){
     const btn=document.createElement('button');
     btn.className='jarvis-tts-btn';
