@@ -14778,14 +14778,26 @@ async function agentSendText(text,id){
     // Exécute les actions Karen si JSON
     if(id==='karen'){
       try{
-        // Extrait le premier objet JSON valide même si du texte suit
-        const jsonMatch=raw.match(/\{[\s\S]*?\}(?=\s*(?:`|$|\n[^{]))/)||raw.match(/\{[\s\S]*\}/);
-        if(jsonMatch){
-          const obj=JSON.parse(jsonMatch[0]);
-          if(obj.karen_action){
-            const msg=obj.message||raw;
-            agentAddMsg('agent',msg);
-            _karenExecuteAction(obj);
+        // Normalise les clés (karenaction → karen_action, karenAction → karen_action)
+        const normalize=s=>s.replace(/"karenaction"\s*:/gi,'"karen_action":').replace(/"karenAction"\s*:/gi,'"karen_action":').replace(/"threadid"\s*:/gi,'"thread_id":').replace(/"messageid"\s*:/gi,'"message_id":');
+        const normalized=normalize(raw);
+        // Tente d'extraire un tableau JSON ou plusieurs objets JSON
+        const objects=[];
+        const arrMatch=normalized.match(/\[[\s\S]*\]/);
+        if(arrMatch){try{const arr=JSON.parse(arrMatch[0]);if(Array.isArray(arr))objects.push(...arr);}catch(e){}}
+        if(!objects.length){const re=/\{[^{}]*"karen_action"[^{}]*\}/g;let m;while((m=re.exec(normalized))!==null){try{objects.push(JSON.parse(m[0]));}catch(e){}}}
+        if(!objects.length){const singleMatch=normalized.match(/\{[\s\S]*?\}(?=\s*(?:`|$|\n[^{]))/)||normalized.match(/\{[\s\S]*\}/);if(singleMatch){try{const obj=JSON.parse(singleMatch[0]);if(obj.karen_action)objects.push(obj);}catch(e){}}}
+        if(objects.length){
+          const validObjs=objects.filter(o=>o&&o.karen_action&&o.karen_action!=='none');
+          if(validObjs.length){
+            // Affiche le message du premier objet
+            const firstMsg=validObjs[0].message||objects[0]?.message||'';
+            if(firstMsg)agentAddMsg('agent',firstMsg);
+            // Exécute toutes les actions en séquence (silencieux sauf la dernière)
+            for(let i=0;i<validObjs.length;i++) await _karenExecuteAction(validObjs[i], i<validObjs.length-1);
+            return;
+          } else if(objects[0]?.karen_action==='none'){
+            agentAddMsg('agent',objects[0].message||raw);
             return;
           }
         }
@@ -14804,17 +14816,17 @@ async function agentSendText(text,id){
 }
 
 // ── Karen actions Gmail ───────────────────────────────
-async function _karenExecuteAction(obj){
+async function _karenExecuteAction(obj, silent=false){
   if(!obj||obj.karen_action==='none')return;
   const dot=document.getElementById('agent-karen-dot');
   if(dot)dot.className='agent-status-dot active';
   if(obj.karen_action==='trash_email'&&obj.message_id){
     const r=await karenTrashEmail(obj.message_id);
-    agentAddMsg('agent',r?'✓ Email mis à la corbeille.':'❌ Erreur — vérifie que Gmail est connecté avec les bons droits.');
+    if(!silent)agentAddMsg('agent',r?'✓ Email mis à la corbeille.':'❌ Erreur — vérifie que Gmail est connecté avec les bons droits.');
 
   }else if(obj.karen_action==='trash_thread'&&obj.thread_id){
     const r=await karenTrashThread(obj.thread_id);
-    agentAddMsg('agent',r?'✓ Conversation supprimée.':'❌ Erreur suppression.');
+    if(!silent)agentAddMsg('agent',r?'✓ Conversation supprimée.':'❌ Erreur suppression.');
 
   }else if(obj.karen_action==='create_draft'){
     const r=await karenCreateDraft(obj.to,obj.subject,obj.body,obj.reply_to_message_id);
