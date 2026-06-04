@@ -10958,7 +10958,7 @@ RÈGLES IMPORTANTES :
 - Test : EXACTEMENT 12 questions, 4 de chaque type ci-dessous. Toutes portent uniquement sur le vocabulaire/grammaire de CETTE leçon :
   TYPE "choice" (4 questions) : QCM 4 options. JSON : {"type":"choice","question":"...","options":["...","...","...","..."],"correct_index":0}
   TYPE "write" (4 questions) : L'élève écrit la traduction ou conjugaison. JSON : {"type":"write","question":"Comment dit-on 'X' en espagnol ?","answer":"..."}
-  TYPE "correct" (4 questions) : Une phrase avec UNE erreur grammaticale à corriger. JSON : {"type":"correct","question":"Corrigez : '[phrase avec erreur]'","answer":"[mot correct]","explanation":"[explication]"}
+  TYPE "correct" (4 questions) : Une phrase avec UNE erreur grammaticale CLAIRE et INCONTESTABLE à corriger. L'answer doit être UNIQUEMENT le mot incorrect (pas l'article ni la phrase entière). INTERDIT : phrases sans erreur réelle, erreurs ambiguës ou acceptables des deux façons. JSON : {"type":"correct","question":"Corrigez : '[phrase avec erreur]'","answer":"[UNIQUEMENT le mot corrigé, ex: dormitorios]","explanation":"[explication courte]"}
 - Grammaire : explication claire avec 3 à 5 exemples couvrant toutes les formes enseignées (inclure vosotros si verbe conjugué)
 - Questions rédigées en français correct (pas de coupures "utilis-on" — écrire "utilise-t-on" ou reformuler)
 
@@ -11069,18 +11069,22 @@ function _cecrlRenderQ(){
 }
 
 function cecrlSelectWord(el, word){
-  // Désélectionne tout
-  document.querySelectorAll('.cecrl-word-selected').forEach(e=>{
-    e.classList.remove('cecrl-word-selected');
-    e.style.background='transparent';e.style.borderColor='transparent';
-  });
-  // Sélectionne le mot cliqué
-  el.classList.add('cecrl-word-selected');
-  el.style.background='var(--accent-bg)';
-  el.style.borderColor='var(--accent)';
-  // Met le mot dans le champ
   const inp=document.getElementById('cecrl-write-inp');
-  if(inp){inp.value=word;inp.focus();inp.select();}
+  // Toggle : si déjà sélectionné, retire-le du champ
+  if(el.classList.contains('cecrl-word-selected')){
+    el.classList.remove('cecrl-word-selected');
+    el.style.background='transparent';el.style.borderColor='transparent';
+    if(inp)inp.value=inp.value.replace(word,'').replace(/\s+/,' ').trim();
+    return;
+  }
+  // Sélectionne le mot (accumule si plusieurs)
+  el.classList.add('cecrl-word-selected');
+  el.style.background='var(--accent-bg)';el.style.borderColor='var(--accent)';
+  if(inp){
+    // Ajoute à la suite si déjà quelque chose
+    inp.value=inp.value.trim()?(inp.value.trim()+' / '+word):word;
+    inp.focus();
+  }
 }
 
 function cecrlAnswerWrite(){
@@ -11091,7 +11095,14 @@ function cecrlAnswerWrite(){
   if(!typed)return;
   const correct=q.answer||'';
   const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[¡!¿?.,;:]/g,'').trim();
-  const isOk=norm(typed)===norm(correct);
+  // Matching flexible : accepte réponse exacte OU si la réponse contient tous les mots clés de la correction
+  const normTyped=norm(typed);
+  const normCorrect=norm(correct);
+  // Accepte si les mots principaux (sans articles) correspondent
+  const keyWords=normCorrect.split(/[\s\/,]+/).filter(w=>w.length>2&&!['los','las','una','uno','unos','unas','del','que'].includes(w));
+  const isOk=normTyped===normCorrect||
+    keyWords.length>0&&keyWords.every(kw=>normTyped.includes(kw))||
+    normCorrect.split('/').map(s=>norm(s.trim())).some(alt=>normTyped===alt||normTyped.includes(norm(alt.split(' ').pop())));
   _cecrlTestAnswers[_cecrlTestQ]=isOk?q.correct_index??0:-1;
   if(inp)inp.disabled=true;
   if(inp)inp.style.borderColor=isOk?'#16a34a':'#f44685';
