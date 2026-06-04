@@ -3550,7 +3550,8 @@ const SUPABASE_SKIP_LOAD = new Set([
   'pending_levelup',
   // Local wins — ne jamais écraser avec Supabase
   'day_presets', 'recurring_tasks', 'leitner_cards', 'jarvis_session',
-  'email_agent_last_run', 'followers_last_run'
+  'email_agent_last_run', 'followers_last_run',
+  'player_xp', 'level_history', 'xp_migrated_v2'
 ]);
 
 async function initSupabase() {
