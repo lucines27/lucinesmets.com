@@ -8421,7 +8421,7 @@ document.getElementById('pwd-input').addEventListener('keydown',e=>{
 // ══ BUSINESS ═════════════════════════════════════════════════════
 
 // ── Gmail OAuth ──────────────────────────────────────────────────
-const GMAIL_SCOPE='https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose';
+const GMAIL_SCOPE='https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.readonly';
 const GMAIL_API='https://gmail.googleapis.com/gmail/v1/users/me';
 
 async function connectGmail(){
@@ -8541,7 +8541,11 @@ async function karenSearchEmails(query, maxResults=10){
   if(fetchUgc&&fetchUgc!==fetchFn) promises.push(fetchUgc(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`));
   const results=await Promise.all(promises);
   const allIds=[...new Set([...results.flatMap(r=>r?.messages||[]).map(m=>m.id)])].slice(0,maxResults).map(id=>({id}));
-  if(!allIds.length)return[];
+  if(!allIds.length){
+    const authErr=store.get('gmail_perso_auth_error',null);
+    if(authErr){store.set('gmail_perso_auth_error',null);throw new Error('GMAIL_AUTH_'+authErr);}
+    return[];
+  }
   const data={messages:allIds};
   if(!data?.messages)return [];
   const details=await Promise.all(data.messages.slice(0,maxResults).map(async m=>{
@@ -8644,7 +8648,14 @@ async function gmailPersoFetch(url){
     if(data.access_token){tokens={...tokens,access_token:data.access_token,expires_at:Date.now()+(data.expires_in||3600)*1000};store.set('gmail_perso_tokens',tokens);}
     else return null;
   }
-  try{const r=await fetch(url,{headers:{Authorization:'Bearer '+tokens.access_token}});if(!r.ok)return null;return await r.json();}catch(e){return null;}
+  try{
+    const r=await fetch(url,{headers:{Authorization:'Bearer '+tokens.access_token}});
+    if(!r.ok){
+      if(r.status===403||r.status===401)store.set('gmail_perso_auth_error',r.status);
+      return null;
+    }
+    return await r.json();
+  }catch(e){return null;}
 }
 
 function disconnectGmailPerso(){
@@ -14783,12 +14794,20 @@ async function _karenExecuteAction(obj){
 
   }else if(obj.karen_action==='search'&&obj.query){
     agentAddMsg('agent','🔍 Recherche en cours…');
-    const results=await karenSearchEmails(obj.query,8);
-    if(!results.length){
-      agentAddMsg('agent','Aucun email trouvé pour cette recherche.');
-    }else{
-      const summary=results.map(e=>`• ${e.from.split('<')[0].trim()} — ${e.subject} (${new Date(e.date).toLocaleDateString('fr-FR')})\n  ${e.snippet?.substring(0,80)}…\n  [id:${e.id}]`).join('\n\n');
-      agentAddMsg('agent',`${results.length} email(s) trouvé(s) :\n\n${summary}`);
+    try{
+      const results=await karenSearchEmails(obj.query,8);
+      if(!results.length){
+        agentAddMsg('agent','Aucun email trouvé pour cette recherche.');
+      }else{
+        const summary=results.map(e=>`• ${e.from.split('<')[0].trim()} — ${e.subject} (${new Date(e.date).toLocaleDateString('fr-FR')})\n  ${e.snippet?.substring(0,80)}…\n  [id:${e.id}]`).join('\n\n');
+        agentAddMsg('agent',`${results.length} email(s) trouvé(s) :\n\n${summary}`);
+      }
+    }catch(e){
+      if(e.message&&e.message.startsWith('GMAIL_AUTH_')){
+        agentAddMsg('agent','❌ Gmail perso n\'a pas les droits de lecture (erreur '+e.message.replace('GMAIL_AUTH_','')+').\n\n**Pour corriger :**\n1. Réglages → Gmail perso → Déconnecter\n2. Dans Google Cloud Console → OAuth consent screen → Add or remove scopes → ajouter `gmail.modify` et `gmail.readonly`\n3. Reconnecte Gmail perso');
+      }else{
+        agentAddMsg('agent','❌ Erreur lors de la recherche emails.');
+      }
     }
   }
 }
