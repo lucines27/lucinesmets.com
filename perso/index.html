@@ -14608,10 +14608,6 @@ async function _karenExecuteAction(obj){
   if(!obj||obj.karen_action==='none')return;
   const dot=document.getElementById('agent-karen-dot');
   if(dot)dot.className='agent-status-dot active';
-
-  if(!obj||obj.karen_action==='none')return;
-  const dot=document.getElementById('agent-karen-dot');
-  if(dot)dot.className='agent-status-dot active';
   if(obj.karen_action==='trash_email'&&obj.message_id){
     const r=await karenTrashEmail(obj.message_id);
     agentAddMsg('agent',r?'✓ Email mis à la corbeille.':'❌ Erreur — vérifie que Gmail est connecté avec les bons droits.');
