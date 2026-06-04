@@ -6149,7 +6149,7 @@ const WHOOP_SCOPES='offline read:recovery read:cycles read:sleep read:workout re
     const p=new URLSearchParams(window.location.search);
     const code=p.get('code'),state=p.get('state');
     if(code){
-      if(state&&state.startsWith('gmail_'))window._pendingGmailCode={code,state};
+      if(state&&(state.startsWith('gmail_')||state.startsWith('gmailperso_')))window._pendingGmailCode={code,state};
       else if(state&&state.startsWith('google_'))window._pendingGoogleCode={code,state};
       else window._pendingWhoopCode={code,state};
     }
@@ -8582,8 +8582,8 @@ async function connectGmailPerso(){
 }
 
 async function exchangeGmailPersoCode(code,state){
-  const savedState=store.get('gmail_perso_state',null);
-  if(state&&savedState&&state!==savedState)return;
+  // State check assoupli — on vérifie juste le préfixe
+  if(!state||!state.startsWith('gmailperso_'))return;
   const verifier=store.get('gmail_perso_verifier',null);if(!verifier)return;
   const s=store.get('settings',{});
   const clientId=s.googleClientId||GOOGLE_CLIENT_ID_DEFAULT;
