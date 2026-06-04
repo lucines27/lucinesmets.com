@@ -8533,7 +8533,10 @@ async function karenSearchEmails(query, maxResults=10){
   // Utilise le token disponible : perso en priorité, sinon UGC
   const fetchFn=store.get('gmail_perso_tokens',null)?.access_token ? gmailPersoFetch : gmailFetch;
   // Cherche aussi dans UGC si dispo
-  const fetchUgc=store.get('gmail_tokens',null)?.access_token ? gmailFetch : null;
+  // N'utilise UGC que si son token n'est pas expiré
+  const ugcTokens=store.get('gmail_tokens',null);
+  const ugcValid=ugcTokens?.access_token&&(!ugcTokens.expires_at||Date.now()<ugcTokens.expires_at);
+  const fetchUgc=ugcValid ? gmailFetch : null;
   const promises=[fetchFn(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`)];
   if(fetchUgc&&fetchUgc!==fetchFn) promises.push(fetchUgc(`${GMAIL_API}/messages?q=${encodeURIComponent(query)}&maxResults=${maxResults}`));
   const results=await Promise.all(promises);
