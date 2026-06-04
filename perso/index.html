@@ -2285,22 +2285,24 @@ body.focus-mode #focus-exit-btn{display:flex}
             </select>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-            <select class="setting-input" id="rec-type" style="flex:1" onchange="recurringTypeChange()">
-              <option value="daily">Chaque jour</option>
-              <option value="weekly">Chaque semaine</option>
-              <option value="monthly">Chaque mois</option>
-              <option value="weekdays">Jours de semaine (L-V)</option>
-            </select>
-            <div id="rec-days-wrap" style="display:none;gap:4px;flex-wrap:wrap">
-              <button type="button" class="rec-day-btn" data-day="0" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">L</button>
-              <button type="button" class="rec-day-btn" data-day="1" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">M</button>
-              <button type="button" class="rec-day-btn" data-day="2" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">M</button>
-              <button type="button" class="rec-day-btn" data-day="3" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">J</button>
-              <button type="button" class="rec-day-btn" data-day="4" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">V</button>
-              <button type="button" class="rec-day-btn" data-day="5" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">S</button>
-              <button type="button" class="rec-day-btn" data-day="6" onclick="recurringToggleDay(this)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">D</button>
+            <!-- Type récurrence en pills -->
+            <input type="hidden" id="rec-type" value="daily">
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+              <button type="button" class="rec-type-pill active" data-val="daily" onclick="recSetType(this,'daily')" style="padding:5px 10px;border-radius:10px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Chaque jour</button>
+              <button type="button" class="rec-type-pill" data-val="weekdays" onclick="recSetType(this,'weekdays')" style="padding:5px 10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">L-V</button>
+              <button type="button" class="rec-type-pill" data-val="weekly" onclick="recSetType(this,'weekly')" style="padding:5px 10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Choisir jours</button>
+              <button type="button" class="rec-type-pill" data-val="monthly" onclick="recSetType(this,'monthly')" style="padding:5px 10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Chaque mois</button>
             </div>
-            <input id="rec-month-day" type="number" min="1" max="31" placeholder="Jour du mois" class="setting-input" style="display:none;width:120px">
+            <div id="rec-days-wrap" style="display:none;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+              <button type="button" class="rec-day-btn" data-day="0" onclick="recurringToggleDay(this)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">L</button>
+              <button type="button" class="rec-day-btn" data-day="1" onclick="recurringToggleDay(this)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">M</button>
+              <button type="button" class="rec-day-btn" data-day="2" onclick="recurringToggleDay(this)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">M</button>
+              <button type="button" class="rec-day-btn" data-day="3" onclick="recurringToggleDay(this)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">J</button>
+              <button type="button" class="rec-day-btn" data-day="4" onclick="recurringToggleDay(this)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">V</button>
+              <button type="button" class="rec-day-btn" data-day="5" onclick="recurringToggleDay(this)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">S</button>
+              <button type="button" class="rec-day-btn" data-day="6" onclick="recurringToggleDay(this)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:700;cursor:pointer">D</button>
+            </div>
+            <input id="rec-month-day" type="number" min="1" max="31" placeholder="Jour du mois (ex: 15)" class="setting-input" style="display:none;width:160px">
           </div>
           <div style="display:flex;gap:8px">
             <button class="save-btn" onclick="recurringSave()" style="background:var(--accent);color:#fff;border-color:var(--accent)">✓ Ajouter</button>
@@ -7733,8 +7735,21 @@ function todoMigrateOld(){
 // ══════════════════════════════════════════════
 //  TÂCHES RÉCURRENTES
 // ══════════════════════════════════════════════
+function recSetType(btn, val){
+  document.getElementById('rec-type').value=val;
+  // Met à jour les pills
+  document.querySelectorAll('.rec-type-pill').forEach(b=>{
+    const active=b.dataset.val===val;
+    b.style.background=active?'var(--accent)':'var(--bg)';
+    b.style.color=active?'#fff':'var(--text2)';
+    b.style.borderColor=active?'var(--accent)':'var(--border)';
+  });
+  document.getElementById('rec-days-wrap').style.display=val==='weekly'?'flex':'none';
+  document.getElementById('rec-month-day').style.display=val==='monthly'?'block':'none';
+}
+
 function recurringTypeChange(){
-  const type=document.getElementById('rec-type')?.value;
+  const type=document.getElementById('rec-type')?.value||'daily';
   document.getElementById('rec-days-wrap').style.display=type==='weekly'?'flex':'none';
   document.getElementById('rec-month-day').style.display=type==='monthly'?'block':'none';
 }
