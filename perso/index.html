@@ -14817,7 +14817,12 @@ async function agentSendText(text,id){
 
 // ── Karen actions Gmail ───────────────────────────────
 async function _karenExecuteAction(obj, silent=false){
-  if(!obj||obj.karen_action==='none')return;
+  if(!obj)return;
+  // Normalise les valeurs d'action (trashthread → trash_thread, etc.)
+  if(obj.karen_action){
+    obj.karen_action=obj.karen_action.replace(/trashthread/i,'trash_thread').replace(/trashemail/i,'trash_email').replace(/createdraft/i,'create_draft').replace(/labelemail/i,'label_email');
+  }
+  if(obj.karen_action==='none')return;
   const dot=document.getElementById('agent-karen-dot');
   if(dot)dot.className='agent-status-dot active';
   if(obj.karen_action==='trash_email'&&obj.message_id){
