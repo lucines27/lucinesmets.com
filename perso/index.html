@@ -539,7 +539,8 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .agent-status-dot.active{background:#0d9488;box-shadow:0 0 0 2px rgba(13,148,136,.3)}
 .agent-status-dot.alert{background:#f44685;box-shadow:0 0 0 2px rgba(244,70,133,.3)}
 /* Panneau agent */
-#agent-panel{position:fixed;bottom:0;right:0;left:0;width:100%;max-width:480px;margin:0 auto;max-height:70vh;background:var(--surface);border-radius:20px 20px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.18);display:flex;flex-direction:column;z-index:9990;transform:translateY(100%);pointer-events:none;transition:transform .25s cubic-bezier(.4,0,.2,1);border-top:3px solid var(--accent)}
+#agent-panel{position:fixed;bottom:0;right:0;left:0;width:100%;max-width:680px;margin:0 auto;max-height:88vh;background:var(--surface);border-radius:24px 24px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;z-index:9990;transform:translateY(100%);pointer-events:none;transition:transform .3s cubic-bezier(.4,0,.2,1);border-top:3px solid var(--accent)}
+.agent-msg.agent-email-id{font-size:10px;color:var(--text3);opacity:0.4;font-family:monospace}
 #agent-panel.open{pointer-events:all;}
 #agent-panel.open{transform:translateY(0)}
 .agent-panel-header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -14594,11 +14595,13 @@ Tu as accès à Gmail (smets.lucine@gmail.com). Quand l'utilisateur te demande d
 {"karen_action":"none","message":"Ta réponse normale"}
 
 REQUÊTES GMAIL VALIDES (syntaxe exacte) :
-- Newsletters/pubs : "category:promotions" ou "unsubscribe"
+- Newsletters/pubs PARTOUT (boîte principale + promotions) : "unsubscribe newer_than:60d" — cherche dans toute la boîte
+- Promotions seulement : "category:promotions newer_than:30d"
 - Emails non lus : "is:unread"
 - Emails récents : "newer_than:7d" ou "newer_than:30d"
 - Par expéditeur : "from:example.com"
 - JAMAIS de wildcards (*) dans from:
+- Pour nettoyer newsletters : utilise TOUJOURS "unsubscribe newer_than:60d" pour couvrir toute la boîte
 
 Ignore le filtre de date "Depuis le" pour les recherches larges. Utilise "newer_than:30d" par défaut.
 Réponds TOUJOURS en JSON strict. En français, sois concise.`,
@@ -14713,6 +14716,7 @@ function _mdToHtml(text){
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')  // **gras**
     .replace(/\*(.+?)\*/g,'<strong>$1</strong>')       // *gras*
     .replace(/_(.+?)_/g,'<em>$1</em>')                 // _italique_
+    .replace(/\[id:[^\]]+\]/g,m=>`<span style="font-size:9px;opacity:0.3;font-family:monospace">${m}</span>`)  // IDs discrets
     .replace(/\n/g,'<br>');                            // sauts de ligne
 }
 
