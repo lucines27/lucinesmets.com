@@ -14589,7 +14589,7 @@ const AGENTS={
 Tu as accès à Gmail (smets.lucine@gmail.com). Quand l'utilisateur te demande d'agir, réponds en JSON strict (PAS de markdown) :
 
 {"karen_action":"search","query":"[REQUÊTE GMAIL VALIDE]","message":"Ce que tu fais"}
-{"karen_action":"trash_thread","thread_id":"[threadId du résultat de recherche]","message":"Ce que tu dis"}
+{"karen_action":"trash_thread","thread_id":"[valeur après t: dans les résultats]","message":"Ce que tu dis"}
 {"karen_action":"create_draft","to":"...","subject":"...","body":"...","message":"Ce que tu dis"}
 {"karen_action":"none","message":"Ta réponse normale"}
 
@@ -14767,7 +14767,7 @@ async function agentSendText(text,id){
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:500,
+      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:3000,
         system:ag.system+(context?'\n\n## Contexte actuel\n'+context:''),
         messages:history})
     });
@@ -14851,7 +14851,7 @@ async function _karenExecuteAction(obj, silent=false){
       if(!results.length){
         agentAddMsg('agent','Aucun email trouvé pour cette recherche.');
       }else{
-        const summary=results.map(e=>`• ${e.from.split('<')[0].trim()} — ${e.subject} (${new Date(e.date).toLocaleDateString('fr-FR')})\n  ${e.snippet?.substring(0,80)}…\n  [id:${e.id}] [threadId:${e.threadId}]`).join('\n\n');
+        const summary=results.map(e=>`• ${e.from.split('<')[0].replace(/"/g,'').trim().substring(0,25)} — ${e.subject?.substring(0,40)} [id:${e.id}|t:${e.threadId}]`).join('\n');
         agentAddMsg('agent',`${results.length} email(s) trouvé(s) :\n\n${summary}`);
       }
     }catch(e){
