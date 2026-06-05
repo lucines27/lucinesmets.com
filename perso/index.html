@@ -14589,7 +14589,7 @@ const AGENTS={
 Tu as accès à Gmail (smets.lucine@gmail.com). Quand l'utilisateur te demande d'agir, réponds en JSON strict (PAS de markdown) :
 
 {"karen_action":"search","query":"[REQUÊTE GMAIL VALIDE]","message":"Ce que tu fais"}
-{"karen_action":"trash_thread","thread_id":"...","message":"Ce que tu dis"}
+{"karen_action":"trash_thread","thread_id":"[threadId du résultat de recherche]","message":"Ce que tu dis"}
 {"karen_action":"create_draft","to":"...","subject":"...","body":"...","message":"Ce que tu dis"}
 {"karen_action":"none","message":"Ta réponse normale"}
 
@@ -14829,8 +14829,11 @@ async function _karenExecuteAction(obj, silent=false){
     const r=await karenTrashEmail(obj.message_id);
     if(!silent)agentAddMsg('agent',r?'✓ Email mis à la corbeille.':'❌ Erreur — vérifie que Gmail est connecté avec les bons droits.');
 
-  }else if(obj.karen_action==='trash_thread'&&obj.thread_id){
-    const r=await karenTrashThread(obj.thread_id);
+  }else if(obj.karen_action==='trash_thread'&&(obj.thread_id||obj.message_id)){
+    const tid=obj.thread_id||obj.message_id;
+    // Essaie thread API puis message API (IDs parfois identiques pour newsletters)
+    let r=await karenTrashThread(tid);
+    if(!r) r=await karenTrashEmail(tid);
     if(!silent)agentAddMsg('agent',r?'✓ Conversation supprimée.':'❌ Erreur suppression.');
 
   }else if(obj.karen_action==='create_draft'){
@@ -14844,11 +14847,11 @@ async function _karenExecuteAction(obj, silent=false){
   }else if(obj.karen_action==='search'&&obj.query){
     agentAddMsg('agent','🔍 Recherche en cours…');
     try{
-      const results=await karenSearchEmails(obj.query,8);
+      const results=await karenSearchEmails(obj.query,25);
       if(!results.length){
         agentAddMsg('agent','Aucun email trouvé pour cette recherche.');
       }else{
-        const summary=results.map(e=>`• ${e.from.split('<')[0].trim()} — ${e.subject} (${new Date(e.date).toLocaleDateString('fr-FR')})\n  ${e.snippet?.substring(0,80)}…\n  [id:${e.id}]`).join('\n\n');
+        const summary=results.map(e=>`• ${e.from.split('<')[0].trim()} — ${e.subject} (${new Date(e.date).toLocaleDateString('fr-FR')})\n  ${e.snippet?.substring(0,80)}…\n  [id:${e.id}] [threadId:${e.threadId}]`).join('\n\n');
         agentAddMsg('agent',`${results.length} email(s) trouvé(s) :\n\n${summary}`);
       }
     }catch(e){
