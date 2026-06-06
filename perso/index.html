@@ -14793,9 +14793,9 @@ async function agentSendText(text,id){
 
     // Exécute les actions Karen si JSON
     if(id==='karen'){
-      const msg_lower=msg.trim().toLowerCase();
+      const msg_lower=text.trim().toLowerCase();
       if((msg_lower.includes('supprim')&&(msg_lower.includes('tout')||msg_lower.includes('les')||msg_lower.includes('all')))&&window._karenLastResults?.length){
-        agentAddMsg('user',msg);
+        // user msg already added by normal flow
         agentAddMsg('agent',`🗑️ Suppression de ${window._karenLastResults.length} email(s)...`);
         const toDelete=[...window._karenLastResults];
         window._karenLastResults=[];
@@ -14806,7 +14806,7 @@ async function agentSendText(text,id){
           r2?ok++:fail++;
         }
         agentAddMsg('agent',`✅ ${ok} email(s) supprimé(s)${fail?' | ❌ '+fail+' erreur(s)':''}`);
-        (_agentSessions[id]=_agentSessions[id]||[]).push({role:'user',content:msg});
+        (_agentSessions[id]=_agentSessions[id]||[]).push({role:'user',content:text});
         return;
       }
       try{
