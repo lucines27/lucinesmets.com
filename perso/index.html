@@ -14793,6 +14793,22 @@ async function agentSendText(text,id){
 
     // Exécute les actions Karen si JSON
     if(id==='karen'){
+      const msg_lower=msg.trim().toLowerCase();
+      if((msg_lower.includes('supprim')&&(msg_lower.includes('tout')||msg_lower.includes('les')||msg_lower.includes('all')))&&window._karenLastResults?.length){
+        agentAddMsg('user',msg);
+        agentAddMsg('agent',`🗑️ Suppression de ${window._karenLastResults.length} email(s)...`);
+        const toDelete=[...window._karenLastResults];
+        window._karenLastResults=[];
+        let ok=0,fail=0;
+        for(const e of toDelete){
+          const r=await karenTrashThread(e.threadId||e.id);
+          const r2=r||await karenTrashEmail(e.id);
+          r2?ok++:fail++;
+        }
+        agentAddMsg('agent',`✅ ${ok} email(s) supprimé(s)${fail?' | ❌ '+fail+' erreur(s)':''}`);
+        (_agentSessions[id]=_agentSessions[id]||[]).push({role:'user',content:msg});
+        return;
+      }
       try{
         // Normalise les clés (karenaction → karen_action, karenAction → karen_action)
         const normalize=s=>s.replace(/"karenaction"\s*:/gi,'"karen_action":').replace(/"karenAction"\s*:/gi,'"karen_action":').replace(/"threadid"\s*:/gi,'"thread_id":').replace(/"messageid"\s*:/gi,'"message_id":');
@@ -14869,6 +14885,7 @@ async function _karenExecuteAction(obj, silent=false){
       }else{
         const summary=results.map(e=>`• ${e.from.split('<')[0].replace(/"/g,'').trim().substring(0,25)} — ${e.subject?.substring(0,40)} [id:${e.id}|t:${e.threadId}]`).join('\n');
         agentAddMsg('agent',`${results.length} email(s) trouvé(s) :\n\n${summary}`);
+        window._karenLastResults=results;
       }
     }catch(e){
       if(e.message&&e.message.startsWith('GMAIL_AUTH_')){
@@ -15288,25 +15305,18 @@ function _jarvisPageContext(){
 // ── Greeting du matin ────────────────────────────────
 async function jarvisGreeting(){
   const apiKey=store.get('settings',{}).apiKey||'';
-  if(!apiKey){_jarvisRenderMsg('bot','Configure ta clé API dans les Réglages pour démarrer Jarvis.');return;}
-  const xpS=xpGetState();
-  const lv=xpLevelFor(xpS.total||0);
-  const lvName=SPRITE_LEVELS[lv-1]?.name||'';
+  if(!apiKey){_jarvisRenderMsg('bot','Configure ta clé API dans les Réglages.');return;}
   const today=todayKey(0);
   const todos=store.get('todo_'+today,[]);
-  const done=todos.filter(t=>t.done).length;
-  const total=todos.length;
-  const habits=store.get('habits_'+today,{});
-  const habitList=store.get('habits',[]);
-  const habitsDone=habitList.filter(h=>habits[h.id]).length;
-  const scoreToday=store.get('atlas_score_'+today,null);
-  const context=`Lucine - LV${lv} ${lvName} - ${xpS.total||0} XP.
-Tâches: ${done}/${total} complétées.
-Habitudes: ${habitsDone}/${habitList.length} faites.
-${scoreToday?'Score Atlas: '+scoreToday+'/100.':''}`;
-  const prompt=`Bilan rapide du jour pour Lucine (3 phrases MAX, ton direct et concis, pas de "bonjour"): ${context}`;
+  const done=todos.filter(t=>t.done).length,total=todos.length,remaining=total-done;
+  const habits=store.get('habits',[]);
+  const hDone=Object.keys(store.get('habits_'+today,{})).length;
+  const h=new Date().getHours();
+  const moment=h<12?'matin':h<18?'après-midi':'soir';
+  const ctx=remaining>0?`${remaining} tâche(s) à faire sur ${total}`:`Toutes les tâches faites (${total})`;
+  const prompt=`Analyse en 2 phrases MAX, ${moment}, direct, pas de formule de politesse ni de mention du niveau ou XP: ${ctx}, ${hDone}/${habits.length} habitudes faites.`;
   _jarvisShowTyping();
-  fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:200,messages:[{role:'user',content:prompt}]})})
+  fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:120,messages:[{role:'user',content:prompt}]})})
   .then(r=>r.json()).then(d=>{_jarvisHideTyping();const t=d.content?.[0]?.text||'';if(t)_jarvisRenderMsg('bot',t);}).catch(()=>_jarvisHideTyping());
 }
 
