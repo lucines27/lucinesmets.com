@@ -8028,7 +8028,7 @@ function changeTodoDay(dir){
 
 function renderHomeTodo(){
   const isToday=_todoOffset===0;
-  const isReadonly=_todoOffset<0;
+  const isReadonly=_todoOffset<-1;
 
   // ── Nav ──
   const prevBtn=document.getElementById('todo-prev');
