@@ -14886,6 +14886,19 @@ async function _karenExecuteAction(obj, silent=false){
         const summary=results.map(e=>`• ${e.from.split('<')[0].replace(/"/g,'').trim().substring(0,25)} — ${e.subject?.substring(0,40)} [id:${e.id}|t:${e.threadId}]`).join('\n');
         agentAddMsg('agent',`${results.length} email(s) trouvé(s) :\n\n${summary}`);
         window._karenLastResults=results;
+        // Bouton suppression directe
+        const _delBtn=document.createElement('button');
+        _delBtn.textContent='🗑️ Supprimer les '+results.length+' emails';
+        _delBtn.style.cssText='background:var(--pink);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;cursor:pointer;margin:6px 0;font-family:inherit;font-weight:600';
+        _delBtn.onclick=async function(){
+          this.disabled=true;this.textContent='⏳ Suppression...';
+          const toDelete=[...window._karenLastResults];window._karenLastResults=[];
+          let ok=0,fail=0;
+          for(const e of toDelete){const r=await karenTrashThread(e.threadId||e.id)||await karenTrashEmail(e.id);r?ok++:fail++;}
+          this.textContent='✅ '+ok+' supprimé(s)'+(fail?' | ❌ '+fail:'');
+          setTimeout(()=>this.remove(),3000);
+        };
+        document.getElementById('ap-msgs')?.appendChild(_delBtn);
       }
     }catch(e){
       if(e.message&&e.message.startsWith('GMAIL_AUTH_')){
