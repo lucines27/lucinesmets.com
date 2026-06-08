@@ -2357,11 +2357,11 @@ body.focus-mode #focus-exit-btn{display:flex}
             </div>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="save-btn" onclick="presetSave()" style="background:var(--accent);color:#fff;border-color:var(--accent)">✓ Créer le préset</button>
-            <button class="save-btn" onclick="document.getElementById('preset-add-form').style.display='none'">Annuler</button>
+            <button class="save-btn" id="preset-save-btn" onclick="presetSave()" style="background:var(--accent);color:#fff;border-color:var(--accent)">✓ Créer le préset</button>
+            <button class="save-btn" onclick="_presetEditId=null;document.getElementById('preset-add-form').style.display='none';const b=document.getElementById('preset-save-btn');if(b)b.textContent='✓ Créer le préset'">Annuler</button>
           </div>
         </div>
-        <button class="add-habit-btn" onclick="document.getElementById('preset-add-form').style.display='block';document.getElementById('preset-name').focus();_presetTempTasks=[];renderPresetTasksList();presetRecTypeChange()">+ Nouveau préset</button>
+        <button class="add-habit-btn" onclick="_presetEditId=null;document.getElementById('preset-add-form').style.display='block';document.getElementById('preset-name').value='';document.getElementById('preset-name').focus();_presetTempTasks=[];renderPresetTasksList();document.getElementById('preset-rec-type').value='manual';presetRecTypeChange();const b=document.getElementById('preset-save-btn');if(b)b.textContent='✓ Créer le préset'">+ Nouveau préset</button>
       </div>
 
     </div>
@@ -7851,6 +7851,33 @@ function renderRecurring(){
 //  PRÉSETS DE JOURNÉE
 // ══════════════════════════════════════════════
 let _presetTempTasks=[];
+let _presetEditId=null;
+
+function presetEdit(id){
+  const p=store.get('day_presets',[]).find(x=>x.id===id);
+  if(!p)return;
+  _presetEditId=id;
+  _presetTempTasks=p.tasks.map(t=>({...t}));
+  const nameInp=document.getElementById('preset-name');
+  if(nameInp)nameInp.value=p.name;
+  const typeSel=document.getElementById('preset-rec-type');
+  if(typeSel)typeSel.value=p.type||'manual';
+  presetRecTypeChange();
+  document.querySelectorAll('.preset-day-btn').forEach(b=>{
+    const d=parseInt(b.dataset.day);
+    const sel=(p.days||[]).includes(d);
+    b.classList.toggle('selected',sel);
+    b.style.background=sel?'var(--accent)':'var(--bg)';
+    b.style.color=sel?'#fff':'var(--text2)';
+    b.style.borderColor=sel?'var(--accent)':'var(--border)';
+  });
+  renderPresetTasksList();
+  const form=document.getElementById('preset-add-form');
+  if(form){form.style.display='block';form.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  if(nameInp)nameInp.focus();
+  const saveBtn=document.getElementById('preset-save-btn');
+  if(saveBtn)saveBtn.textContent='✓ Enregistrer les modifications';
+}
 
 function presetRecTypeChange(){
   const type=document.getElementById('preset-rec-type')?.value;
@@ -7900,22 +7927,36 @@ function presetSave(){
   const type=document.getElementById('preset-rec-type')?.value||'manual';
   const days=[];
   if(type==='weekly') document.querySelectorAll('.preset-day-btn.selected').forEach(b=>days.push(parseInt(b.dataset.day)));
-  const preset={
-    id:'preset_'+Date.now(),name,
-    tasks:[..._presetTempTasks],
-    type,days,active:true,
-    createdAt:Date.now()
-  };
   const presets=store.get('day_presets',[]);
-  presets.push(preset);
-  store.set('day_presets',presets);
+  let toastMsg;
+  if(_presetEditId){
+    const idx=presets.findIndex(p=>p.id===_presetEditId);
+    if(idx>-1){
+      presets[idx]={...presets[idx],name,tasks:[..._presetTempTasks],type,days};
+      store.set('day_presets',presets);
+    }
+    toastMsg=`✓ Préset "${name}" modifié`;
+    _presetEditId=null;
+  }else{
+    const preset={
+      id:'preset_'+Date.now(),name,
+      tasks:[..._presetTempTasks],
+      type,days,active:true,
+      createdAt:Date.now()
+    };
+    presets.push(preset);
+    store.set('day_presets',presets);
+    toastMsg=`✓ Préset "${name}" créé`;
+  }
   // Reset
   _presetTempTasks=[];
   document.getElementById('preset-name').value='';
   document.getElementById('preset-rec-type').value='manual';
   document.getElementById('preset-add-form').style.display='none';
+  const saveBtn=document.getElementById('preset-save-btn');
+  if(saveBtn)saveBtn.textContent='✓ Créer le préset';
   renderPresets();
-  toast(`✓ Préset "${name}" créé`);
+  toast(toastMsg);
 }
 
 function presetApply(id){
@@ -7961,6 +8002,7 @@ function renderPresets(){
         ${isDue?'<span style="font-size:9px;padding:2px 6px;background:var(--accent-bg);color:var(--accent);border-radius:6px;font-weight:700">Aujourd\'hui</span>':''}
         <div style="font-weight:700;font-size:13px;flex:1">${p.name}</div>
         <span style="font-size:10px;color:var(--text3)">${p.tasks.length} tâche${p.tasks.length>1?'s':''} · ${typeLabel}</span>
+        <button onclick="presetEdit('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:0 2px" title="Modifier">✏️</button>
         <button onclick="presetDelete('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 2px">✕</button>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
