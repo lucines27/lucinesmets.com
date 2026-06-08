@@ -15037,17 +15037,59 @@ async function _julietteExecuteAction(obj, silent=false){
   if(dot)dot.className='agent-status-dot active';
   if(obj.juliette_action==='prospecter'){
     const niche=obj.niche||'';
+    const parseBrands=(data)=>{
+      let arr=null;
+      if(Array.isArray(data))arr=data;
+      else if(data&&typeof data==='object'){
+        for(const k of ['marques','brands','results','data','items']){
+          if(Array.isArray(data[k])){arr=data[k];break;}
+        }
+        if(!arr){
+          // peut-être un objet unique
+          if(data.nom||data.name||data.marque||data.brand)arr=[data];
+        }
+      }
+      if(!arr)return [];
+      return arr.map(b=>({
+        nom: b.nom||b.name||b.marque||b.brand||'(sans nom)',
+        instagram: b.instagram||b.insta||b.handle||b.compte||'',
+        produit: b.produit||b.product||b.description||'',
+        raison: b.raison||b.pourquoi||b.reason||b.why||b.justification||''
+      }));
+    };
+    const formatLot=(brands)=>brands.map(b=>{
+      const handle=b.instagram?` (@${b.instagram.replace(/^@/,'')})`:'';
+      const parts=[b.nom+handle, b.produit, b.raison].filter(Boolean);
+      return `* ${parts.join(' — ')}`;
+    }).join('\n');
     try{
       agentAddMsg('agent',`🚀 Lancement de la prospection pour "${niche}" — premier lot de marques (1/2)...`);
-      await fetch('https://hook.eu2.make.com/xwxy7tbrohppsmlb1ee2vmywk1shuof2',{
+      const r1=await fetch('https://hook.eu2.make.com/xwxy7tbrohppsmlb1ee2vmywk1shuof2',{
         method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({niche})
       });
+      let data1=null; try{data1=await r1.json();}catch(e){try{data1=await r1.text();}catch(e2){}}
+      const lot1=parseBrands(data1);
+
       await new Promise(r=>setTimeout(r,3000));
       agentAddMsg('agent',`🔄 Deuxième lot en cours (2/2)...`);
-      await fetch('https://hook.eu2.make.com/xwxy7tbrohppsmlb1ee2vmywk1shuof2',{
+      const r2=await fetch('https://hook.eu2.make.com/xwxy7tbrohppsmlb1ee2vmywk1shuof2',{
         method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({niche})
       });
-      if(!silent)agentAddMsg('agent',`✅ Prospection lancée pour "${niche}" — 10 marques en cours de traitement. Tu recevras les résultats dans ton pipeline Notion.`);
+      let data2=null; try{data2=await r2.json();}catch(e){try{data2=await r2.text();}catch(e2){}}
+      const lot2=parseBrands(data2);
+
+      if(!silent){
+        let out='';
+        if(lot1.length||lot2.length){
+          if(lot1.length)out+=`**Lot 1 :**\n${formatLot(lot1)}`;
+          if(lot2.length)out+=`${out?'\n\n':''}**Lot 2 :**\n${formatLot(lot2)}`;
+          const allNames=[...lot1,...lot2].map(b=>b.nom).join(', ');
+          if(allNames)out+=`\n\n📋 Copie dans Claude.ai pour trouver les emails :\nTrouve les emails de contact de ces 10 marques : ${allNames}`;
+        } else {
+          out='✅ Prospection terminée, mais je n\'ai pas réussi à lire les marques dans la réponse du webhook. Vérifie le format renvoyé par Make.';
+        }
+        agentAddMsg('agent',out);
+      }
     }catch(e){
       agentAddMsg('agent','❌ Erreur lors de la prospection — vérifie que le webhook Make est actif.');
     }
