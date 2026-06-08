@@ -14607,17 +14607,19 @@ Tu as accès à Gmail (smets.lucine@gmail.com). Quand l'utilisateur te demande d
 {"karen_action":"none","message":"Ta réponse normale"}
 
 REQUÊTES GMAIL VALIDES (syntaxe exacte) :
-- Newsletters/pubs PARTOUT (boîte principale + promotions) : "unsubscribe newer_than:60d" — cherche dans toute la boîte
+- Newsletters/pubs PARTOUT (boîte principale + promotions) : combine PLUSIEURS requêtes pour ne rien rater, ex : "unsubscribe newer_than:60d", "category:promotions newer_than:60d", "list:unsubscribe newer_than:60d", "(newsletter OR unsubscribe OR \"se désabonner\" OR \"désinscrire\") newer_than:60d" — ne te limite JAMAIS à une seule requête : beaucoup de newsletters atterrissent dans la boîte principale et n'ont pas toutes le mot "unsubscribe" détecté par Gmail
 - Promotions seulement : "category:promotions newer_than:30d"
+- Coupons / codes promo / cadeaux / offres spéciales (cherche PARTOUT, principale + promotions) : "(coupon OR \"code promo\" OR \"code de réduction\" OR cadeau OR gratuit OR réduction OR rabais OR offre OR \"% de réduction\" OR -25% OR -30%) newer_than:30d" — repère ces emails, résume l'offre et la date d'expiration si mentionnée, et signale ceux qui semblent intéressants
 - Emails non lus : "is:unread"
 - Emails récents : "newer_than:7d" ou "newer_than:30d"
 - Par expéditeur : "from:example.com"
 - JAMAIS de wildcards (*) dans from:
-- Pour nettoyer newsletters : utilise TOUJOURS "unsubscribe newer_than:60d" pour couvrir toute la boîte
+- Pour nettoyer newsletters : lance plusieurs recherches successives ("unsubscribe newer_than:60d" PUIS "category:promotions newer_than:60d" PUIS "list:unsubscribe newer_than:60d") pour couvrir toute la boîte (principale ET promotions), pas seulement les emails déjà tagués "promotions" par Gmail
+- Recherche TOUJOURS dans toute la boîte par défaut (ne te limite pas à "category:promotions" sauf si l'utilisateur le précise) : la boîte principale contient aussi des newsletters, coupons et offres que Gmail n'a pas catégorisés
 
 Ignore le filtre de date "Depuis le" pour les recherches larges. Utilise "newer_than:30d" par défaut.
 Réponds TOUJOURS en JSON strict. En français, sois concise.`,
-    actions:['📬 Nouveaux emails UGC','📤 Relances en attente','🗑️ Nettoyer newsletters','📊 Pipeline UGC']
+    actions:['📬 Nouveaux emails UGC','📤 Relances en attente','🗑️ Nettoyer newsletters','🎁 Coupons & cadeaux','📊 Pipeline UGC']
   },
   atlas:{
     avatar:'💼',name:'Atlas',role:'Business & ZiNRAi',
