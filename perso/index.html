@@ -3291,7 +3291,7 @@ body.focus-mode #focus-exit-btn{display:flex}
               <div class="setting-lbl" style="color:#7c3aed;font-weight:600">🧠 Obsidian — Mémoire longue durée</div>
               <span id="obsidian-note-count" style="font-size:11px;color:var(--text3)"></span>
             </div>
-            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27123</div></div><input class="setting-input" id="obsidian-port" placeholder="27123" oninput="saveSettings()"></div>
+            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27124</div></div><input class="setting-input" id="obsidian-port" placeholder="27124" oninput="saveSettings()"></div>
             <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
             <div class="setting-row" style="margin-top:8px">
               <div><div class="setting-lbl">🧠 Mémoire Obsidian activée</div><div class="setting-sub">Journal, Bible, Livres, Coach IA, Stats</div></div>
@@ -5357,7 +5357,9 @@ function loadSettings(){
   if(s.nordigenSecretId)document.getElementById('nordigen-secret-id').value=s.nordigenSecretId;
   if(s.nordigenSecretKey)document.getElementById('nordigen-secret-key').value=s.nordigenSecretKey;
   if(s.obsidianPort)document.getElementById('obsidian-port').value=s.obsidianPort;
+  else document.getElementById('obsidian-port').value='27124';
   if(s.obsidianKey)document.getElementById('obsidian-key').value=s.obsidianKey;
+  else document.getElementById('obsidian-key').value='2cca484a2774acf10e0f6edc8f20e5adeb94639ffbf2b515b3a36e16eb69c09d';
   const obsToggle=document.getElementById('obsidian-enabled-toggle');
   const obsLbl=document.getElementById('obsidian-enabled-lbl');
   if(obsToggle){const en=store.get('obsidian_enabled',false);obsToggle.checked=en;if(obsLbl)obsLbl.textContent=en?'On':'Off';}
@@ -5399,7 +5401,7 @@ function saveSettings(){
     googleClientSecret:document.getElementById('gcal-client-secret').value.trim()||GOOGLE_CLIENT_SECRET_DEFAULT,
     nordigenSecretId:document.getElementById('nordigen-secret-id').value.trim(),
     nordigenSecretKey:document.getElementById('nordigen-secret-key').value.trim(),
-    obsidianPort:document.getElementById('obsidian-port')?.value.trim()||'27123',
+    obsidianPort:document.getElementById('obsidian-port')?.value.trim()||'27124',
     obsidianKey:document.getElementById('obsidian-key')?.value.trim()||'',
   };
   store.set('settings',s);
@@ -5409,7 +5411,7 @@ function saveSettings(){
 async function obsidianWrite(folder, filename, content){
   if(!store.get('obsidian_enabled',false))return;
   const s=store.get('settings',{});
-  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27124';
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return;
   try{
@@ -5428,7 +5430,7 @@ async function obsidianWrite(folder, filename, content){
 async function loadJarvisMemory(){
   if(!store.get('obsidian_enabled',false))return'';
   const s=store.get('settings',{});
-  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27124';
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return'';
   try{
@@ -5477,7 +5479,7 @@ async function jarvisSaveConversation(){
 
 async function obsidianCountNotes(){
   const s=store.get('settings',{});
-  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27124';
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   const el=document.getElementById('obsidian-note-count');
   if(!key||!el)return;
@@ -5528,7 +5530,7 @@ async function obsidianNightlySync(){
 
 async function obsidianTest(){
   const s=store.get('settings',{});
-  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27123';
+  const port=document.getElementById('obsidian-port')?.value||s.obsidianPort||'27124';
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   const res=document.getElementById('obsidian-test-result');
   if(!key){if(res)res.textContent='⚠ Clé API manquante';return;}
