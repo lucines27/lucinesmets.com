@@ -3291,7 +3291,7 @@ body.focus-mode #focus-exit-btn{display:flex}
               <div class="setting-lbl" style="color:#7c3aed;font-weight:600">🧠 Obsidian — Mémoire longue durée</div>
               <span id="obsidian-note-count" style="font-size:11px;color:var(--text3)"></span>
             </div>
-            <div class="setting-row"><div><div class="setting-lbl">Port Local REST API</div><div class="setting-sub">Défaut : 27124</div></div><input class="setting-input" id="obsidian-port" placeholder="27124" oninput="saveSettings()"></div>
+            <div class="setting-row"><div><div class="setting-lbl">Serveur Obsidian (VPS)</div><div class="setting-sub">push.lucinesmets.com/obsidian</div></div><input class="setting-input" id="obsidian-port" placeholder="27124" oninput="saveSettings()"></div>
             <div class="setting-row" style="margin-top:8px"><div><div class="setting-lbl">Clé API Obsidian</div></div><input class="setting-input" id="obsidian-key" type="password" placeholder="clé API…" oninput="saveSettings()"></div>
             <div class="setting-row" style="margin-top:8px">
               <div><div class="setting-lbl">🧠 Mémoire Obsidian activée</div><div class="setting-sub">Journal, Bible, Livres, Coach IA, Stats</div></div>
@@ -5418,7 +5418,7 @@ async function obsidianWrite(folder, filename, content){
     // Encode chaque segment séparément pour préserver les / dans le chemin
     const folderPath=folder.split('/').map(s=>encodeURIComponent(s)).join('/');
     const filePath=encodeURIComponent(filename);
-    const resp=await fetch(`https://127.0.0.1:${port}/vault/${folderPath}/${filePath}.md`,{
+    const resp=await fetch(`https://push.lucinesmets.com/obsidian/vault/${folderPath}/${filePath}.md`,{
       method:'PUT',
       headers:{'Authorization':`Bearer ${key}`,'Content-Type':'text/markdown'},
       body:content
@@ -5434,14 +5434,14 @@ async function loadJarvisMemory(){
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return'';
   try{
-    const res=await fetch(`https://127.0.0.1:${port}/vault/M%C3%A9moire%20Jarvis/`,{
+    const res=await fetch(`https://push.lucinesmets.com/obsidian/vault/M%C3%A9moire%20Jarvis/`,{
       headers:{'Authorization':`Bearer ${key}`}
     });
     if(!res.ok)return'';
     const data=await res.json();
     const files=(data.files||[]).filter(f=>f.endsWith('.md')).slice(-5);
     const contents=await Promise.all(files.map(f=>
-      fetch(`https://127.0.0.1:${port}/vault/${encodeURIComponent(f)}`,{
+      fetch(`https://push.lucinesmets.com/obsidian/vault/${encodeURIComponent(f)}`,{
         headers:{'Authorization':`Bearer ${key}`}
       }).then(r=>r.ok?r.text():'').catch(()=>'')
     ));
@@ -5484,7 +5484,7 @@ async function obsidianCountNotes(){
   const el=document.getElementById('obsidian-note-count');
   if(!key||!el)return;
   try{
-    const r=await fetch(`https://127.0.0.1:${port}/vault/M%C3%A9moire%20Jarvis/`,{headers:{'Authorization':`Bearer ${key}`}});
+    const r=await fetch(`https://push.lucinesmets.com/obsidian/vault/M%C3%A9moire%20Jarvis/`,{headers:{'Authorization':`Bearer ${key}`}});
     if(!r.ok){el.textContent='—';return;}
     const data=await r.json();
     el.textContent=(data.files||[]).filter(f=>f.endsWith('.md')).length+' notes';
@@ -5535,9 +5535,9 @@ async function obsidianTest(){
   const res=document.getElementById('obsidian-test-result');
   if(!key){if(res)res.textContent='⚠ Clé API manquante';return;}
   try{
-    const r=await fetch(`https://127.0.0.1:${port}/`,{headers:{'Authorization':`Bearer ${key}`}});
+    const r=await fetch(`https://push.lucinesmets.com/obsidian/`,{headers:{'Authorization':`Bearer ${key}`}});
     if(res)res.textContent=r.ok?'Connecté ✓':'Erreur '+r.status;
-  }catch(e){if(res)res.textContent='Erreur (Obsidian ouvert ?)';}
+  }catch(e){if(res)res.textContent='Erreur (VPS ou clé invalide)';}
 }
 
 function updateWhoopOauthStatus(){
