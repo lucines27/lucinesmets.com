@@ -8038,7 +8038,9 @@ function todoRollover(){
   pastItems.filter(t=>!t.done&&!todayIds.has(t.id)).forEach(t=>{
     const copy={
       id:'td_r'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
-      text:t.text,done:false,createdAt:Date.now()
+      text:t.text,done:false,createdAt:Date.now(),
+      ...(t.difficulty?{difficulty:t.difficulty}:{}),
+      ...(t.category?{category:t.category}:{})
     };
     todayItems.push(copy);todayIds.add(copy.id);
   });
