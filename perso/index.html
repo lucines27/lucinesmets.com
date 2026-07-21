@@ -15688,8 +15688,11 @@ async function _jarvisSendText(text){
   // Construit les messages (10 derniers)
   const history=_jarvisSession.slice(-10).map(m=>({role:m.role==='bot'?'assistant':m.role,content:m.content}));
 
+  // Charge mémoire Obsidian si activée
+  const obsidianMem=await loadJarvisMemory();
+
   // System prompt avec instruction action
-  const system=_jarvisPageContext()+`
+  const system=_jarvisPageContext()+(obsidianMem?`\n\n## Mémoire Obsidian de Lucine\n${obsidianMem}\n\n`:'')+`
 
 Si la demande implique une action sur le dashboard, réponds UNIQUEMENT en JSON STRICT (pas de markdown, pas de backticks) :
 {"action":"add_todo","params":{"text":"..."},"message":"ta réponse en français"}
