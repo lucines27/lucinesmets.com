@@ -5454,15 +5454,28 @@ async function obsidianWrite(folder,filename,content){
 
 async function loadJarvisMemory(){
   if(!store.get('obsidian_enabled',false))return'';
+  // Notes clés à toujours lire (Mémoire Jarvis + notes personnelles déconnectées du graph)
+  const KEY_NOTES=[
+    'mémoire jarvis.md',
+    'mémoire jarvis/imports/synthèse des informations personnelles et plan d\'automatisat.md',
+    'mémoire jarvis/imports/récapitulatif des conversations récentes.md',
+    'instructions-jarvis.md',
+    'vie-personnelle.md',
+    'projets.md',
+    'identite.md',
+    'compétences.md',
+    'valeurs.md',
+    'psychologie.md',
+    'habitudes.md',
+    'finances.md',
+    'points-de-friction.md',
+    'historique-chatgpt.md',
+  ];
   // Primary: CouchDB (cross-device, fonctionne sur mobile)
   try{
-    const main=await _couchNote('mémoire jarvis.md');
-    if(main!==null){
-      const synth=await _couchNote('mémoire jarvis/imports/synthèse des informations personnelles et plan d\'automatisat.md');
-      const recap=await _couchNote('mémoire jarvis/imports/récapitulatif des conversations récentes.md');
-      const extra=[synth,recap].filter(Boolean).join('\n\n---\n\n');
-      return main+(extra?'\n\n---\n\n'+extra:'');
-    }
+    const results=await Promise.all(KEY_NOTES.map(n=>_couchNote(n).catch(()=>null)));
+    const combined=results.filter(Boolean).join('\n\n---\n\n');
+    if(combined)return combined;
   }catch(e){console.log('[Obsidian] CouchDB:',e);}
   // Fallback: vault API (Mac local seulement)
   const s=store.get('settings',{});
@@ -5474,7 +5487,7 @@ async function loadJarvisMemory(){
     });
     if(!res.ok)return'';
     const data=await res.json();
-    const files=(data.files||[]).filter(f=>f.endsWith('.md')).slice(-5);
+    const files=(data.files||[]).filter(f=>f.endsWith('.md')).slice(-10);
     const contents=await Promise.all(files.map(f=>
       fetch(`https://push.lucinesmets.com/obsidian/vault/${encodeURIComponent(f)}`,{
         headers:{'Authorization':`Bearer ${key}`}
