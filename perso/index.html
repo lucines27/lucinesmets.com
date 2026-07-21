@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Dashboard — Lucine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14049,13 +14049,19 @@ function jarvisImportChatGPT(input){
 <style>
 /* ── Bouton flottant ── */
 #jarvis-fab{
-  position:fixed;bottom:24px;right:24px;z-index:9999;
+  position:fixed;
+  bottom:calc(24px + env(safe-area-inset-bottom));
+  right:calc(24px + env(safe-area-inset-right));
+  z-index:99999;
   width:56px;height:56px;border-radius:50%;
   background:#0d9488;border:none;cursor:pointer;
   display:none;align-items:center;justify-content:center;
   box-shadow:0 4px 20px rgba(13,148,136,.4);
   transition:transform .2s,box-shadow .2s;
   animation:jarvis-pulse-anim 3s ease-in-out infinite;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
 }
 #jarvis-fab.open{animation:none;box-shadow:0 6px 28px rgba(13,148,136,.55);}
 #jarvis-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(13,148,136,.55);}
@@ -14075,7 +14081,7 @@ function jarvisImportChatGPT(input){
   position:fixed;bottom:90px;right:24px;width:340px;max-height:500px;
   background:#fff;border:1px solid var(--border);border-radius:16px;
   box-shadow:0 8px 40px rgba(0,0,0,.18);
-  display:flex;flex-direction:column;z-index:9998;
+  display:flex;flex-direction:column;z-index:99998;
   opacity:0;transform:translateY(20px);pointer-events:none;
   transition:opacity .2s,transform .2s;
   overflow:hidden;
@@ -14151,7 +14157,7 @@ function jarvisImportChatGPT(input){
     transform:translateY(100%);
   }
   #jarvis-panel.open{transform:translateY(0);}
-  #jarvis-fab{bottom:80px;right:16px;}
+  #jarvis-fab{bottom:calc(80px + env(safe-area-inset-bottom));right:16px;}
 }
 </style>
 
@@ -14848,7 +14854,7 @@ Ton style général : phrases punchy, vocabulaire de vendeur (« closing », « 
     name:'Lewis',role:'Sport & Nutri',
     color:'#dc2626',
     intro:"Lewis au rapport 🏎️ Prêt à te coacher sur l'entraînement, la nutrition ou la récupération. Qu'est-ce qu'on attaque aujourd'hui ?",
-    system:,
+    system:`Tu es Lewis, l'agent sport et nutrition de Lucine. Personnalité : énergique, motivant, rigoureux. Tu analyses les séances d'entraînement, proposes des plans nutritionnels adaptés et optimises la récupération. Tu bases tes conseils sur les données et la science du sport. Réponds en français, de façon directe et motivante.`,
     actions:['🏋️ Plan entraînement','🥗 Plan nutritionnel','💤 Récupération','⚡ Séance du jour']
   }
 };
