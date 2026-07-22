@@ -5456,20 +5456,20 @@ async function loadJarvisMemory(){
   if(!store.get('obsidian_enabled',false))return'';
   // Notes clés à toujours lire (Mémoire Jarvis + notes personnelles déconnectées du graph)
   const KEY_NOTES=[
-    'Mémoire Jarvis.md',
-    'Mémoire Jarvis/Imports/Synthèse des informations personnelles et plan d\'automatisat.md',
-    'Mémoire Jarvis/Imports/Récapitulatif des conversations récentes.md',
-    'Mémoire Jarvis/Profil/Instructions-Jarvis.md',
-    'Mémoire Jarvis/Profil/Vie-Personnelle.md',
-    'Mémoire Jarvis/Profil/Projets.md',
-    'Mémoire Jarvis/Profil/Identite.md',
-    'Mémoire Jarvis/Profil/Competences.md',
-    'Mémoire Jarvis/Profil/Valeurs.md',
-    'Mémoire Jarvis/Profil/Psychologie.md',
-    'Mémoire Jarvis/Profil/Habitudes.md',
-    'Mémoire Jarvis/Profil/Finances.md',
-    'Mémoire Jarvis/Profil/Points-de-friction.md',
-    'Mémoire Jarvis/Profil/Historique-ChatGPT.md',
+    'mémoire jarvis.md',
+    'mémoire jarvis/imports/synthèse des informations personnelles et plan d\'automatisat.md',
+    'mémoire jarvis/imports/récapitulatif des conversations récentes.md',
+    'mémoire jarvis/profil/instructions-jarvis.md',
+    'mémoire jarvis/profil/vie-personnelle.md',
+    'mémoire jarvis/profil/projets.md',
+    'mémoire jarvis/profil/identite.md',
+    'mémoire jarvis/profil/competences.md',
+    'mémoire jarvis/profil/valeurs.md',
+    'mémoire jarvis/profil/psychologie.md',
+    'mémoire jarvis/profil/habitudes.md',
+    'mémoire jarvis/profil/finances.md',
+    'mémoire jarvis/profil/points-de-friction.md',
+    'mémoire jarvis/profil/historique-chatgpt.md',
   ];
   // Primary: CouchDB (cross-device, fonctionne sur mobile)
   try{
