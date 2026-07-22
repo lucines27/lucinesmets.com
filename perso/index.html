@@ -5456,20 +5456,20 @@ async function loadJarvisMemory(){
   if(!store.get('obsidian_enabled',false))return'';
   // Notes clés à toujours lire (Mémoire Jarvis + notes personnelles déconnectées du graph)
   const KEY_NOTES=[
-    'mémoire jarvis.md',
-    'mémoire jarvis/imports/synthèse des informations personnelles et plan d\'automatisat.md',
-    'mémoire jarvis/imports/récapitulatif des conversations récentes.md',
-    'instructions-jarvis.md',
-    'vie-personnelle.md',
-    'projets.md',
-    'identite.md',
-    'compétences.md',
-    'valeurs.md',
-    'psychologie.md',
-    'habitudes.md',
-    'finances.md',
-    'points-de-friction.md',
-    'historique-chatgpt.md',
+    'Mémoire Jarvis.md',
+    'Mémoire Jarvis/Imports/Synthèse des informations personnelles et plan d\'automatisat.md',
+    'Mémoire Jarvis/Imports/Récapitulatif des conversations récentes.md',
+    'Mémoire Jarvis/Profil/Instructions-Jarvis.md',
+    'Mémoire Jarvis/Profil/Vie-Personnelle.md',
+    'Mémoire Jarvis/Profil/Projets.md',
+    'Mémoire Jarvis/Profil/Identite.md',
+    'Mémoire Jarvis/Profil/Competences.md',
+    'Mémoire Jarvis/Profil/Valeurs.md',
+    'Mémoire Jarvis/Profil/Psychologie.md',
+    'Mémoire Jarvis/Profil/Habitudes.md',
+    'Mémoire Jarvis/Profil/Finances.md',
+    'Mémoire Jarvis/Profil/Points-de-friction.md',
+    'Mémoire Jarvis/Profil/Historique-ChatGPT.md',
   ];
   // Primary: CouchDB (cross-device, fonctionne sur mobile)
   try{
@@ -5484,9 +5484,10 @@ async function loadJarvisMemory(){
   const BASE=`https://push.lucinesmets.com/obsidian/vault`;
   const h={'Authorization':`Bearer ${key}`};
   const fetchNote=url=>fetch(url,{headers:h}).then(r=>r.ok?r.text():'').catch(()=>'');
+  const noteToVaultPath=n=>n.split('/').map(s=>encodeURIComponent(s)).join('/');
   try{
-    // Lire les notes racines directement
-    const rootContents=await Promise.all(KEY_NOTES.map(n=>fetchNote(`${BASE}/${encodeURIComponent(n)}`)));
+    // Lire les notes en encodant chaque segment du chemin séparément
+    const rootContents=await Promise.all(KEY_NOTES.map(n=>fetchNote(`${BASE}/${noteToVaultPath(n)}`)));
     const rootCombined=rootContents.filter(Boolean).join('\n\n---\n\n');
     if(rootCombined)return rootCombined;
     // Dernier recours : lister le dossier Mémoire Jarvis
