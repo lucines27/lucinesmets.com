@@ -5477,22 +5477,24 @@ async function loadJarvisMemory(){
     const combined=results.filter(Boolean).join('\n\n---\n\n');
     if(combined)return combined;
   }catch(e){console.log('[Obsidian] CouchDB:',e);}
-  // Fallback: vault API (Mac local seulement)
+  // Fallback: vault API (Mac local seulement) — lit les notes racines + Mémoire Jarvis
   const s=store.get('settings',{});
   const key=document.getElementById('obsidian-key')?.value||s.obsidianKey||'';
   if(!key)return'';
+  const BASE=`https://push.lucinesmets.com/obsidian/vault`;
+  const h={'Authorization':`Bearer ${key}`};
+  const fetchNote=url=>fetch(url,{headers:h}).then(r=>r.ok?r.text():'').catch(()=>'');
   try{
-    const res=await fetch(`https://push.lucinesmets.com/obsidian/vault/M%C3%A9moire%20Jarvis/`,{
-      headers:{'Authorization':`Bearer ${key}`}
-    });
+    // Lire les notes racines directement
+    const rootContents=await Promise.all(KEY_NOTES.map(n=>fetchNote(`${BASE}/${encodeURIComponent(n)}`)));
+    const rootCombined=rootContents.filter(Boolean).join('\n\n---\n\n');
+    if(rootCombined)return rootCombined;
+    // Dernier recours : lister le dossier Mémoire Jarvis
+    const res=await fetch(`${BASE}/M%C3%A9moire%20Jarvis/`,{headers:h});
     if(!res.ok)return'';
     const data=await res.json();
     const files=(data.files||[]).filter(f=>f.endsWith('.md')).slice(-10);
-    const contents=await Promise.all(files.map(f=>
-      fetch(`https://push.lucinesmets.com/obsidian/vault/${encodeURIComponent(f)}`,{
-        headers:{'Authorization':`Bearer ${key}`}
-      }).then(r=>r.ok?r.text():'').catch(()=>'')
-    ));
+    const contents=await Promise.all(files.map(f=>fetchNote(`${BASE}/${encodeURIComponent(f)}`)));
     return contents.filter(Boolean).join('\n\n---\n\n');
   }catch(e){return'';}
 }
