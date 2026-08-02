@@ -8105,7 +8105,7 @@ function presetApply(id){
     if(!exists){
       items.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
         text:t.text,done:false,difficulty:t.difficulty||'medium',createdAt:Date.now(),
-        category:t.cat||undefined,presetId:id});
+        category:t.cat?t.cat.toLowerCase():undefined,presetId:id});
       added++;
     }
   });
@@ -8176,7 +8176,7 @@ function todoRollover(){
       const exists=todayItems.some(x=>x.presetId===p.id&&x.text===t.text);
       if(!exists) todayItems.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
         text:t.text,done:false,difficulty:'medium',createdAt:Date.now(),
-        category:t.cat||undefined,presetId:p.id});
+        category:t.cat?t.cat.toLowerCase():undefined,presetId:p.id});
     });
   });
 
