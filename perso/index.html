@@ -985,6 +985,20 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .dep-tx-amount.positive{color:var(--accent)}
 .dep-tx-date{font-size:10px;color:var(--text3);margin-top:2px}
 .dep-empty{text-align:center;padding:36px 16px;color:var(--text3);font-size:13px;line-height:1.6}
+/* ── BUDGET MENSUEL ── */
+.bgt-add-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 13px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.bgt-add-btn:hover{background:var(--accent2,#0d9488)}
+.bgt-inp{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;transition:border-color .15s}
+.bgt-inp:focus{border-color:var(--accent)}
+.bgt-save-btn{flex:1;padding:8px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.bgt-cancel-btn{padding:8px 14px;background:none;border:1.5px solid var(--border);border-radius:8px;color:var(--text2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.bgt-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--bg3)}
+.bgt-row:last-child{border-bottom:none}
+.bgt-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap}
+.bgt-badge.nec{background:#d1fae5;color:#065f46}
+.bgt-badge.non{background:#fef3c7;color:#92400e}
+.bgt-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 5px;border-radius:6px;line-height:1;transition:color .15s}
+.bgt-del:hover{color:var(--red,#dc2626)}
 /* ── PARCOURS BIBLIQUE ── */
 .bible-prog-wrap{background:var(--bg3);border-radius:99px;height:9px;overflow:hidden;margin:2px 0 4px}
 .bible-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#0d9488,#14b8a6);transition:width .4s}
@@ -2819,6 +2833,64 @@ body.focus-mode #focus-exit-btn{display:flex}
 
       <!-- Dépenses sub-tab -->
       <div id="finance-depenses-pane" class="subtab-pane">
+
+        <!-- ── Budget mensuel fixe ── -->
+        <div class="card" id="budget-mensuel-card" style="padding:14px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:700;color:var(--text)">📋 Budget mensuel</div>
+            <button class="bgt-add-btn" onclick="bgtShowForm()">+ Ajouter</button>
+          </div>
+
+          <!-- Formulaire d'ajout -->
+          <div id="bgt-form" style="display:none;background:var(--bg2);border-radius:10px;padding:12px;margin-bottom:12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <input id="bgt-nom" class="bgt-inp" placeholder="Nom (ex: Loyer)" />
+              <select id="bgt-cat" class="bgt-inp">
+                <option value="Logement">🏠 Logement</option>
+                <option value="Alimentation">🍽 Alimentation</option>
+                <option value="Transport">🚗 Transport</option>
+                <option value="Abonnement">📱 Abonnement</option>
+                <option value="Santé">💊 Santé</option>
+                <option value="Sport">💪 Sport</option>
+                <option value="Divertissement">🎬 Divertissement</option>
+                <option value="Shopping">🛍 Shopping</option>
+                <option value="Investissement">📈 Investissement</option>
+                <option value="Business">💼 Business</option>
+                <option value="Autre">• Autre</option>
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+              <input id="bgt-montant" class="bgt-inp" type="number" placeholder="Montant (€)" min="0" step="0.01" />
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;padding:0 4px">
+                <input type="checkbox" id="bgt-necessaire" checked style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
+                Nécessaire
+              </label>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="bgt-save-btn" onclick="bgtSave()">✓ Ajouter</button>
+              <button class="bgt-cancel-btn" onclick="bgtHideForm()">Annuler</button>
+            </div>
+          </div>
+
+          <!-- Liste -->
+          <div id="bgt-list"></div>
+
+          <!-- Totaux -->
+          <div id="bgt-summary" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:11px;color:var(--text3)">✅ Nécessaire</span>
+              <span id="bgt-total-nec" style="font-size:12px;font-weight:700;color:var(--text)">0,00 €</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:11px;color:var(--text3)">💫 Optionnel</span>
+              <span id="bgt-total-non" style="font-size:12px;font-weight:700;color:var(--text)">0,00 €</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--bg3)">
+              <span style="font-size:12px;font-weight:700;color:var(--text)">Total / mois</span>
+              <span id="bgt-total-all" style="font-size:14px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace">0,00 €</span>
+            </div>
+          </div>
+        </div>
 
         <!-- Sync status bar -->
         <div id="dep-sync-bar" class="dep-sync-bar" style="display:none">
@@ -11653,6 +11725,70 @@ function depSetCat(cat,btn){
   renderDepenses();
 }
 
+// ── BUDGET MENSUEL ──────────────────────────────────────────────
+const BGT_CAT_ICONS={Logement:'🏠',Alimentation:'🍽',Transport:'🚗',Abonnement:'📱',Santé:'💊',Sport:'💪',Divertissement:'🎬',Shopping:'🛍',Investissement:'📈',Business:'💼',Autre:'•'};
+
+function bgtLoad(){try{return JSON.parse(localStorage.getItem('budget_mensuel')||'[]')}catch(e){return[]}}
+function bgtSaveStore(arr){localStorage.setItem('budget_mensuel',JSON.stringify(arr))}
+
+function bgtShowForm(){
+  document.getElementById('bgt-form').style.display='block';
+  setTimeout(()=>document.getElementById('bgt-nom').focus(),50);
+}
+function bgtHideForm(){
+  document.getElementById('bgt-form').style.display='none';
+  document.getElementById('bgt-nom').value='';
+  document.getElementById('bgt-montant').value='';
+  document.getElementById('bgt-necessaire').checked=true;
+  document.getElementById('bgt-cat').selectedIndex=0;
+}
+function bgtSave(){
+  const nom=document.getElementById('bgt-nom').value.trim();
+  const cat=document.getElementById('bgt-cat').value;
+  const montant=parseFloat(document.getElementById('bgt-montant').value)||0;
+  const nec=document.getElementById('bgt-necessaire').checked;
+  if(!nom||!montant)return;
+  const arr=bgtLoad();
+  arr.push({id:Date.now(),nom,cat,montant,nec});
+  bgtSaveStore(arr);
+  bgtHideForm();
+  bgtRender();
+}
+function bgtDelete(id){
+  bgtSaveStore(bgtLoad().filter(x=>x.id!==id));
+  bgtRender();
+}
+function bgtFmt(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
+function bgtRender(){
+  const arr=bgtLoad();
+  const list=document.getElementById('bgt-list');
+  const summary=document.getElementById('bgt-summary');
+  if(!list)return;
+  if(!arr.length){
+    list.innerHTML='<div class="dep-empty" style="padding:20px 0">Aucune dépense fixe.<br><span style="font-size:11px">Clique sur + Ajouter pour commencer.</span></div>';
+    if(summary)summary.style.display='none';
+    return;
+  }
+  list.innerHTML=arr.map(x=>`
+    <div class="bgt-row">
+      <span style="font-size:20px;width:30px;text-align:center;flex-shrink:0">${BGT_CAT_ICONS[x.cat]||'•'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.nom}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:1px">${x.cat}</div>
+      </div>
+      <span class="bgt-badge ${x.nec?'nec':'non'}">${x.nec?'Nécessaire':'Optionnel'}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--red,#dc2626);font-family:'DM Mono',monospace;white-space:nowrap">${bgtFmt(x.montant)}</span>
+      <button class="bgt-del" onclick="bgtDelete(${x.id})" title="Supprimer">×</button>
+    </div>`).join('');
+  const totNec=arr.filter(x=>x.nec).reduce((s,x)=>s+x.montant,0);
+  const totNon=arr.filter(x=>!x.nec).reduce((s,x)=>s+x.montant,0);
+  document.getElementById('bgt-total-nec').textContent=bgtFmt(totNec);
+  document.getElementById('bgt-total-non').textContent=bgtFmt(totNon);
+  document.getElementById('bgt-total-all').textContent=bgtFmt(totNec+totNon);
+  if(summary)summary.style.display='block';
+}
+// ────────────────────────────────────────────────────────────────
+
 function renderDepenses(){
   updateDepSyncBar();
   const list=document.getElementById('dep-tx-list');
@@ -13957,6 +14093,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>{if(store.get('obsidian_enabled',false))obsidianCountNotes();},3000);
   setTimeout(()=>{initStartDayBtn();renderUgcRelancesTable();},800);
   setTimeout(()=>leitnerRender(),1000);
+  bgtRender();
 });
 
 </script>
