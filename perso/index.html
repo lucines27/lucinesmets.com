@@ -248,7 +248,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .hcell{width:14px;height:14px;border-radius:3px;background:var(--bg3);cursor:pointer;transition:background .1s;flex-shrink:0;border:1px solid var(--border)}
 .hcell.done{background:#5eead4;border-color:#2dd4bf}
 .hcell.done-2{background:#2dd4bf;border-color:#14b8a6}
-.hcell.done-3{background:var(--accent);border-color:var(--accent2)}
+.hcell.done-3{background:var(--accent);border-color:var(--accent2)}.hcell.skip{background:var(--bg3);border-color:#94a3b8;opacity:.55}.hcell.skip::after{content:"–";font-size:10px;color:#94a3b8;line-height:14px;display:block;text-align:center}
 .hcell:hover{background:var(--accent-light)}
 .habit-stats{display:flex;gap:12px}
 .hstat{text-align:center}
@@ -261,7 +261,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .week-nav-lbl{font-size:10px;color:var(--text3);letter-spacing:.04em;font-weight:500}
 .habit-weekrow{display:flex;gap:3px}
 .hwday{flex:1;height:28px;border-radius:5px;background:var(--bg3);cursor:pointer;transition:background .1s;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text3);border:1px solid var(--border)}
-.hwday.done{background:var(--accent);color:#fff;font-weight:600;border-color:var(--accent2)}
+.hwday.done{background:var(--accent);color:#fff;font-weight:600;border-color:var(--accent2)}.hwday.skip{background:var(--bg3);border-color:#94a3b8;opacity:.55;color:#94a3b8}
 .hwday:hover:not(.done){background:var(--accent-light)}
 .add-habit-btn{background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:12px;padding:8px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;margin-top:4px}
 .add-habit-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -752,7 +752,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .hg-table tr.hg-total-row td{border-top:2px solid var(--border2);background:var(--bg2);font-weight:700}
 .hg-table tr.hg-total-row td.hg-name-col{background:var(--bg2);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
 .hg-dot{width:20px;height:20px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);margin:0 auto;transition:background .12s;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.hg-dot.done{background:var(--accent);border-color:var(--accent)}
+.hg-dot.done{background:var(--accent);border-color:var(--accent)}.hg-dot.skip{background:var(--bg3);border-color:#94a3b8;opacity:.5}
 .hg-dot.future{opacity:.2;cursor:default;pointer-events:none}
 .hg-dot:not(.done):not(.future):hover{background:var(--accent-light);border-color:var(--accent-light)}
 .hg-today-col{background:#e6f7f6 !important}
@@ -795,7 +795,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .home-habit-streak{font-size:11px;color:var(--pink);font-weight:600;white-space:nowrap}
 .home-habit-cb{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--border2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;background:transparent}
 .home-habit-cb.done{background:var(--accent);border-color:var(--accent)}
-.home-habit-cb.done::after{content:'✓';font-size:12px;color:#fff;font-weight:700}
+.home-habit-cb.done::after{content:'✓';font-size:12px;color:#fff;font-weight:700}.home-habit-cb.skip{background:var(--bg3);border-color:#94a3b8;opacity:.6}.home-habit-cb.skip::after{content:'–';font-size:14px;color:#94a3b8;font-weight:700}
 
 /* ── QUANTITY HABIT ── */
 .hqty-prog{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;flex:1}
@@ -3871,8 +3871,8 @@ function renderHomeHabits(){
     const todayK=todayKey();
     const isQty=h.type==='quantity';
     const currentVal=parseFloat(data[todayK])||0;
-    const isDone=isQty?currentVal>=(h.target||1):!!data[todayK];
-    const checkDoneHome=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v;
+    const isDone=isQty?currentVal>=(h.target||1):(data[todayK]===true);
+    const checkDoneHome=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v&&v!=='skip';
     const streak=calcStreak(data,checkDoneHome,today);
     const row=document.createElement('div');
     row.className='home-habit-row';
@@ -3897,7 +3897,7 @@ function renderHomeHabits(){
         <div class="home-habit-emoji">${h.emoji}</div>
         <div class="home-habit-name">${h.name}</div>
         <div class="home-habit-streak">🔥 ${streak}j</div>
-        <div class="home-habit-cb${isDone?' done':''}" onclick="toggleHabitHome('${h.id}','${todayK}')"></div>`;
+        <div class="home-habit-cb${isDone?' done':data[todayK]==='skip'?' skip':''}" onclick="toggleHabitHome('${h.id}','${todayK}')"></div>`;
     }
     cont.appendChild(row);
   });
@@ -3905,11 +3905,10 @@ function renderHomeHabits(){
 
 function toggleHabitHome(hid,dateKey){
   const data=store.get('habit_'+hid,{});
-  const wasOff=!data[dateKey];
-  if(data[dateKey])delete data[dateKey];else data[dateKey]=true;
-  store.set('habit_'+hid,data);
-  if(wasOff)addXP(5,'habit',hid+'_'+dateKey);
-  else removeXP(5,'habit',hid+'_'+dateKey);
+  const cur=data[dateKey];
+  if(cur===true){data[dateKey]='skip';store.set('habit_'+hid,data);removeXP(5,'habit',hid+'_'+dateKey);}
+  else if(cur==='skip'){delete data[dateKey];store.set('habit_'+hid,data);}
+  else{data[dateKey]=true;store.set('habit_'+hid,data);addXP(5,'habit',hid+'_'+dateKey);}
   renderHomeHabits();
   renderHabits();
   renderDayScore();
@@ -4233,6 +4232,7 @@ function calcStreak(data,checkDoneFn,fromDate){
   const d=new Date(fromDate);
   for(let i=0;i<730;i++){
     const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if(data[k]==='skip'){d.setDate(d.getDate()-1);continue;}
     if(checkDoneFn(data[k])){streak++;d.setDate(d.getDate()-1);}
     else break;
   }
@@ -4300,7 +4300,7 @@ function renderHabits(){
   habits.forEach(h=>{
     const data=store.get('habit_'+h.id,{});
     const isQty=h.type==='quantity';
-    const checkDone=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v;
+    const checkDone=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v&&v!=='skip';
 
     // Streak consécutif par jour pour opacité
     const streakAt=[];
@@ -4322,6 +4322,7 @@ function renderHabits(){
     for(let d=1;d<=effectiveDays;d++){
       const k=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       if(k<habitStart)continue;
+      if(data[k]==='skip')continue;
       monthPossible++;
       if(checkDone(data[k]))monthDone++;
     }
@@ -4346,8 +4347,9 @@ function renderHabits(){
       const isBeforeStart=k<habitStart;
       const val=data[k];
       const done=!isFuture&&!isBeforeStart&&checkDone(val);
+      const isSkip=!isFuture&&!isBeforeStart&&val==='skip';
 
-      if(!isFuture&&!isBeforeStart){colPossible[d-1]++;if(done)colDone[d-1]++;}
+      if(!isFuture&&!isBeforeStart&&!isSkip){colPossible[d-1]++;if(done)colDone[d-1]++;}
 
       // Opacité selon streak
       const opacity=done?Math.min(1,.45+streakAt[d]*.12):1;
@@ -4359,7 +4361,7 @@ function renderHabits(){
         :`onclick="toggleHabit('${h.id}','${k}')"`;
 
       rows+=`<td class="${isToday?'hg-today-col':''}">
-        <div class="hg-dot${done?' done':''}${isFuture?' future':''}${isBeforeStart?' future':''}" style="${isBeforeStart?'opacity:.15;cursor:default':dotStyle}" ${clickAttr} ${titleAttr}></div>
+        <div class="hg-dot${done?' done':''} ${isSkip?' skip':''}${isFuture?' future':''}${isBeforeStart?' future':''}" style="${isBeforeStart?'opacity:.15;cursor:default':dotStyle}" ${clickAttr} ${titleAttr}></div>
       </td>`;
     }
 
@@ -4398,7 +4400,7 @@ function renderHgStats(habits,today){
   habits.forEach(h=>{
     const data=store.get('habit_'+h.id,{});
     const isQty=h.type==='quantity';
-    const chk=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v;
+    const chk=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v&&v!=='skip';
     const hStart=h.startDate||`${monthPfx}-01`;
 
     if(todayK>=hStart&&chk(data[todayK]))todayDone++;
@@ -4411,6 +4413,7 @@ function renderHgStats(habits,today){
       if(dt>today)break;
       const dk=localKey(dt);
       if(dk<hStart)continue;
+      if(data[dk]==='skip')continue;
       weekTotal++;
       if(chk(data[dk]))weekDone++;
     }
@@ -4418,6 +4421,7 @@ function renderHgStats(habits,today){
     for(let d=1;d<=today.getDate();d++){
       const k=`${monthPfx}-${String(d).padStart(2,'0')}`;
       if(k<hStart)continue;
+      if(data[k]==='skip')continue;
       monthTotal++;
       if(chk(data[k]))monthDone++;
     }
@@ -4441,14 +4445,15 @@ function buildHabitCard(h){
   const daysInMonth=new Date(year,month+1,0).getDate();
   const data=store.get('habit_'+h.id,{});
   const isQty=h.type==='quantity';
-  const checkDone=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v;
+  const checkDone=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v&&v!=='skip';
 
   const streak=calcStreak(data,checkDone,today);
 
   // total this month
   const monthPfx=`${year}-${String(month+1).padStart(2,'0')}`;
   const total=Object.keys(data).filter(k=>k.startsWith(monthPfx)&&checkDone(data[k])).length;
-  const pct=Math.round(total/daysInMonth*100);
+  const skipInMonth=Object.keys(data).filter(k=>k.startsWith(monthPfx)&&data[k]==='skip').length;
+  const pct=Math.round(total/Math.max(1,daysInMonth-skipInMonth)*100);
 
   const todayK=todayKey();
   const todayVal=parseFloat(data[todayK])||0;
@@ -4460,8 +4465,9 @@ function buildHabitCard(h){
   const localDay=d=>new Date(d+'T00:00:00'); // évite le décalage UTC
   const startStr=h.startDate||(allKeys.length?allKeys[0]:todayK);
   const daysSinceStart=Math.max(1,Math.round((localDay(todayK)-localDay(startStr))/86400000)+1);
+  const skipTotal=allKeys.filter(k=>k>=startStr&&data[k]==='skip').length;
   const completedTotal=allKeys.filter(k=>checkDone(data[k])).length;
-  if(daysSinceStart>0)overallPct=Math.round(completedTotal/daysSinceStart*100);
+  if(daysSinceStart>0)overallPct=Math.round(completedTotal/Math.max(1,daysSinceStart-skipTotal)*100);
 
   const card=document.createElement('div');
   card.className='card';
@@ -4479,7 +4485,7 @@ function buildHabitCard(h){
     const d=new Date(weekEnd);d.setDate(weekEnd.getDate()-i);
     const k=localKey(d);
     const isFutureDay=d>today;
-    const done=checkDone(data[k])?'done':'';
+    const done=data[k]==='skip'?'skip':checkDone(data[k])?'done':'';
     const val=isQty&&(parseFloat(data[k])||0)>0?`<span style="font-size:9px;display:block;margin-top:1px;font-family:'DM Mono',monospace">${parseFloat(data[k])}</span>`:'';
     const click=isFutureDay?'':isQty?`onclick="habitQtyDayEdit('${h.id}','${k}',this)"`:`onclick="toggleHabit('${h.id}','${k}')"`;
     weekHTML+=`<div class="hwday ${done}" ${click} style="${isFutureDay?'opacity:.3;cursor:default':''}">${days[d.getDay()]}${val}</div>`;
@@ -4491,7 +4497,8 @@ function buildHabitCard(h){
     const k=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const isFuture=day>today.getDate();
     let cls='';
-    if(checkDone(data[k]))cls='done-3';
+    if(data[k]==='skip')cls='skip';
+    else if(checkDone(data[k]))cls='done-3';
     else if(isQty&&(parseFloat(data[k])||0)>0)cls='done';
     const click=isFuture?'':isQty?`onclick="habitQtyDayEdit('${h.id}','${k}',this)"`:`onclick="toggleHabit('${h.id}','${k}')"`;
     gridHTML+=`<div class="hcell ${cls}" style="${isFuture?'opacity:.2;cursor:default':''}" ${click} title="${k}"></div>`;
@@ -4539,11 +4546,10 @@ function buildHabitCard(h){
 
 function toggleHabit(hid,dateKey){
   const data=store.get('habit_'+hid,{});
-  const wasOff=!data[dateKey];
-  if(data[dateKey])delete data[dateKey];else data[dateKey]=true;
-  store.set('habit_'+hid,data);
-  if(wasOff){addXP(5,'habit',hid+'_'+dateKey);playSound('check');}
-  else{removeXP(5,'habit',hid+'_'+dateKey);playSound('uncheck');}
+  const cur=data[dateKey];
+  if(cur===true){data[dateKey]='skip';store.set('habit_'+hid,data);removeXP(5,'habit',hid+'_'+dateKey);playSound('uncheck');}
+  else if(cur==='skip'){delete data[dateKey];store.set('habit_'+hid,data);}
+  else{data[dateKey]=true;store.set('habit_'+hid,data);addXP(5,'habit',hid+'_'+dateKey);playSound('check');}
   renderHabits();
   renderDayScore();
 }
@@ -5270,7 +5276,7 @@ async function sendWeeklyReport(){
     const data=store.get('habit_'+h.id,{});
     const count=days.filter(dk=>{
       const v=data[dk];
-      return h.type==='quantity'?(parseFloat(v)||0)>=(h.target||1):!!v;
+      return h.type==='quantity'?(parseFloat(v)||0)>=(h.target||1):!!v&&v!=='skip';
     }).length;
     const streak=getHabitStreak(h.name);
     return `${h.emoji} ${h.name} : ${count}/7${streak>=7?' 🔥'+streak+'j':''}`;
@@ -5632,7 +5638,7 @@ async function obsidianNightlySync(){
   // Stats du jour
   const habitLines=habits.map(h=>{
     const data=store.get('habit_'+h.id,{});
-    const chk=h.type==='quantity'?(parseFloat(data[today])||0)>=(h.target||1):!!data[today];
+    const chk=h.type==='quantity'?(parseFloat(data[today])||0)>=(h.target||1):!!data[today]&&data[today]!=='skip';
     return `- ${chk?'✅':'❌'} ${h.name}`;
   }).join('\n');
   const goalLines=goals.map(g=>`- ${g.done?'✅':'⬜'} ${g.text}`).join('\n')||'- Aucun goal';
@@ -13150,7 +13156,7 @@ function xpDailyChecks(){
   habits.forEach(h=>{
     const data=store.get('habit_'+h.id,{});
     const isQty=h.type==='quantity';
-    const chk=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v;
+    const chk=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v&&v!=='skip';
     const streak=calcStreak(data,chk,today);
     if(streak===7){addXP(20,'streak_7',h.id);playSound('streak');}
     if(streak===30){addXP(50,'streak_30',h.id);playSound('streak');}
@@ -13203,7 +13209,7 @@ function calcDayScore(){
     habits.forEach(h=>{
       const data=store.get('habit_'+h.id,{});
       const isQty=h.type==='quantity';
-      const chk=isQty?(parseFloat(data[today])||0)>=(h.target||1):!!data[today];
+      const chk=isQty?(parseFloat(data[today])||0)>=(h.target||1):!!data[today]&&data[today]!=='skip';
       if(chk)habitDone++;
     });
     score+=Math.round((habitDone/habits.length)*20);
@@ -13412,7 +13418,7 @@ function _statRenderHabits(){
     for(let i=DAYS-1;i>=0;i--){
       const d=new Date(today);d.setDate(today.getDate()-i);
       const dk=localKey(d);
-      const chk=isQty?(parseFloat(data[dk])||0)>=(h.target||1):!!data[dk];
+      const chk=isQty?(parseFloat(data[dk])||0)>=(h.target||1):!!data[dk]&&data[dk]!=='skip';
       if(chk)done++;
       sparkData.push(chk?1:0);
     }
@@ -13422,7 +13428,7 @@ function _statRenderHabits(){
     for(let i=364;i>=0;i--){
       const d2=new Date(today);d2.setDate(today.getDate()-i);
       const dk2=localKey(d2);
-      const chk2=isQty?(parseFloat(data[dk2])||0)>=(h.target||1):!!data[dk2];
+      const chk2=isQty?(parseFloat(data[dk2])||0)>=(h.target||1):!!data[dk2]&&data[dk2]!=='skip';
       if(chk2){cs++;if(cs>bs)bs=cs;}else cs=0;
     }
     const streak=getHabitStreak(h.name)||0;
@@ -13549,7 +13555,7 @@ function getHabitStreak(name){
   if(!h)return 0;
   const data=store.get('habit_'+h.id,{});
   const isQty=h.type==='quantity';
-  const chk=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v;
+  const chk=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v&&v!=='skip';
   return calcStreak(data,chk,new Date());
 }
 
