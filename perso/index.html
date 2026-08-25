@@ -3602,8 +3602,8 @@ const CONFIG = {
 // ══════════════════════════════════════════════
 //  SUPABASE SYNC — cross-device via kv_store
 // ══════════════════════════════════════════════
-const SUPABASE_URL = 'https://nkswmmmyhqjtkacrlfpb.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rc3dtbW15aHFqdGthY3JsZnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5MjI3ODAsImV4cCI6MjA5NTQ5ODc4MH0.ayXBMh13FGbm8Hzrvz1BL2W1N6yXwYzdhdy915KMtdI';
+const VPS_KV_URL = 'https://push.lucinesmets.com/obsidian/kv';
+const VPS_API_KEY = '2cca484a2774acf10e0f6edc8f20e5adeb94639ffbf2b515b3a36e16eb69c09d';
 
 // Queue of keys pending flush to Supabase
 let _supaFlushQueue = {};
@@ -3623,14 +3623,9 @@ async function _flushToSupabase() {
     .map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }));
   if (!rows.length) return;
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
+    await fetch(VPS_KV_URL, {
       method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
-      },
+      headers: { 'X-API-Key': VPS_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify(rows)
     });
   } catch(e) { /* offline — localStorage is the source of truth */ }
@@ -3654,11 +3649,8 @@ const SUPABASE_BACKUP_KEYS = new Set(['day_presets','recurring_tasks','player_xp
 
 async function initSupabase() {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?select=key,value`, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY
-      }
+    const res = await fetch(VPS_KV_URL, {
+      headers: { 'X-API-Key': VPS_API_KEY }
     });
     if (!res.ok) return;
     const rows = await res.json();
@@ -3689,14 +3681,9 @@ async function initSupabase() {
           try { value = JSON.parse(localStorage.getItem(fullKey)); } catch { value = null; }
           return { key, value, updated_at: new Date().toISOString() };
         }).filter(r => r.value !== null && r.value !== undefined);
-        fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
+        fetch(VPS_KV_URL, {
           method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': 'resolution=merge-duplicates'
-          },
+          headers: { 'X-API-Key': VPS_API_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(migrateRows)
         }).catch(() => {});
       }
