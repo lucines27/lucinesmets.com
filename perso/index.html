@@ -248,7 +248,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .hcell{width:14px;height:14px;border-radius:3px;background:var(--bg3);cursor:pointer;transition:background .1s;flex-shrink:0;border:1px solid var(--border)}
 .hcell.done{background:#5eead4;border-color:#2dd4bf}
 .hcell.done-2{background:#2dd4bf;border-color:#14b8a6}
-.hcell.done-3{background:var(--accent);border-color:var(--accent2)}.hcell.skip{background:var(--bg3);border-color:#94a3b8;opacity:.55}.hcell.skip::after{content:"–";font-size:10px;color:#94a3b8;line-height:14px;display:block;text-align:center}
+.hcell.done-3{background:var(--accent);border-color:var(--accent2)}.hcell.skip{background:var(--bg3);border-color:#94a3b8;opacity:.65;position:relative;overflow:hidden}.hcell.skip::after{content:"";position:absolute;top:50%;left:50%;width:150%;height:1.5px;background:#94a3b8;transform:translate(-50%,-50%) rotate(45deg)}
 .hcell:hover{background:var(--accent-light)}
 .habit-stats{display:flex;gap:12px}
 .hstat{text-align:center}
@@ -261,7 +261,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .week-nav-lbl{font-size:10px;color:var(--text3);letter-spacing:.04em;font-weight:500}
 .habit-weekrow{display:flex;gap:3px}
 .hwday{flex:1;height:28px;border-radius:5px;background:var(--bg3);cursor:pointer;transition:background .1s;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text3);border:1px solid var(--border)}
-.hwday.done{background:var(--accent);color:#fff;font-weight:600;border-color:var(--accent2)}.hwday.skip{background:var(--bg3);border-color:#94a3b8;opacity:.55;color:#94a3b8}
+.hwday.done{background:var(--accent);color:#fff;font-weight:600;border-color:var(--accent2)}.hwday.skip{background:var(--bg3);border-color:#94a3b8;opacity:.65;color:#94a3b8;position:relative;overflow:hidden}.hwday.skip::after{content:"⊘";position:absolute;font-size:14px;color:#94a3b8;line-height:1}
 .hwday:hover:not(.done){background:var(--accent-light)}
 .add-habit-btn{background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:12px;padding:8px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;margin-top:4px}
 .add-habit-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -752,7 +752,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .hg-table tr.hg-total-row td{border-top:2px solid var(--border2);background:var(--bg2);font-weight:700}
 .hg-table tr.hg-total-row td.hg-name-col{background:var(--bg2);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
 .hg-dot{width:20px;height:20px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);margin:0 auto;transition:background .12s;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.hg-dot.done{background:var(--accent);border-color:var(--accent)}.hg-dot.skip{background:var(--bg3);border-color:#94a3b8;opacity:.5}
+.hg-dot.done{background:var(--accent);border-color:var(--accent)}.hg-dot.skip{background:var(--bg3);border-color:#94a3b8;opacity:.65;position:relative;overflow:hidden}.hg-dot.skip::after{content:"";position:absolute;top:50%;left:50%;width:150%;height:1.5px;background:#94a3b8;transform:translate(-50%,-50%) rotate(45deg)}
 .hg-dot.future{opacity:.2;cursor:default;pointer-events:none}
 .hg-dot:not(.done):not(.future):hover{background:var(--accent-light);border-color:var(--accent-light)}
 .hg-today-col{background:#e6f7f6 !important}
@@ -795,7 +795,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .home-habit-streak{font-size:11px;color:var(--pink);font-weight:600;white-space:nowrap}
 .home-habit-cb{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--border2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;background:transparent}
 .home-habit-cb.done{background:var(--accent);border-color:var(--accent)}
-.home-habit-cb.done::after{content:'✓';font-size:12px;color:#fff;font-weight:700}.home-habit-cb.skip{background:var(--bg3);border-color:#94a3b8;opacity:.6}.home-habit-cb.skip::after{content:'–';font-size:14px;color:#94a3b8;font-weight:700}
+.home-habit-cb.done::after{content:'✓';font-size:12px;color:#fff;font-weight:700}.home-habit-cb.skip{background:var(--bg3);border-color:#94a3b8;opacity:.7}.home-habit-cb.skip::after{content:'⊘';font-size:15px;color:#94a3b8;font-weight:400}
 
 /* ── QUANTITY HABIT ── */
 .hqty-prog{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;flex:1}
