@@ -5655,7 +5655,7 @@ async function obsidianTest(){
   try{
     const[couchR,vaultR]=await Promise.all([
       fetch(`${_COUCH_BASE}/`,{headers:{'Authorization':_COUCH_AUTH}}).catch(()=>null),
-      key?fetch(`https://push.lucinesmets.com/obsidian/`,{headers:{'Authorization':`Bearer ${key}`}}).catch(()=>null):null
+      key?fetch(`https://push.lucinesmets.com/obsidian/notes`,{headers:{'X-API-Key':key}}).catch(()=>null):null
     ]);
     if(res)res.textContent=`CouchDB:${couchR?.ok?'✓':'✗'} Vault:${vaultR?.ok?'✓':'—'}`;
   }catch(e){if(res)res.textContent='Erreur connexion';}
