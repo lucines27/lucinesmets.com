@@ -3628,7 +3628,7 @@ async function _flushToSupabase() {
   try {
     await fetch(VPS_KV_URL, {
       method: 'POST',
-      headers: { 'X-API-Key': VPS_API_KEY, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': 'Bearer ' + VPS_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify(rows)
     });
   } catch(e) { /* offline — localStorage is the source of truth */ }
@@ -3653,7 +3653,7 @@ const SUPABASE_BACKUP_KEYS = new Set(['day_presets','recurring_tasks','player_xp
 async function initSupabase() {
   try {
     const res = await fetch(VPS_KV_URL, {
-      headers: { 'X-API-Key': VPS_API_KEY }
+      headers: { 'Authorization': 'Bearer ' + VPS_API_KEY }
     });
     if (!res.ok) return;
     const rows = await res.json();
@@ -3686,7 +3686,7 @@ async function initSupabase() {
         }).filter(r => r.value !== null && r.value !== undefined);
         fetch(VPS_KV_URL, {
           method: 'POST',
-          headers: { 'X-API-Key': VPS_API_KEY, 'Content-Type': 'application/json' },
+          headers: { 'Authorization': 'Bearer ' + VPS_API_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(migrateRows)
         }).catch(() => {});
       }
@@ -5655,7 +5655,7 @@ async function obsidianTest(){
   try{
     const[couchR,vaultR]=await Promise.all([
       fetch(`${_COUCH_BASE}/`,{headers:{'Authorization':_COUCH_AUTH}}).catch(()=>null),
-      key?fetch(`https://push.lucinesmets.com/obsidian/notes`,{headers:{'X-API-Key':key}}).catch(()=>null):null
+      key?fetch(`https://push.lucinesmets.com/obsidian/notes`,{headers:{'Authorization':`Bearer ${key}`}}).catch(()=>null):null
     ]);
     if(res)res.textContent=`CouchDB:${couchR?.ok?'✓':'✗'} Vault:${vaultR?.ok?'✓':'—'}`;
   }catch(e){if(res)res.textContent='Erreur connexion';}
