@@ -7711,6 +7711,7 @@ function deleteAgendaEvent(i){
 //  TO-DO
 // ══════════════════════════════════════════════
 function refreshTodoCharts(){
+  if (typeof Chart === 'undefined') return; // Chart.js not loaded (e.g. blocked by browser)
   // Build Mon→Sun data for current week from goals_[date]
   const today=new Date();
   const dow=today.getDay(); // 0=Sun,1=Mon…6=Sat
