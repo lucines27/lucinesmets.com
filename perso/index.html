@@ -3733,22 +3733,22 @@ const store = {
 //  INIT
 // ══════════════════════════════════════════════
 function init(){
-  loadSettings();
-  initHome();
-  initGoals();
-  initSante();
-  initCapital();
-  initBusiness();
-  initHabits();
-  initCoach();
-  initLog();
-  initLibrary();
-  initBible();
-  initSavoir();
-  initDepenses();
-  nordigenHandleCallback();
-  // Auto-send daily Telegram summary at 21:00
-  scheduleAutoTelegram();
+  const _s=(fn,name)=>{try{fn();}catch(e){console.error('[init]',name,e);}};
+  _s(loadSettings,'loadSettings');
+  _s(initHome,'initHome');
+  _s(initGoals,'initGoals');
+  _s(initSante,'initSante');
+  _s(initCapital,'initCapital');
+  _s(initBusiness,'initBusiness');
+  _s(initHabits,'initHabits');
+  _s(initCoach,'initCoach');
+  _s(initLog,'initLog');
+  _s(initLibrary,'initLibrary');
+  _s(initBible,'initBible');
+  _s(initSavoir,'initSavoir');
+  _s(initDepenses,'initDepenses');
+  _s(nordigenHandleCallback,'nordigenHandleCallback');
+  _s(scheduleAutoTelegram,'scheduleAutoTelegram');
 }
 
 function showPage(id, btn){
@@ -3773,16 +3773,17 @@ function toast(msg){
 //  HOME
 // ══════════════════════════════════════════════
 function initHome(){
-  renderHomePriorities();
-  pwmInit();
-  initPomo();
-  todoMigrateOld();
-  todoRollover();
-  renderHomeTodo();
-  renderAgenda();
-  initPensebete();
-  renderHomeHabits();
-  renderDashboardObjectives();
+  const _s=(fn,name)=>{try{fn();}catch(e){console.error('[initHome]',name,e);}};
+  _s(renderHomePriorities,'renderHomePriorities');
+  _s(pwmInit,'pwmInit');
+  _s(initPomo,'initPomo');
+  _s(todoMigrateOld,'todoMigrateOld');
+  _s(todoRollover,'todoRollover');
+  _s(renderHomeTodo,'renderHomeTodo');
+  _s(renderAgenda,'renderAgenda');
+  _s(initPensebete,'initPensebete');
+  _s(renderHomeHabits,'renderHomeHabits');
+  _s(renderDashboardObjectives,'renderDashboardObjectives');
   loadDailyQuote(false);
   loadDailyVerse(false);
   // Handle Google Calendar OAuth callback (redirect back from Google)
