@@ -4725,7 +4725,7 @@ ${memory?`\n## Mémoire des conversations passées\n${memory}`:''}`;
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,
+      body:JSON.stringify({model:'claude-sonnet-5',max_tokens:300,
         system:systemPrompt,messages:[{role:'user',content:val}]})
     });
     const data=await res.json();
@@ -15499,7 +15499,7 @@ async function runEmailAgent(){
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
+        model:'claude-sonnet-5',
         max_tokens:2000,
         mcp_servers:[{type:'url',url:'https://gmailmcp.googleapis.com/mcp/v1',name:'gmail'}],
         system:`Tu es l'agent email de Lucine. Tu gères deux boîtes Gmail : contact@ugcbylucine.be et son Gmail perso. À chaque run, tu dois :
@@ -15652,7 +15652,7 @@ Ton : coach direct et bienveillant. Pas de bullet points. Focus productivité pu
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,
+      body:JSON.stringify({model:'claude-sonnet-5',max_tokens:600,
         system:'Tu es Jarvis, le coach personnel de Lucine. Direct, bienveillant, focus productivité. Pas de gamification.',
         messages:[{role:'user',content:prompt}]})
     });
