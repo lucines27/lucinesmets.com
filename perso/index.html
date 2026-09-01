@@ -2820,7 +2820,7 @@ body.focus-mode #focus-exit-btn{display:flex}
           <div style="overflow-x:auto">
             <table class="trading-table">
               <thead><tr>
-                <th>Compte</th><th>Capital initial</th><th>Valeur actuelle</th><th>P&amp;L $</th><th>P&amp;L %</th><th></th>
+                <th>Compte</th><th>Devise</th><th>Capital initial</th><th>Valeur actuelle</th><th>P&amp;L $</th><th>P&amp;L %</th><th></th>
               </tr></thead>
               <tbody id="trading-tbody"></tbody>
             </table>
@@ -6058,10 +6058,15 @@ async function fetchExchangeRate(){
 }
 
 function getCapitalTotal(){
-  return CAPITAL_CATS.reduce((sum,c)=>{
+  let sum=CAPITAL_CATS.reduce((s,c)=>{
     const d=store.get('capital_'+c.id,{});
-    return sum+capConvert(parseFloat(d.val)||0,d.devise||'$');
+    return s+capConvert(parseFloat(d.val)||0,d.devise||'$');
   },0);
+  store.get('trading_accounts',[]).forEach(a=>{
+    const v=parseFloat(a.cur)||parseFloat(a.init)||0;
+    if(v>0)sum+=capConvert(v,a.devise||'$');
+  });
+  return sum;
 }
 
 function initCapital(){renderCapital();}
@@ -6075,6 +6080,14 @@ function renderCapTotal(){
     tot+=capConvert(v,dv);
     // On inclut la référence dans le delta uniquement si la valeur actuelle est renseignée
     if(v>0)totRef+=capConvert(parseFloat(d.ref)||0,dv);
+  });
+  // Inclure les comptes trading
+  store.get('trading_accounts',[]).forEach(a=>{
+    const cur=parseFloat(a.cur)||0;
+    const init=parseFloat(a.init)||0;
+    const dv=a.devise||'$';
+    const v=cur||init;
+    if(v>0){tot+=capConvert(v,dv);totRef+=capConvert(init||v,dv);}
   });
   const valEl=document.getElementById('cap-total-val');
   const deltaEl=document.getElementById('cap-total-delta');
@@ -9077,15 +9090,18 @@ function tradingRender(){
   if(!tbody)return;
   const accounts=store.get('trading_accounts',[]);
   let totalInit=0,totalCur=0;
+  const devSel=(i,dv)=>`<select onchange="tradingSetDevise(${i},this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:5px;background:var(--bg2);color:var(--text);padding:2px 4px;cursor:pointer;font-family:'DM Mono',monospace"><option value="$" ${(dv||'$')==='$'?'selected':''}>$</option><option value="€" ${dv==='€'?'selected':''}>€</option></select>`;
   let rows=accounts.map((a,i)=>{
     const init=parseFloat(a.init)||0;
     const cur=parseFloat(a.cur)||0;
+    const dv=a.devise||'$';
     const pl=cur-init;
     const plPct=init?(pl/init*100):0;
     totalInit+=init;totalCur+=cur;
     const plCls=pl>0?'pl-pos':pl<0?'pl-neg':'';
     return `<tr>
       <td><div class="trading-cell${a.name?'':' empty'}" id="td-name-${i}" onclick="tradingEdit(${i},'name')">${a.name||'Compte…'}</div></td>
+      <td>${devSel(i,dv)}</td>
       <td><div class="trading-cell${init?'':' empty'}" id="td-init-${i}" onclick="tradingEdit(${i},'init')">${init?init.toLocaleString('fr-FR'):'—'}</div></td>
       <td><div class="trading-cell${cur?'':' empty'}" id="td-cur-${i}" onclick="tradingEdit(${i},'cur')">${cur?cur.toLocaleString('fr-FR'):'—'}</div></td>
       <td><div class="trading-cell ${plCls}">${init||cur?formatPL(pl):''}</div></td>
@@ -9099,6 +9115,7 @@ function tradingRender(){
   const totCls=totalPL>0?'pl-pos':totalPL<0?'pl-neg':'';
   rows+=`<tr class="total-row">
     <td>Total</td>
+    <td></td>
     <td>${totalInit?totalInit.toLocaleString('fr-FR'):''}</td>
     <td>${totalCur?totalCur.toLocaleString('fr-FR'):''}</td>
     <td class="${totCls}">${totalInit||totalCur?formatPL(totalPL):''}</td>
@@ -9106,6 +9123,13 @@ function tradingRender(){
     <td></td>
   </tr>`;
   tbody.innerHTML=rows;
+}
+
+function tradingSetDevise(idx,val){
+  const accs=store.get('trading_accounts',[]);
+  if(accs[idx])accs[idx].devise=val;
+  store.set('trading_accounts',accs);
+  renderCapTotal();
 }
 
 function formatPL(n){return(n>=0?'+':'')+n.toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:2});}
@@ -9137,7 +9161,7 @@ function tradingEdit(idx,field){
 
 function tradingAddRow(){
   const accs=store.get('trading_accounts',[]);
-  accs.push({name:'',init:0,cur:0});
+  accs.push({name:'',init:0,cur:0,devise:'$'});
   store.set('trading_accounts',accs);
   tradingRender();
 }
