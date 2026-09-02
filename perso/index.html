@@ -3872,8 +3872,8 @@ function renderHomeHabits(){
       const yd=new Date(today);yd.setDate(yd.getDate()-1);
       const yk=`${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
       const prev=calcStreak(data,checkDoneHome,yk);
-      streakLabel=prev>0?`❄️ ${prev}j`:`🔥 0j`;
-    }else{streakLabel=`🔥 0j`;}
+      streakLabel=prev>0?`❄️ ${prev}j`:`❄️ 0j`;
+    }else{streakLabel=`❄️ 0j`;}
     const row=document.createElement('div');
     row.className='home-habit-row';
     if(isQty){
