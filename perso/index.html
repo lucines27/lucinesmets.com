@@ -3865,6 +3865,15 @@ function renderHomeHabits(){
     const isDone=isQty?currentVal>=(h.target||1):(data[todayK]===true);
     const checkDoneHome=v=>isQty?(parseFloat(v)||0)>=(h.target||1):!!v&&v!=='skip';
     const streak=calcStreak(data,checkDoneHome,today);
+    // Streak label : 🔥 si coché aujourd'hui, ❄️ si streak en danger (non coché mais streak hier > 0)
+    let streakLabel;
+    if(streak>0){streakLabel=`🔥 ${streak}j`;}
+    else if(!isDone){
+      const yd=new Date(today);yd.setDate(yd.getDate()-1);
+      const yk=`${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
+      const prev=calcStreak(data,checkDoneHome,yk);
+      streakLabel=prev>0?`❄️ ${prev}j`:`🔥 0j`;
+    }else{streakLabel=`🔥 0j`;}
     const row=document.createElement('div');
     row.className='home-habit-row';
     if(isQty){
@@ -3874,7 +3883,7 @@ function renderHomeHabits(){
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
             <div class="home-habit-name">${h.name}</div>
-            <div class="home-habit-streak">🔥 ${streak}j</div>
+            <div class="home-habit-streak">${streakLabel}</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <input class="hqty-input" type="number" value="${currentVal||''}" placeholder="0"
@@ -3887,7 +3896,7 @@ function renderHomeHabits(){
       row.innerHTML=`
         <div class="home-habit-emoji">${h.emoji}</div>
         <div class="home-habit-name">${h.name}</div>
-        <div class="home-habit-streak">🔥 ${streak}j</div>
+        <div class="home-habit-streak">${streakLabel}</div>
         <div class="home-habit-cb${isDone?' done':data[todayK]==='skip'?' skip':''}" onclick="toggleHabitHome('${h.id}','${todayK}')"></div>`;
     }
     cont.appendChild(row);
