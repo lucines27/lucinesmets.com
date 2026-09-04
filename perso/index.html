@@ -12984,7 +12984,7 @@ Réponds UNIQUEMENT avec un tableau JSON valide, sans texte autour :
 [{"ref":"Livre Numéro","raison":"explication courte max 15 mots"}]
 Exemple : [{"ref":"Psaumes 46","raison":"Parle de force et de refuge en Dieu face aux épreuves"}]`;
     const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-5',max_tokens:500,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const text=data.content?.find(b=>b.type==='text')?.text||'[]';
