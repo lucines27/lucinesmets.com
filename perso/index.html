@@ -12988,8 +12988,12 @@ Exemple : [{"ref":"Psaumes 46","raison":"Parle de force et de refuge en Dieu fac
       body:JSON.stringify({model:'claude-sonnet-5',max_tokens:500,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const text=data.content?.find(b=>b.type==='text')?.text||'[]';
-    const match=text.match(/\[[\s\S]*\]/);
-    const suggestions=match?JSON.parse(match[0]):[];
+    console.log('[bibleAskSuggest] raw:', text);
+    const clean=text.replace(/```(?:json)?\s*/gi,'').replace(/```\s*/gi,'');
+    const match=clean.match(/\[[\s\S]*?\]/s)||clean.match(/\[[\s\S]*\]/);
+    let suggestions=[];
+    try{suggestions=match?JSON.parse(match[0]):[];}catch(pe){console.error('[bibleAskSuggest] parse error',pe,match?.[0]);}
+
     loadEl.style.display='none';
     if(!suggestions.length){resEl.innerHTML='<p style="color:var(--text3);font-size:12px;padding:8px 0">Aucune suggestion trouvée — essaie un autre thème.</p>';resEl.style.display='flex';return;}
     resEl.innerHTML=suggestions.map(s=>`
