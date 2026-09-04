@@ -3547,6 +3547,17 @@ body.focus-mode #focus-exit-btn{display:flex}
           <div id="bible-books-grid"></div>
         </div>
 
+        <!-- Suggestion IA -->
+        <div class="bible-section-title" style="margin-top:16px">🔍 Suggestion de lecture par thème</div>
+        <div class="card" style="padding-bottom:14px">
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input class="add-input" id="bible-suggest-inp" placeholder="Ex : résilience, foi, pardon, courage…" style="margin:0;flex:1" onkeydown="if(event.key==='Enter')bibleAskSuggest()">
+            <button onclick="bibleAskSuggest()" style="padding:9px 16px;background:rgba(124,58,237,.12);color:#7c3aed;border:1px solid rgba(124,58,237,.35);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">✨ Suggérer</button>
+          </div>
+          <div id="bible-suggest-loading" style="display:none;text-align:center;padding:12px;font-size:13px;color:var(--text3)"><span style="animation:spin 1s linear infinite;display:inline-block">📖</span> Recherche en cours…</div>
+          <div id="bible-suggest-result" style="display:none;flex-direction:column;gap:8px"></div>
+        </div>
+
         <!-- Étude -->
         <div class="bible-section-title" style="margin-top:16px">✍️ Étude & Analyse — Passages étudiés</div>
         <div class="card" style="padding-bottom:14px">
@@ -12944,6 +12955,59 @@ function bibleRenderStudyList(){
       </div>
       ${e.notes?`<div class="bible-study-notes">${e.notes.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}
     </div>`).join('');
+}
+
+async function bibleAskSuggest(){
+  const theme=(document.getElementById('bible-suggest-inp').value||'').trim();
+  if(!theme)return toast('Entre un thème');
+  const key=store.get('settings',{}).apiKey;
+  if(!key)return toast('Clé Anthropic manquante dans les réglages');
+  const loadEl=document.getElementById('bible-suggest-loading');
+  const resEl=document.getElementById('bible-suggest-result');
+  loadEl.style.display='block';resEl.style.display='none';resEl.innerHTML='';
+  try{
+    // Livres avec chapitres non lus
+    const reading=bibleGetReading();
+    const unreadBooks=[];
+    for(const book of BIBLE_ALL){
+      const total=BIBLE_CHAPTERS[book]||0;
+      const readChs=(reading[book]||[]).length;
+      const left=total-readChs;
+      if(left>0)unreadBooks.push(`${book} (${left} ch. non lus)`);
+    }
+    const prompt=`Tu es un expert biblique. L'utilisateur veut étudier le thème : "${theme}".
+
+Livres ayant des chapitres non lus : ${unreadBooks.join(', ')}.
+
+Suggère entre 3 et 7 chapitres spécifiques, pertinents pour ce thème, UNIQUEMENT parmi les chapitres non lus listés ci-dessus.
+Réponds UNIQUEMENT avec un tableau JSON valide, sans texte autour :
+[{"ref":"Livre Numéro","raison":"explication courte max 15 mots"}]
+Exemple : [{"ref":"Psaumes 46","raison":"Parle de force et de refuge en Dieu face aux épreuves"}]`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-5',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const text=data.content?.find(b=>b.type==='text')?.text||'[]';
+    const match=text.match(/\[[\s\S]*\]/);
+    const suggestions=match?JSON.parse(match[0]):[];
+    loadEl.style.display='none';
+    if(!suggestions.length){resEl.innerHTML='<p style="color:var(--text3);font-size:12px;padding:8px 0">Aucune suggestion trouvée — essaie un autre thème.</p>';resEl.style.display='flex';return;}
+    resEl.innerHTML=suggestions.map(s=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#7c3aed">${s.ref}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4">${s.raison}</div>
+        </div>
+        <button onclick="bibleOpenSuggestion('${s.ref.replace(/'/g,"\\'")}')" style="padding:6px 12px;background:rgba(124,58,237,.12);color:#7c3aed;border:1px solid rgba(124,58,237,.3);border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0">Étudier →</button>
+      </div>`).join('');
+    resEl.style.display='flex';resEl.style.flexDirection='column';
+  }catch(e){loadEl.style.display='none';toast('Erreur : '+e.message);}
+}
+
+function bibleOpenSuggestion(ref){
+  const inp=document.getElementById('bible-study-ref-inp');
+  if(inp){inp.value=ref;bibleRefInput();}
+  document.getElementById('bible-study-ref-inp')?.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 function initBible(){
