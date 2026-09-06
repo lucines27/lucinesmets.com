@@ -8179,6 +8179,26 @@ function presetSave(){
   toast(toastMsg);
 }
 
+function presetApplyOffset(id,offset){
+  const preset=store.get('day_presets',[]).find(p=>p.id===id);
+  if(!preset)return;
+  const key=todoKey(offset);
+  const items=store.get(key,[]);
+  let added=0;
+  preset.tasks.forEach(t=>{
+    const exists=items.some(x=>x.text===t.text&&x.presetId===id);
+    if(!exists){
+      items.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+        text:t.text,done:false,difficulty:t.difficulty||'medium',createdAt:Date.now(),
+        category:t.cat?t.cat.toLowerCase():undefined,presetId:id});
+      added++;
+    }
+  });
+  store.set(key,items);
+  const label=offset===0?"aujourd'hui":"demain";
+  toast(`✓ ${added} tâche(s) ajoutée(s) pour ${label}`);
+  if(offset===0){renderHomeTodo();renderAgenda();}
+}
 function presetApply(id){
   const preset=store.get('day_presets',[]).find(p=>p.id===id);
   if(!preset)return;
@@ -8228,7 +8248,10 @@ function renderPresets(){
       <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
         ${p.tasks.map(t=>`<span style="font-size:11px;padding:2px 8px;background:var(--bg2);border-radius:6px;color:var(--text2)">${t.text}</span>`).join('')}
       </div>
-      <button onclick="presetApply('${p.id}')" style="font-size:12px;font-weight:700;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit">▶ Appliquer aujourd'hui</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="presetApply('${p.id}')" style="font-size:12px;font-weight:700;padding:5px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit">▶ Appliquer aujourd'hui</button>
+        <button onclick="presetApplyOffset('${p.id}',1)" style="font-size:12px;font-weight:700;padding:5px 14px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-family:inherit">▶ Appliquer demain</button>
+      </div>
     </div>`;
   }).join('');
 }
