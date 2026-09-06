@@ -790,6 +790,29 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .obj-form-steps .ms-val-wrap{display:none}
 .obj-target-row{transition:opacity .2s}
 
+/* ── BLOCS PRODUCTIFS ── */
+.bloc-week-grid{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px}
+.bloc-day-col{flex:0 0 118px;display:flex;flex-direction:column;gap:5px}
+.bloc-day-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);text-align:center;padding:5px 0 4px;border-bottom:1px solid var(--border)}
+.bloc-day-hdr.today{color:var(--accent);border-color:var(--accent)}
+.bloc-chip{display:flex;align-items:center;gap:4px;padding:6px 8px;border-radius:9px;border:1.5px solid transparent;transition:opacity .15s}
+.bloc-chip.done{opacity:.45}
+.bloc-chip-name{flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bloc-chip-dur{font-size:9px;opacity:.65;flex-shrink:0}
+.bloc-chip-cb{width:14px;height:14px;flex-shrink:0;cursor:pointer;border-radius:3px}
+.bloc-chip-del{background:none;border:none;font-size:12px;cursor:pointer;opacity:.3;padding:0;flex-shrink:0;line-height:1}
+.bloc-chip-del:hover{opacity:.9}
+.bloc-day-add{padding:5px;background:transparent;border:1px dashed var(--border2);border-radius:8px;font-size:11px;color:var(--text3);cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;width:100%;margin-top:2px}
+.bloc-day-add:hover{border-color:var(--accent);color:var(--accent)}
+.bloc-picker{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:5px;box-shadow:0 4px 14px rgba(0,0,0,.12);display:flex;flex-direction:column;gap:3px;max-height:160px;overflow-y:auto;margin-top:3px}
+.bloc-picker-item{padding:6px 8px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+.bloc-picker-item:hover{filter:brightness(.94)}
+.bloc-def-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bg3)}
+.bloc-def-swatch{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.bloc-summary-row{display:flex;align-items:center;gap:8px;padding:3px 0}
+.bloc-summary-bar{height:5px;background:var(--bg3);border-radius:3px;flex:1;overflow:hidden}
+.bloc-summary-fill{height:100%;border-radius:3px;transition:width .3s}
+
 /* ── HOME HABITS ── */
 .home-habit-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bg3)}
 .home-habit-row:last-child{border-bottom:none}
@@ -2011,6 +2034,9 @@ body.focus-mode #focus-exit-btn{display:flex}
         </div>
       </div>
 
+      <div class="section-label">Blocs du jour</div>
+      <div class="card" id="home-blocs"></div>
+
       <div class="section-label">Habitudes</div>
       <div class="card" id="home-habits"></div>
 
@@ -2255,6 +2281,31 @@ body.focus-mode #focus-exit-btn{display:flex}
         <div id="objective-config-list"></div>
         <div id="objective-add-form" style="display:none"></div>
         <button class="add-habit-btn" style="margin-top:6px" onclick="showAddObjectiveForm()">+ Nouvel objectif</button>
+      </div>
+
+      <!-- ── BLOCS PRODUCTIFS ── -->
+      <div class="section-label">Blocs productifs</div>
+      <div class="card" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <button class="cal-nav-btn" onclick="blocPrevWeek()">‹</button>
+          <span id="bloc-week-lbl" style="font-size:12px;font-weight:700;color:var(--text)"></span>
+          <button class="cal-nav-btn" onclick="blocNextWeek()">›</button>
+        </div>
+        <div id="bloc-week-summary" style="margin-bottom:10px"></div>
+        <div id="bloc-week-grid" class="bloc-week-grid"></div>
+      </div>
+      <div class="section-label" style="font-size:10px">Types de blocs</div>
+      <div class="card" style="margin-bottom:10px">
+        <div id="bloc-defs-list"></div>
+        <div id="bloc-def-form" style="display:none;flex-direction:column;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <div style="display:flex;gap:6px">
+            <input class="add-input" id="bloc-def-name" placeholder="Nom du bloc…" style="margin:0;flex:1">
+            <input class="add-input" id="bloc-def-dur" placeholder="30' ou 1h" style="margin:0;width:80px">
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="bloc-color-picker"></div>
+          <button onclick="blocSaveDef()" style="padding:8px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Ajouter</button>
+        </div>
+        <button class="add-habit-btn" onclick="blocAddDefForm()" style="margin-top:8px">+ Nouveau type de bloc</button>
       </div>
 
       <div class="section-label">Calendrier</div>
@@ -3748,6 +3799,7 @@ function init(){
   _s(loadSettings,'loadSettings');
   _s(initHome,'initHome');
   _s(initGoals,'initGoals');
+  _s(initBlocs,'initBlocs');
   _s(initSante,'initSante');
   _s(initCapital,'initCapital');
   _s(initBusiness,'initBusiness');
@@ -3793,6 +3845,7 @@ function initHome(){
   _s(renderHomeTodo,'renderHomeTodo');
   _s(renderAgenda,'renderAgenda');
   _s(initPensebete,'initPensebete');
+  _s(renderHomeBlocsToday,'renderHomeBlocsToday');
   _s(renderHomeHabits,'renderHomeHabits');
   _s(renderDashboardObjectives,'renderDashboardObjectives');
   loadDailyQuote(false);
@@ -12955,6 +13008,167 @@ function bibleRenderStudyList(){
       </div>
       ${e.notes?`<div class="bible-study-notes">${e.notes.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}
     </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  BLOCS PRODUCTIFS
+// ══════════════════════════════════════════════
+const BLOC_COLORS=[
+  {bg:'#fecdd3',border:'#f9a8a8',text:'#9f1239'},
+  {bg:'#bfdbfe',border:'#93c5fd',text:'#1e40af'},
+  {bg:'#bbf7d0',border:'#86efac',text:'#14532d'},
+  {bg:'#e9d5ff',border:'#c4b5fd',text:'#5b21b6'},
+  {bg:'#fef08a',border:'#fde047',text:'#713f12'},
+  {bg:'#fed7aa',border:'#fdba74',text:'#7c2d12'},
+];
+let _blocWeekOffset=0;
+let _blocSelColor=0;
+
+function blocDateKey(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function blocGetWeekDates(off){
+  const today=new Date();const dow=today.getDay();
+  const mon=new Date(today);mon.setDate(today.getDate()-(dow===0?6:dow-1)+off*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+}
+function blocUID(){return'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+
+function initBlocs(){_blocWeekOffset=0;renderBlocsWeek();renderBlocsDefs();}
+function blocPrevWeek(){_blocWeekOffset--;renderBlocsWeek();}
+function blocNextWeek(){_blocWeekOffset++;renderBlocsWeek();}
+
+function renderBlocsWeek(){
+  const grid=document.getElementById('bloc-week-grid');
+  const sumEl=document.getElementById('bloc-week-summary');
+  const wlbl=document.getElementById('bloc-week-lbl');
+  if(!grid)return;
+  const dates=blocGetWeekDates(_blocWeekOffset);
+  const todayKey=blocDateKey(new Date());
+  const defs=store.get('bloc_defs',[]);
+  const schedule=store.get('bloc_schedule',{});
+  const fmt=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+  if(wlbl)wlbl.textContent=`${fmt(dates[0])} – ${fmt(dates[6])}`;
+  // Summary
+  const ws={};defs.forEach(d=>{ws[d.id]={done:0,total:0,def:d};});
+  dates.forEach(d=>{(schedule[blocDateKey(d)]||[]).forEach(inst=>{if(ws[inst.defId]){ws[inst.defId].total++;if(inst.done)ws[inst.defId].done++;}});});
+  const tDone=Object.values(ws).reduce((s,r)=>s+r.done,0);
+  const tAll=Object.values(ws).reduce((s,r)=>s+r.total,0);
+  const pct=tAll?Math.round(tDone/tAll*100):0;
+  if(sumEl){
+    const rows=Object.values(ws).filter(r=>r.total>0).map(r=>{
+      const c=BLOC_COLORS[r.def.color%BLOC_COLORS.length];
+      const p=r.total?Math.round(r.done/r.total*100):0;
+      return`<div class="bloc-summary-row"><span style="font-size:11px;font-weight:600;color:${c.text};min-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.def.name}</span><div class="bloc-summary-bar"><div class="bloc-summary-fill" style="width:${p}%;background:${c.border}"></div></div><span style="font-size:11px;color:var(--text2);min-width:36px;text-align:right">${r.done}/${r.total}</span></div>`;
+    }).join('');
+    sumEl.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;font-weight:700">Cette semaine</span><span style="font-size:13px;font-weight:700;color:var(--accent)">${tDone}/${tAll} <span style="font-size:10px;color:var(--text3)">(${pct}%)</span></span></div>${rows}`;
+  }
+  // Grid
+  const DAY=['Lu','Ma','Me','Je','Ve','Sa','Di'];
+  grid.innerHTML=dates.map((d,i)=>{
+    const dk=blocDateKey(d);
+    const isToday=dk===todayKey;
+    const instances=schedule[dk]||[];
+    const chips=instances.map(inst=>{
+      const def=defs.find(x=>x.id===inst.defId);if(!def)return'';
+      const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
+      return`<div class="bloc-chip${inst.done?' done':''}" style="background:${c.bg};border-color:${c.border};color:${c.text}">
+        <input type="checkbox" class="bloc-chip-cb" ${inst.done?'checked':''} onchange="blocToggle('${dk}','${inst.iid}')">
+        <span class="bloc-chip-name" title="${def.name}">${def.name}</span>
+        <span class="bloc-chip-dur">${def.duration||''}</span>
+        <button class="bloc-chip-del" onclick="blocRemove('${dk}','${inst.iid}')">×</button>
+      </div>`;
+    }).join('');
+    return`<div class="bloc-day-col">
+      <div class="bloc-day-hdr${isToday?' today':''}">${DAY[i]}<br>${d.getDate()}</div>
+      ${chips}
+      <button class="bloc-day-add" onclick="blocShowPicker('${dk}',this)">+ bloc</button>
+      <div id="bloc-picker-${dk}" style="display:none"></div>
+    </div>`;
+  }).join('');
+}
+
+function blocToggle(dk,iid){
+  const s=store.get('bloc_schedule',{});
+  const inst=(s[dk]||[]).find(x=>x.iid===iid);
+  if(inst)inst.done=!inst.done;
+  store.set('bloc_schedule',s);
+  renderBlocsWeek();renderHomeBlocsToday();
+}
+function blocRemove(dk,iid){
+  const s=store.get('bloc_schedule',{});
+  s[dk]=(s[dk]||[]).filter(x=>x.iid!==iid);
+  store.set('bloc_schedule',s);renderBlocsWeek();renderHomeBlocsToday();
+}
+function blocShowPicker(dk,btn){
+  document.querySelectorAll('[id^="bloc-picker-"]').forEach(el=>el.style.display='none');
+  const pickerEl=document.getElementById('bloc-picker-'+dk);if(!pickerEl)return;
+  if(pickerEl.style.display!=='none'){pickerEl.style.display='none';return;}
+  const defs=store.get('bloc_defs',[]);
+  if(!defs.length){pickerEl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px">Crée d\'abord des types ci-dessous</div>';pickerEl.style.display='block';return;}
+  pickerEl.innerHTML=`<div class="bloc-picker">${defs.map(def=>{const c=BLOC_COLORS[def.color%BLOC_COLORS.length];return`<div class="bloc-picker-item" onclick="blocPickDef('${dk}','${def.id}')" style="background:${c.bg};color:${c.text}">${def.name} <span style="font-size:10px;opacity:.65">${def.duration||''}</span></div>`;}).join('')}</div>`;
+  pickerEl.style.display='block';
+}
+function blocPickDef(dk,defId){
+  const s=store.get('bloc_schedule',{});
+  if(!s[dk])s[dk]=[];
+  s[dk].push({iid:blocUID(),defId,done:false});
+  store.set('bloc_schedule',s);renderBlocsWeek();renderHomeBlocsToday();
+}
+
+function renderBlocsDefs(){
+  const cont=document.getElementById('bloc-defs-list');if(!cont)return;
+  const defs=store.get('bloc_defs',[]);
+  if(!defs.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:6px 0">Aucun type de bloc</div>';return;}
+  cont.innerHTML=defs.map(def=>{
+    const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
+    return`<div class="bloc-def-row"><div class="bloc-def-swatch" style="background:${c.border}"></div><span style="font-size:13px;font-weight:600;flex:1;color:var(--text)">${def.name}</span><span style="font-size:11px;color:var(--text3)">${def.duration||''}</span><button onclick="blocDeleteDef('${def.id}')" style="background:none;border:none;color:var(--border2);cursor:pointer;font-size:14px;padding:2px 4px">×</button></div>`;
+  }).join('');
+}
+function blocAddDefForm(){
+  const form=document.getElementById('bloc-def-form');if(!form)return;
+  const show=form.style.display==='none';
+  form.style.display=show?'flex':'none';
+  if(show){
+    const cp=document.getElementById('bloc-color-picker');
+    if(cp&&!cp.children.length)cp.innerHTML=BLOC_COLORS.map((c,i)=>`<div onclick="_blocSelColor=${i};document.querySelectorAll('.bcs').forEach(x=>x.style.outline='none');this.style.outline='2.5px solid #0d9488'" class="bcs" style="width:22px;height:22px;border-radius:50%;background:${c.border};cursor:pointer;border:2px solid transparent;${i===0?'outline:2.5px solid #0d9488':''}"></div>`).join('');
+  }
+}
+function blocSaveDef(){
+  const name=(document.getElementById('bloc-def-name')?.value||'').trim();
+  const dur=(document.getElementById('bloc-def-dur')?.value||'').trim();
+  if(!name)return toast('Nom requis');
+  const defs=store.get('bloc_defs',[]);
+  defs.push({id:blocUID(),name,duration:dur,color:_blocSelColor});
+  store.set('bloc_defs',defs);
+  document.getElementById('bloc-def-name').value='';
+  document.getElementById('bloc-def-dur').value='';
+  document.getElementById('bloc-def-form').style.display='none';
+  renderBlocsDefs();renderBlocsWeek();
+}
+function blocDeleteDef(id){
+  store.set('bloc_defs',store.get('bloc_defs',[]).filter(d=>d.id!==id));
+  const s=store.get('bloc_schedule',{});
+  Object.keys(s).forEach(dk=>{s[dk]=s[dk].filter(x=>x.defId!==id);});
+  store.set('bloc_schedule',s);
+  renderBlocsDefs();renderBlocsWeek();renderHomeBlocsToday();
+}
+
+function renderHomeBlocsToday(){
+  const cont=document.getElementById('home-blocs');if(!cont)return;
+  const dk=blocDateKey(new Date());
+  const instances=store.get('bloc_schedule',{})[dk]||[];
+  const defs=store.get('bloc_defs',[]);
+  if(!instances.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0;text-align:center">Aucun bloc — configure dans Planification</div>';return;}
+  cont.innerHTML=instances.map(inst=>{
+    const def=defs.find(d=>d.id===inst.defId);if(!def)return'';
+    const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
+    return`<div class="home-habit-row">
+      <div style="flex:1;display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;border:1.5px solid ${c.border};background:${c.bg}">
+        <span style="flex:1;font-size:13px;font-weight:600;color:${c.text}">${def.name}</span>
+        <span style="font-size:10px;opacity:.65;color:${c.text}">${def.duration||''}</span>
+      </div>
+      <div class="home-habit-cb${inst.done?' done':''}" onclick="blocToggle('${dk}','${inst.iid}')"></div>
+    </div>`;
+  }).join('');
 }
 
 async function bibleAskSuggest(){
