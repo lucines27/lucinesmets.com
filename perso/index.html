@@ -3841,6 +3841,7 @@ function initHome(){
   _s(pwmInit,'pwmInit');
   _s(initPomo,'initPomo');
   _s(todoMigrateOld,'todoMigrateOld');
+  _s(migrateTodoDedupe,'migrateTodoDedupe');
   _s(todoRollover,'todoRollover');
   _s(renderHomeTodo,'renderHomeTodo');
   _s(renderAgenda,'renderAgenda');
@@ -7946,6 +7947,37 @@ function todoKey(off){
 }
 function todoIsReadonly(){return _todoOffset<-1;}
 
+// ── Générateur d'IDs uniques pour les todos ──────────────────────────────────
+let _todoUIDctr=0;
+function _todoUID(pfx){
+  // base36(timestamp) + compteur croissant + 6 chars aléatoires → collision impossible
+  return 'td_'+(pfx?pfx+'_':'')+Date.now().toString(36)+(++_todoUIDctr).toString(36)+'_'+Math.random().toString(36).slice(2,8);
+}
+
+// Migration : corrige les IDs dupliqués dans le localStorage (exécuté une fois au boot)
+function migrateTodoDedupe(){
+  const seenIds=new Set();
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith('lm_todo_'))keys.push(k);
+  }
+  keys.forEach(k=>{
+    const raw=localStorage.getItem(k);
+    if(!raw)return;
+    try{
+      const items=JSON.parse(raw);
+      if(!Array.isArray(items))return;
+      let changed=false;
+      items.forEach(t=>{
+        if(!t.id||seenIds.has(t.id)){t.id=_todoUID('fix');changed=true;}
+        seenIds.add(t.id);
+      });
+      if(changed)localStorage.setItem(k,JSON.stringify(items));
+    }catch(e){}
+  });
+}
+
 // Migrate old flat `todo` array → today's todo_[date]
 function todoMigrateOld(){
   const old=store.get('todo',null);
@@ -7955,7 +7987,7 @@ function todoMigrateOld(){
   old.forEach(t=>{
     if(!t.text)return;
     const entry={
-      id:t.id||('td_m'+Date.now()+'_'+Math.random().toString(36).slice(2,5)),
+      id:t.id||_todoUID('m'),
       text:t.text,done:t.done||false,createdAt:t.createdAt||Date.now()
     };
     if(!ids.has(entry.id)){todayItems.push(entry);ids.add(entry.id);}
@@ -8188,7 +8220,7 @@ function presetApplyOffset(id,offset){
   preset.tasks.forEach(t=>{
     const exists=items.some(x=>x.text===t.text&&x.presetId===id);
     if(!exists){
-      items.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      items.push({id:_todoUID('p'),
         text:t.text,done:false,difficulty:t.difficulty||'medium',createdAt:Date.now(),
         category:t.cat?t.cat.toLowerCase():undefined,presetId:id});
       added++;
@@ -8207,7 +8239,7 @@ function presetApply(id){
   preset.tasks.forEach(t=>{
     const exists=items.some(x=>x.text===t.text&&x.presetId===id);
     if(!exists){
-      items.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      items.push({id:_todoUID('p'),
         text:t.text,done:false,difficulty:t.difficulty||'medium',createdAt:Date.now(),
         category:t.cat?t.cat.toLowerCase():undefined,presetId:id});
       added++;
@@ -8269,7 +8301,7 @@ function todoRollover(){
   const pastItems=store.get('todo_'+localKey(yesterday),[]);
   pastItems.filter(t=>!t.done&&!todayIds.has(t.id)).forEach(t=>{
     const copy={
-      id:'td_r'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      id:_todoUID('r'),
       text:t.text,done:false,createdAt:Date.now(),
       ...(t.difficulty?{difficulty:t.difficulty}:{}),
       ...(t.category?{category:t.category}:{})
@@ -8281,7 +8313,7 @@ function todoRollover(){
   presets.forEach(p=>{
     p.tasks.forEach(t=>{
       const exists=todayItems.some(x=>x.presetId===p.id&&x.text===t.text);
-      if(!exists) todayItems.push({id:'td_p'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      if(!exists) todayItems.push({id:_todoUID('p'),
         text:t.text,done:false,difficulty:'medium',createdAt:Date.now(),
         category:t.cat?t.cat.toLowerCase():undefined,presetId:p.id});
     });
@@ -8430,7 +8462,7 @@ function addTodoItem(){
   const txt=inp.value.trim();if(!txt)return;
   const items=store.get(todoKey(_todoOffset),[]);
   const newCat=_todoFilter!=='all'?_todoFilter:undefined;
-  items.push({id:'td_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),text:txt,done:false,difficulty:'medium',createdAt:Date.now(),...(newCat?{category:newCat}:{})});
+  items.push({id:_todoUID(),text:txt,done:false,difficulty:'medium',createdAt:Date.now(),...(newCat?{category:newCat}:{})});
   store.set(todoKey(_todoOffset),items);
   inp.value='';
   renderHomeTodo();
@@ -16064,7 +16096,7 @@ function jarvisInit(){
   // Fonctions globales pour actions dashboard
   window.addTodo=function(text){
     const items=store.get(todoKey(0),[]);
-    items.push({id:'td_'+Date.now()+'_jv',text:text,done:false,difficulty:'medium',createdAt:Date.now()});
+    items.push({id:_todoUID('jv'),text:text,done:false,difficulty:'medium',createdAt:Date.now()});
     store.set(todoKey(0),items);
     if(typeof renderHomeTodo==='function') renderHomeTodo();
     if(typeof refreshTodoCharts==='function') refreshTodoCharts();
