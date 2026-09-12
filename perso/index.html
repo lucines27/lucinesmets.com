@@ -2308,6 +2308,20 @@ body.focus-mode #focus-exit-btn{display:flex}
         <button class="add-habit-btn" onclick="blocAddDefForm()" style="margin-top:8px">+ Nouveau type de bloc</button>
       </div>
 
+      <div class="section-label" style="font-size:10px">Présets de semaine</div>
+      <div class="card" style="margin-bottom:10px">
+        <div id="bloc-presets-list"></div>
+        <div id="bloc-preset-form" style="display:none;flex-direction:column;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <input class="add-input" id="bloc-preset-name" placeholder="Nom du préset…" style="margin:0">
+          <div id="bloc-preset-days" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div style="display:flex;gap:6px">
+            <button onclick="blocPresetSave()" style="flex:1;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Enregistrer</button>
+            <button onclick="document.getElementById('bloc-preset-form').style.display='none'" style="padding:8px 14px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>
+          </div>
+        </div>
+        <button class="add-habit-btn" onclick="blocPresetAddForm()" style="margin-top:8px">+ Nouveau préset</button>
+      </div>
+
       <div class="section-label">Calendrier</div>
       <div class="cal-card">
         <div class="cal-header">
@@ -13087,7 +13101,7 @@ function blocGetWeekDates(off){
 }
 function blocUID(){return'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
-function initBlocs(){_blocWeekOffset=0;renderBlocsWeek();renderBlocsDefs();}
+function initBlocs(){_blocWeekOffset=0;renderBlocsWeek();renderBlocsDefs();renderBlocsPresets();}
 function blocPrevWeek(){_blocWeekOffset--;renderBlocsWeek();}
 function blocNextWeek(){_blocWeekOffset++;renderBlocsWeek();}
 
@@ -13205,6 +13219,114 @@ function blocDeleteDef(id){
   Object.keys(s).forEach(dk=>{s[dk]=s[dk].filter(x=>x.defId!==id);});
   store.set('bloc_schedule',s);
   renderBlocsDefs();renderBlocsWeek();renderHomeBlocsToday();
+}
+
+// ── PRÉSETS DE BLOCS ─────────────────────────────────────────────────────────
+const BLOC_DAY_LABELS=['Lu','Ma','Me','Je','Ve','Sa','Di'];
+
+function renderBlocsPresets(){
+  const cont=document.getElementById('bloc-presets-list');if(!cont)return;
+  const presets=store.get('bloc_presets',[]);
+  const defs=store.get('bloc_defs',[]);
+  if(!presets.length){cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:6px 0">Aucun préset — crées-en un !</div>';return;}
+  cont.innerHTML=presets.map(p=>{
+    // Résumé : nombre de blocs par jour
+    const summary=BLOC_DAY_LABELS.map((lbl,i)=>{
+      const ids=p.days[i]||[];
+      if(!ids.length)return'';
+      return`<span style="font-size:10px;padding:2px 6px;background:var(--bg2);border-radius:6px;color:var(--text2)">${lbl}:${ids.length}</span>`;
+    }).filter(Boolean).join('');
+    return`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-weight:700;font-size:13px;flex:1">${p.name}</span>
+        <button onclick="blocPresetDelete('${p.id}')" style="background:none;border:none;color:var(--border2);cursor:pointer;font-size:14px;padding:2px 4px">×</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${summary||'<span style="font-size:11px;color:var(--text3)">Vide</span>'}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="blocPresetApply('${p.id}',${_blocWeekOffset})" style="font-size:12px;font-weight:700;padding:5px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit">▶ Cette semaine</button>
+        <button onclick="blocPresetApply('${p.id}',${_blocWeekOffset+1})" style="font-size:12px;font-weight:700;padding:5px 12px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-family:inherit">▶ Semaine suivante</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function blocPresetAddForm(){
+  const form=document.getElementById('bloc-preset-form');if(!form)return;
+  const show=form.style.display==='none';
+  form.style.display=show?'flex':'none';
+  if(!show)return;
+  const defs=store.get('bloc_defs',[]);
+  const daysEl=document.getElementById('bloc-preset-days');if(!daysEl)return;
+  if(!defs.length){daysEl.innerHTML='<div style="font-size:12px;color:var(--text3)">Crée d\'abord des types de blocs</div>';return;}
+  daysEl.innerHTML=BLOC_DAY_LABELS.map((lbl,i)=>`
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <span style="font-size:11px;font-weight:700;color:var(--text3);min-width:22px;padding-top:4px">${lbl}</span>
+      <div id="bloc-preset-day-${i}" style="display:flex;flex-wrap:wrap;gap:4px;flex:1">
+        ${defs.map(def=>{const c=BLOC_COLORS[def.color%BLOC_COLORS.length];return`<div class="bloc-preset-toggle" data-day="${i}" data-defid="${def.id}" onclick="blocPresetToggleChip(this,'${def.id}',${i})" style="font-size:11px;padding:3px 8px;border-radius:7px;border:1.5px solid ${c.border};background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .15s">${def.name}</div>`;}).join('')}
+      </div>
+    </div>`).join('');
+  document.getElementById('bloc-preset-name').value='';
+}
+
+function blocPresetToggleChip(el,defId,dayIdx){
+  const active=el.getAttribute('data-active')==='1';
+  const defs=store.get('bloc_defs',[]);
+  const def=defs.find(d=>d.id===defId);
+  if(!def)return;
+  const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
+  if(active){
+    el.setAttribute('data-active','0');
+    el.style.background='var(--bg2)';el.style.color='var(--text2)';
+  }else{
+    el.setAttribute('data-active','1');
+    el.style.background=c.bg;el.style.color=c.text;el.style.borderColor=c.border;
+  }
+}
+
+function blocPresetSave(){
+  const name=(document.getElementById('bloc-preset-name')?.value||'').trim();
+  if(!name)return toast('Nom requis');
+  const days={};
+  document.querySelectorAll('.bloc-preset-toggle[data-active="1"]').forEach(el=>{
+    const d=parseInt(el.getAttribute('data-day'));
+    const defId=el.getAttribute('data-defid');
+    if(!days[d])days[d]=[];
+    if(!days[d].includes(defId))days[d].push(defId);
+  });
+  const presets=store.get('bloc_presets',[]);
+  presets.push({id:blocUID(),name,days});
+  store.set('bloc_presets',presets);
+  document.getElementById('bloc-preset-form').style.display='none';
+  renderBlocsPresets();
+  toast('✓ Préset enregistré');
+}
+
+function blocPresetApply(id,weekOff){
+  const preset=store.get('bloc_presets',[]).find(p=>p.id===id);
+  if(!preset)return;
+  const dates=blocGetWeekDates(weekOff);
+  const s=store.get('bloc_schedule',{});
+  let added=0;
+  dates.forEach((d,i)=>{
+    const defIds=preset.days[i]||[];
+    if(!defIds.length)return;
+    const dk=blocDateKey(d);
+    if(!s[dk])s[dk]=[];
+    defIds.forEach(defId=>{
+      s[dk].push({iid:blocUID(),defId,done:false});
+      added++;
+    });
+  });
+  store.set('bloc_schedule',s);
+  renderBlocsWeek();renderHomeBlocsToday();
+  const label=weekOff===_blocWeekOffset?'cette semaine':'la semaine suivante';
+  toast(`✓ ${added} bloc(s) ajouté(s) pour ${label}`);
+}
+
+function blocPresetDelete(id){
+  store.set('bloc_presets',store.get('bloc_presets',[]).filter(p=>p.id!==id));
+  renderBlocsPresets();
+  toast('Préset supprimé');
 }
 
 function renderHomeBlocsToday(){
