@@ -12954,12 +12954,12 @@ async function bibleAnalyzeAI(){
   _bibleAIEditing=false;
   document.getElementById('bible-ai-edit-inp').style.display='none';
   document.getElementById('bible-ai-edit-btn').textContent='✏️ Modifier';
-  const sys="Tu es un guide biblique bienveillant et érudit. L'utilisateur étudie la Bible de façon personnelle et approfondie. Pour le passage demandé, fournis une analyse structurée en français avec : 1) Le contexte historique et littéraire (2-3 phrases), 2) L'analyse verset par verset avec les mots-clés grecs/hébreux importants si pertinent, 3) Les thèmes théologiques centraux, 4) L'application pratique pour la vie quotidienne, 5) Des liens avec d'autres passages bibliques. Sois précis, complet, accessible et spirituellement nourrissant.";
+  const sys="Tu es un guide biblique bienveillant et érudit. Pour le passage demandé, fournis une analyse concise et complète en français structurée ainsi :\n\n## Contexte\n2-3 phrases sur le contexte historique et l'intention de l'auteur.\n\n## Message central\n1 paragraphe : l'idée principale du passage en langage clair.\n\n## Points clés\n3 à 5 points essentiels du passage (avec un mot grec/hébreu important si vraiment pertinent).\n\n## Application\n2-3 phrases concrètes pour aujourd'hui.\n\n## À retenir\nUne phrase-clé mémorisable.\n\nSois synthétique : chaque section tient en 2-4 phrases maximum. Pas d'analyse verset par verset, pas de tableaux.";
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:2000,stream:true,system:sys,messages:[{role:'user',content:'Analyse le passage : '+ref}]})
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:1200,stream:true,system:sys,messages:[{role:'user',content:'Analyse le passage : '+ref}]})
     });
     if(!res.ok){const e=await res.json();throw new Error(e?.error?.message||'Erreur API');}
     loading.style.display='none';
