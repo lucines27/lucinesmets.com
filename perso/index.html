@@ -2293,7 +2293,6 @@ body.focus-mode #focus-exit-btn{display:flex}
         </div>
         <div id="bloc-week-summary" style="margin-bottom:10px"></div>
         <div id="bloc-week-grid" class="bloc-week-grid"></div>
-        <button class="add-habit-btn" onclick="blocSaveAsPreset()" style="margin-top:10px">💾 Sauvegarder cette semaine comme préset</button>
       </div>
       <div class="section-label" style="font-size:10px">Types de blocs</div>
       <div class="card" style="margin-bottom:10px">
@@ -2312,6 +2311,15 @@ body.focus-mode #focus-exit-btn{display:flex}
       <div class="section-label" style="font-size:10px">Présets de semaine</div>
       <div class="card" style="margin-bottom:10px">
         <div id="bloc-presets-list"></div>
+        <div id="bloc-preset-form" style="display:none;flex-direction:column;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <input class="add-input" id="bloc-preset-name" placeholder="Nom du préset…" style="margin:0">
+          <div id="bloc-preset-rows" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div style="display:flex;gap:6px">
+            <button onclick="blocPresetSave()" style="flex:1;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Enregistrer</button>
+            <button onclick="document.getElementById('bloc-preset-form').style.display='none'" style="padding:8px 14px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Annuler</button>
+          </div>
+        </div>
+        <button class="add-habit-btn" onclick="blocPresetAddForm()" style="margin-top:8px">+ Nouveau préset</button>
       </div>
 
       <div class="section-label">Calendrier</div>
@@ -13093,7 +13101,7 @@ function blocGetWeekDates(off){
 }
 function blocUID(){return'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
-function initBlocs(){_blocWeekOffset=0;renderBlocsWeek();renderBlocsDefs();renderBlocsPresets();}
+function initBlocs(){_blocWeekOffset=0;renderBlocsDefs();renderBlocsPresets();renderBlocsWeek();}
 function blocPrevWeek(){_blocWeekOffset--;renderBlocsWeek();}
 function blocNextWeek(){_blocWeekOffset++;renderBlocsWeek();}
 
@@ -13102,6 +13110,8 @@ function renderBlocsWeek(){
   const sumEl=document.getElementById('bloc-week-summary');
   const wlbl=document.getElementById('bloc-week-lbl');
   if(!grid)return;
+  // Auto-apply preset si semaine vierge
+  if(blocAutoApplyPreset(_blocWeekOffset))return;
   const dates=blocGetWeekDates(_blocWeekOffset);
   const todayKey=blocDateKey(new Date());
   const defs=store.get('bloc_defs',[]);
@@ -13220,79 +13230,165 @@ function renderBlocsPresets(){
   const cont=document.getElementById('bloc-presets-list');if(!cont)return;
   const presets=store.get('bloc_presets',[]);
   const defs=store.get('bloc_defs',[]);
+  const activeId=store.get('bloc_preset_active',null);
   if(!presets.length){
-    cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:6px 0">Aucun préset — configure une semaine et sauvegarde-la via le bouton ci-dessus.</div>';
+    cont.innerHTML='<div style="font-size:12px;color:var(--text3);padding:6px 0">Aucun préset — crées-en un !</div>';
     return;
   }
   cont.innerHTML=presets.map(p=>{
-    // Résumé par jour : Lu:SessionTrading×2, Ma:Esp…
-    const template=p.template||[];
-    const summaryByDay=template.map((dayBlocs,i)=>{
-      if(!dayBlocs||!dayBlocs.length)return'';
-      // Compter les occurrences par defId
-      const counts={};
-      dayBlocs.forEach(b=>{counts[b.defId]=(counts[b.defId]||0)+1;});
-      const chips=Object.entries(counts).map(([defId,n])=>{
-        const def=defs.find(d=>d.id===defId);if(!def)return'';
-        const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
-        return`<span style="font-size:10px;padding:1px 6px;background:${c.bg};border:1px solid ${c.border};border-radius:5px;color:${c.text};white-space:nowrap">${n>1?n+'× ':''}${def.name}</span>`;
-      }).join('');
-      return`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-        <span style="font-size:10px;font-weight:700;color:var(--text3);min-width:20px">${BLOC_DAY_LABELS[i]}</span>${chips}
+    const isActive=p.id===activeId;
+    // Résumé par ligne de type de bloc : SessionTrading Lu Ma Me Je Ve, Prospection ×2 Lu…
+    const items=p.items||[];
+    const summary=items.map(item=>{
+      const def=defs.find(d=>d.id===item.defId);if(!def)return'';
+      const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
+      const dayLabels=(item.days||[]).map(i=>BLOC_DAY_LABELS[i]).join(' ');
+      return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+        <span style="font-size:11px;padding:2px 7px;background:${c.bg};border:1px solid ${c.border};border-radius:6px;color:${c.text};font-weight:600">${def.name}${item.qty>1?' ×'+item.qty:''}</span>
+        <span style="font-size:11px;color:var(--text3)">${dayLabels}</span>
       </div>`;
-    }).filter(Boolean).join('');
+    }).join('');
     return`<div style="padding:10px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        ${isActive?'<span style="font-size:10px;padding:2px 7px;background:var(--accent-bg);color:var(--accent);border-radius:6px;font-weight:700">⭐ Actif</span>':''}
         <span style="font-weight:700;font-size:13px;flex:1">${p.name}</span>
         <button onclick="blocPresetDelete('${p.id}')" style="background:none;border:none;color:var(--border2);cursor:pointer;font-size:14px;padding:2px 4px">×</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">${summaryByDay||'<span style="font-size:11px;color:var(--text3)">Semaine vide</span>'}</div>
+      <div style="margin-bottom:8px">${summary||'<span style="font-size:11px;color:var(--text3)">Vide</span>'}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button onclick="blocPresetApply('${p.id}',_blocWeekOffset)" style="font-size:12px;font-weight:700;padding:5px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit">▶ Cette semaine</button>
-        <button onclick="blocPresetApply('${p.id}',_blocWeekOffset+1)" style="font-size:12px;font-weight:700;padding:5px 12px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-family:inherit">▶ Semaine suivante</button>
+        ${!isActive?`<button onclick="blocPresetSetActive('${p.id}')" style="font-size:11px;font-weight:600;padding:4px 10px;background:var(--bg2);color:var(--accent);border:1.5px solid var(--accent);border-radius:7px;cursor:pointer;font-family:inherit">⭐ Définir par défaut</button>`:'<button onclick="blocPresetSetActive(null)" style="font-size:11px;padding:4px 10px;background:var(--bg2);color:var(--text3);border:1px solid var(--border);border-radius:7px;cursor:pointer;font-family:inherit">Désactiver</button>'}
+        <button onclick="blocPresetApply('${p.id}',_blocWeekOffset)" style="font-size:11px;font-weight:700;padding:4px 10px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:inherit">▶ Cette semaine</button>
+        <button onclick="blocPresetApply('${p.id}',_blocWeekOffset+1)" style="font-size:11px;font-weight:700;padding:4px 10px;background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:7px;cursor:pointer;font-family:inherit">▶ Sem. suivante</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function blocSaveAsPreset(){
-  // Capture la semaine affichée et demande un nom
-  const dates=blocGetWeekDates(_blocWeekOffset);
-  const schedule=store.get('bloc_schedule',{});
-  const template=dates.map(d=>(schedule[blocDateKey(d)]||[]).map(inst=>({defId:inst.defId})));
-  const total=template.reduce((s,day)=>s+day.length,0);
-  if(!total){toast('La semaine est vide — ajoute des blocs d\'abord');return;}
-  const name=prompt('Nom de ce préset :','Ma semaine type');
-  if(!name||!name.trim())return;
-  const presets=store.get('bloc_presets',[]);
-  presets.push({id:blocUID(),name:name.trim(),template});
-  store.set('bloc_presets',presets);
-  renderBlocsPresets();
-  toast(`✓ Préset "${name.trim()}" enregistré (${total} blocs)`);
+function blocPresetAddForm(){
+  const form=document.getElementById('bloc-preset-form');if(!form)return;
+  const show=form.style.display==='none';
+  form.style.display=show?'flex':'none';
+  if(!show)return;
+  const defs=store.get('bloc_defs',[]);
+  const rowsEl=document.getElementById('bloc-preset-rows');if(!rowsEl)return;
+  if(!defs.length){rowsEl.innerHTML='<div style="font-size:12px;color:var(--text3)">Crée d\'abord des types de blocs</div>';return;}
+  rowsEl.innerHTML=defs.map(def=>{
+    const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
+    const dayBtns=BLOC_DAY_LABELS.map((lbl,i)=>
+      `<button type="button" class="bloc-pd-day" data-defid="${def.id}" data-day="${i}" data-active="0"
+        onclick="blocPresetToggleDay(this)"
+        style="font-size:10px;font-weight:700;padding:4px 0;border-radius:6px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text3);cursor:pointer;width:30px;transition:all .15s">${lbl}</button>`
+    ).join('');
+    return`<div style="padding:8px 10px;border-radius:10px;border:1.5px solid ${c.border};background:${c.bg}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:${c.text};flex:1">${def.name}${def.duration?' · '+def.duration:''}</span>
+        <div style="display:flex;align-items:center;gap:3px">
+          <button type="button" onclick="blocPresetQtyChange('${def.id}',-1)" style="width:20px;height:20px;border-radius:5px;border:1px solid ${c.border};background:rgba(0,0,0,.06);color:${c.text};cursor:pointer;font-size:13px;line-height:1;padding:0">−</button>
+          <span id="bloc-pq-${def.id}" style="font-size:12px;font-weight:700;color:${c.text};min-width:16px;text-align:center">1</span>
+          <button type="button" onclick="blocPresetQtyChange('${def.id}',1)" style="width:20px;height:20px;border-radius:5px;border:1px solid ${c.border};background:rgba(0,0,0,.06);color:${c.text};cursor:pointer;font-size:13px;line-height:1;padding:0">+</button>
+          <span style="font-size:10px;color:${c.text};opacity:.6">/j</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px">${dayBtns}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('bloc-preset-name').value='';
 }
 
-function blocPresetApply(id,weekOff){
+function blocPresetToggleDay(btn){
+  const active=btn.getAttribute('data-active')==='1';
+  const defId=btn.getAttribute('data-defid');
+  const def=store.get('bloc_defs',[]).find(d=>d.id===defId);
+  const c=def?BLOC_COLORS[def.color%BLOC_COLORS.length]:null;
+  if(active){
+    btn.setAttribute('data-active','0');
+    btn.style.background='var(--bg2)';btn.style.color='var(--text3)';btn.style.borderColor='var(--border)';
+  }else{
+    btn.setAttribute('data-active','1');
+    btn.style.background=c?c.border:'var(--accent)';btn.style.color='#fff';btn.style.borderColor='transparent';
+  }
+}
+
+function blocPresetQtyChange(defId,delta){
+  const el=document.getElementById('bloc-pq-'+defId);if(!el)return;
+  el.textContent=Math.max(1,Math.min(5,(parseInt(el.textContent)||1)+delta));
+}
+
+function blocPresetSave(){
+  const name=(document.getElementById('bloc-preset-name')?.value||'').trim();
+  if(!name)return toast('Nom requis');
+  const itemsMap={};
+  document.querySelectorAll('.bloc-pd-day[data-active="1"]').forEach(btn=>{
+    const defId=btn.getAttribute('data-defid');
+    const day=parseInt(btn.getAttribute('data-day'));
+    if(!itemsMap[defId])itemsMap[defId]={defId,days:[],qty:1};
+    itemsMap[defId].days.push(day);
+  });
+  Object.keys(itemsMap).forEach(defId=>{
+    const qEl=document.getElementById('bloc-pq-'+defId);
+    itemsMap[defId].qty=qEl?parseInt(qEl.textContent)||1:1;
+  });
+  const items=Object.values(itemsMap);
+  if(!items.length)return toast('Sélectionne au moins un jour');
+  const presets=store.get('bloc_presets',[]);
+  const newId=blocUID();
+  presets.push({id:newId,name,items});
+  store.set('bloc_presets',presets);
+  // Si aucun préset actif, activer automatiquement ce nouveau
+  if(!store.get('bloc_preset_active',null))store.set('bloc_preset_active',newId);
+  document.getElementById('bloc-preset-form').style.display='none';
+  renderBlocsPresets();
+  toast('✓ Préset enregistré');
+}
+
+function blocPresetSetActive(id){
+  store.set('bloc_preset_active',id);
+  renderBlocsPresets();
+  toast(id?'⭐ Préset défini par défaut — s\'appliquera aux nouvelles semaines':'Préset désactivé');
+}
+
+function blocPresetApply(id,weekOff,silent){
   const preset=store.get('bloc_presets',[]).find(p=>p.id===id);
   if(!preset)return;
   const dates=blocGetWeekDates(weekOff);
   const s=store.get('bloc_schedule',{});
   let added=0;
-  (preset.template||[]).forEach((dayBlocs,i)=>{
-    if(!dayBlocs||!dayBlocs.length)return;
-    const dk=blocDateKey(dates[i]);
-    if(!s[dk])s[dk]=[];
-    dayBlocs.forEach(b=>{s[dk].push({iid:blocUID(),defId:b.defId,done:false});added++;});
+  (preset.items||[]).forEach(item=>{
+    (item.days||[]).forEach(dayIdx=>{
+      const dk=blocDateKey(dates[dayIdx]);
+      if(!s[dk])s[dk]=[];
+      for(let q=0;q<(item.qty||1);q++){s[dk].push({iid:blocUID(),defId:item.defId,done:false});added++;}
+    });
   });
   store.set('bloc_schedule',s);
   renderBlocsWeek();renderHomeBlocsToday();
-  const label=weekOff===_blocWeekOffset?'cette semaine':'la semaine suivante';
-  toast(`✓ ${added} bloc(s) appliqué(s) pour ${label}`);
+  if(!silent){
+    const label=weekOff===_blocWeekOffset?'cette semaine':'la semaine suivante';
+    toast(`✓ ${added} bloc(s) appliqué(s) pour ${label}`);
+  }
 }
 
 function blocPresetDelete(id){
   store.set('bloc_presets',store.get('bloc_presets',[]).filter(p=>p.id!==id));
+  if(store.get('bloc_preset_active',null)===id)store.set('bloc_preset_active',null);
   renderBlocsPresets();
   toast('Préset supprimé');
+}
+
+function blocAutoApplyPreset(weekOff){
+  // Auto-applique le préset actif si la semaine est vierge et pas encore initialisée
+  const activeId=store.get('bloc_preset_active',null);
+  if(!activeId)return false;
+  const dates=blocGetWeekDates(weekOff);
+  const weekKey='w_'+blocDateKey(dates[0]);
+  const init=store.get('bloc_week_init',{});
+  if(init[weekKey])return false; // déjà initialisée
+  const schedule=store.get('bloc_schedule',{});
+  const isEmpty=dates.every(d=>!(schedule[blocDateKey(d)]||[]).length);
+  // Marquer comme initialisée dans tous les cas
+  init[weekKey]=true;store.set('bloc_week_init',init);
+  if(isEmpty){blocPresetApply(activeId,weekOff,true);return true;}
+  return false;
 }
 
 function renderHomeBlocsToday(){
