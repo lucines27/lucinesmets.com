@@ -13242,9 +13242,12 @@ function renderBlocsPresets(){
     const summary=items.map(item=>{
       const def=defs.find(d=>d.id===item.defId);if(!def)return'';
       const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
-      const dayLabels=(item.days||[]).map(i=>BLOC_DAY_LABELS[i]).join(' ');
+      // Afficher chaque jour avec sa quantité
+      const dayCounts=item.dayCounts||{};
+      if(!Object.keys(dayCounts).length&&item.days)(item.days||[]).forEach(d=>{dayCounts[d]=item.qty||1;});
+      const dayLabels=Object.entries(dayCounts).sort((a,b)=>a[0]-b[0]).map(([d,n])=>`${BLOC_DAY_LABELS[d]}${n>1?'×'+n:''}`).join(' ');
       return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-        <span style="font-size:11px;padding:2px 7px;background:${c.bg};border:1px solid ${c.border};border-radius:6px;color:${c.text};font-weight:600">${def.name}${item.qty>1?' ×'+item.qty:''}</span>
+        <span style="font-size:11px;padding:2px 7px;background:${c.bg};border:1px solid ${c.border};border-radius:6px;color:${c.text};font-weight:600">${def.name}</span>
         <span style="font-size:11px;color:var(--text3)">${dayLabels}</span>
       </div>`;
     }).join('');
@@ -13272,69 +13275,64 @@ function blocPresetAddForm(){
   const defs=store.get('bloc_defs',[]);
   const rowsEl=document.getElementById('bloc-preset-rows');if(!rowsEl)return;
   if(!defs.length){rowsEl.innerHTML='<div style="font-size:12px;color:var(--text3)">Crée d\'abord des types de blocs</div>';return;}
+  // Un tableau par bloc : colonnes = jours, chaque cellule = compteur indépendant (0 = inactif)
   rowsEl.innerHTML=defs.map(def=>{
     const c=BLOC_COLORS[def.color%BLOC_COLORS.length];
-    const dayBtns=BLOC_DAY_LABELS.map((lbl,i)=>
-      `<button type="button" class="bloc-pd-day" data-defid="${def.id}" data-day="${i}" data-active="0"
-        onclick="blocPresetToggleDay(this)"
-        style="font-size:10px;font-weight:700;padding:4px 0;border-radius:6px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text3);cursor:pointer;width:30px;transition:all .15s">${lbl}</button>`
+    const dayCells=BLOC_DAY_LABELS.map((lbl,i)=>
+      `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:36px">
+        <span style="font-size:9px;font-weight:700;color:var(--text3)">${lbl}</span>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);min-width:32px" id="bloc-pd-cell-${def.id}-${i}">
+          <button type="button" onclick="blocPresetDayInc('${def.id}',${i},1)" style="width:18px;height:18px;border:none;background:none;color:var(--text3);cursor:pointer;font-size:13px;line-height:1;padding:0">+</button>
+          <span class="bloc-pd-count" data-defid="${def.id}" data-day="${i}" style="font-size:13px;font-weight:700;color:var(--text3);min-width:16px;text-align:center">0</span>
+          <button type="button" onclick="blocPresetDayInc('${def.id}',${i},-1)" style="width:18px;height:18px;border:none;background:none;color:var(--text3);cursor:pointer;font-size:13px;line-height:1;padding:0">−</button>
+        </div>
+      </div>`
     ).join('');
     return`<div style="padding:8px 10px;border-radius:10px;border:1.5px solid ${c.border};background:${c.bg}">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:${c.text};flex:1">${def.name}${def.duration?' · '+def.duration:''}</span>
-        <div style="display:flex;align-items:center;gap:3px">
-          <button type="button" onclick="blocPresetQtyChange('${def.id}',-1)" style="width:20px;height:20px;border-radius:5px;border:1px solid ${c.border};background:rgba(0,0,0,.06);color:${c.text};cursor:pointer;font-size:13px;line-height:1;padding:0">−</button>
-          <span id="bloc-pq-${def.id}" style="font-size:12px;font-weight:700;color:${c.text};min-width:16px;text-align:center">1</span>
-          <button type="button" onclick="blocPresetQtyChange('${def.id}',1)" style="width:20px;height:20px;border-radius:5px;border:1px solid ${c.border};background:rgba(0,0,0,.06);color:${c.text};cursor:pointer;font-size:13px;line-height:1;padding:0">+</button>
-          <span style="font-size:10px;color:${c.text};opacity:.6">/j</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:4px">${dayBtns}</div>
+      <div style="font-size:12px;font-weight:700;color:${c.text};margin-bottom:8px">${def.name}${def.duration?' · <span style="font-weight:400;opacity:.7">'+def.duration+'</span>':''}</div>
+      <div style="display:flex;gap:4px">${dayCells}</div>
     </div>`;
   }).join('');
   document.getElementById('bloc-preset-name').value='';
 }
 
-function blocPresetToggleDay(btn){
-  const active=btn.getAttribute('data-active')==='1';
-  const defId=btn.getAttribute('data-defid');
+function blocPresetDayInc(defId,dayIdx,delta){
+  const countEl=document.querySelector(`.bloc-pd-count[data-defid="${defId}"][data-day="${dayIdx}"]`);
+  if(!countEl)return;
+  const cur=parseInt(countEl.textContent)||0;
+  const next=Math.max(0,Math.min(5,cur+delta));
+  countEl.textContent=next;
+  // Style visuel : coloré si actif, gris si 0
+  const cell=document.getElementById(`bloc-pd-cell-${defId}-${dayIdx}`);
   const def=store.get('bloc_defs',[]).find(d=>d.id===defId);
   const c=def?BLOC_COLORS[def.color%BLOC_COLORS.length]:null;
-  if(active){
-    btn.setAttribute('data-active','0');
-    btn.style.background='var(--bg2)';btn.style.color='var(--text3)';btn.style.borderColor='var(--border)';
-  }else{
-    btn.setAttribute('data-active','1');
-    btn.style.background=c?c.border:'var(--accent)';btn.style.color='#fff';btn.style.borderColor='transparent';
+  if(next>0&&cell&&c){
+    cell.style.background=c.bg;cell.style.borderColor=c.border;countEl.style.color=c.text;
+  }else if(cell){
+    cell.style.background='var(--bg2)';cell.style.borderColor='var(--border)';countEl.style.color='var(--text3)';
   }
-}
-
-function blocPresetQtyChange(defId,delta){
-  const el=document.getElementById('bloc-pq-'+defId);if(!el)return;
-  el.textContent=Math.max(1,Math.min(5,(parseInt(el.textContent)||1)+delta));
 }
 
 function blocPresetSave(){
   const name=(document.getElementById('bloc-preset-name')?.value||'').trim();
   if(!name)return toast('Nom requis');
+  // Collect: pour chaque def, un objet dayCounts {dayIdx: count}
   const itemsMap={};
-  document.querySelectorAll('.bloc-pd-day[data-active="1"]').forEach(btn=>{
-    const defId=btn.getAttribute('data-defid');
-    const day=parseInt(btn.getAttribute('data-day'));
-    if(!itemsMap[defId])itemsMap[defId]={defId,days:[],qty:1};
-    itemsMap[defId].days.push(day);
-  });
-  Object.keys(itemsMap).forEach(defId=>{
-    const qEl=document.getElementById('bloc-pq-'+defId);
-    itemsMap[defId].qty=qEl?parseInt(qEl.textContent)||1:1;
+  document.querySelectorAll('.bloc-pd-count').forEach(el=>{
+    const defId=el.getAttribute('data-defid');
+    const day=parseInt(el.getAttribute('data-day'));
+    const count=parseInt(el.textContent)||0;
+    if(count>0){
+      if(!itemsMap[defId])itemsMap[defId]={defId,dayCounts:{}};
+      itemsMap[defId].dayCounts[day]=count;
+    }
   });
   const items=Object.values(itemsMap);
-  if(!items.length)return toast('Sélectionne au moins un jour');
+  if(!items.length)return toast('Configure au moins un bloc pour un jour');
   const presets=store.get('bloc_presets',[]);
   const newId=blocUID();
   presets.push({id:newId,name,items});
   store.set('bloc_presets',presets);
-  // Si aucun préset actif, activer automatiquement ce nouveau
   if(!store.get('bloc_preset_active',null))store.set('bloc_preset_active',newId);
   document.getElementById('bloc-preset-form').style.display='none';
   renderBlocsPresets();
@@ -13354,10 +13352,17 @@ function blocPresetApply(id,weekOff,silent){
   const s=store.get('bloc_schedule',{});
   let added=0;
   (preset.items||[]).forEach(item=>{
-    (item.days||[]).forEach(dayIdx=>{
-      const dk=blocDateKey(dates[dayIdx]);
+    // Support nouveau format dayCounts ET ancien format days/qty
+    const dayCounts=item.dayCounts||{};
+    if(!Object.keys(dayCounts).length&&item.days){
+      // Compat ancien format
+      (item.days||[]).forEach(d=>{dayCounts[d]=item.qty||1;});
+    }
+    Object.entries(dayCounts).forEach(([dayIdx,count])=>{
+      const d=dates[parseInt(dayIdx)];if(!d)return;
+      const dk=blocDateKey(d);
       if(!s[dk])s[dk]=[];
-      for(let q=0;q<(item.qty||1);q++){s[dk].push({iid:blocUID(),defId:item.defId,done:false});added++;}
+      for(let q=0;q<count;q++){s[dk].push({iid:blocUID(),defId:item.defId,done:false});added++;}
     });
   });
   store.set('bloc_schedule',s);
